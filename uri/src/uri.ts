@@ -260,10 +260,6 @@ export class URI extends URL {
         throw new TypeError(`URI ${this} does not support query()`);
     }
 
-    protected guessContentType(knownContentType?: ContentType | string): ContentType | undefined {
-        return guessContentType(this.pathname, knownContentType);
-    }
-
     async *[Symbol.asyncIterator](): AsyncIterableIterator<Buffer> {
         yield* await this.load<AsyncIterable<Buffer>>('application/vnd.esxx.octet-stream');
     }
@@ -272,22 +268,22 @@ export class URI extends URL {
         return new IOError(`URI ${this} operation failed`, err, err instanceof IOError ? undefined : metadata(err));
     }
 
-    protected getBestSelector<T extends SelectorBase>(sels: T[] | undefined, challenge?: WWWAuthenticate): T | null {
-        let result: T | null = null;
-        let bestScore = -1;
-
-        for (const e of enumerateSelectors(sels, this, challenge)) {
-            if (e.score > bestScore) {
-                result = e.sel;
-                bestScore = e.score;
-            }
-        }
-
-        return result;
+    protected _guessContentType(knownContentType?: ContentType | string): ContentType | undefined {
+        return guessContentType(this.pathname, knownContentType);
     }
 
-    protected filterSelectors<T extends SelectorBase>(sels: T[] | undefined, challenge?: WWWAuthenticate): T[] {
-        return [...enumerateSelectors(sels, this, challenge)].map((e) => e.sel);
+    protected _makeIOError(err: NodeJS.ErrnoException): IOError {
+        return new IOError(`URI ${this} operation failed`, err, err instanceof IOError ? undefined : metadata(err));
+    }
+
+    protected _getBestSelector<T extends SelectorBase>(sels: T[] | undefined, challenge?: WWWAuthenticate): T | null {
+        return this._filterSelectors(sels, challenge)[0] ?? null;
+    }
+
+    protected _filterSelectors<T extends SelectorBase>(sels: T[] | undefined, challenge?: WWWAuthenticate): T[] {
+        return [...enumerateSelectors(sels, this, challenge)]
+            .sort((a, b) => b.score - a.score /* Best first */)
+            .map((e) => e.sel);
     }
 }
 

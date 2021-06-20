@@ -98,7 +98,7 @@ export abstract class Parser {
     abstract parse(stream: AsyncIterable<Buffer>): Promise<unknown>;
     abstract serialize(data: unknown): Buffer | AsyncIterable<Buffer>;
 
-    protected assertSerializebleData(condition: boolean, data: unknown, cause?: Error): asserts condition {
+    protected _assertSerializebleData(condition: boolean, data: unknown, cause?: Error): asserts condition {
         if (!condition) {
             const type = data instanceof Object ? Object.getPrototypeOf(data).constructor.name : data === null ? 'null' : typeof data;
 
@@ -119,7 +119,7 @@ export class BufferParser extends Parser {
     }
 
     serialize(data: string | Buffer | AsyncIterable<Buffer>): Buffer | AsyncIterable<Buffer> {
-        this.assertSerializebleData(typeof data === 'string' || data instanceof Buffer || isAsyncIterable(data), data);
+        this._assertSerializebleData(typeof data === 'string' || data instanceof Buffer || isAsyncIterable(data), data);
 
         return data instanceof Buffer ? data : toAsyncIterable(data);
     }
@@ -152,7 +152,7 @@ export class StringParser extends Parser {
     serialize(data: unknown): Buffer {
         const charset = this.contentType.param('charset', 'utf8');
         const bom     = this.contentType.param('x-bom',   'absent');
-        this.assertSerializebleData(data !== null && data !== undefined, data);
+        this._assertSerializebleData(data !== null && data !== undefined, data);
 
         return iconv.encode(String(data), charset, { addBOM: bom === 'present'});
     }

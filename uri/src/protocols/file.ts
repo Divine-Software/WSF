@@ -43,7 +43,7 @@ export class FileURI extends URI {
             return entry as T;
         }
         catch (err) {
-            throw this.makeIOError(err);
+            throw this._makeIOError(err);
         }
     }
 
@@ -55,7 +55,7 @@ export class FileURI extends URI {
             return await Promise.all(children.sort().map((child) => FileURI.create(join(this._path, child), this).info<T>()));
         }
         catch (err) {
-            throw this.makeIOError(err);
+            throw this._makeIOError(err);
         }
     }
 
@@ -67,7 +67,7 @@ export class FileURI extends URI {
             return await Parser.parse<T>(stream, ContentType.create(recvCT, lookup(this._path) || undefined));
         }
         catch (err) {
-            throw this.makeIOError(err);
+            throw this._makeIOError(err);
         }
     }
 
@@ -81,7 +81,7 @@ export class FileURI extends URI {
             return Object(VOID);
         }
         catch (err) {
-            throw this.makeIOError(err);
+            throw this._makeIOError(err);
         }
     }
 
@@ -95,7 +95,7 @@ export class FileURI extends URI {
             return Object(VOID);
         }
         catch (err) {
-            throw this.makeIOError(err);
+            throw this._makeIOError(err);
         }
     }
 
@@ -122,13 +122,13 @@ export class FileURI extends URI {
                 return Object(false);
             }
             else {
-                throw this.makeIOError(err);
+                throw this._makeIOError(err);
             }
         }
     }
 
     private async _write(data: unknown, sendCT: ContentType | string | undefined, append: boolean): Promise<void> {
-        const [serialized] = Parser.serialize(data, this.guessContentType(sendCT));
+        const [serialized] = Parser.serialize(data, this._guessContentType(sendCT));
 
         await copyStream(toReadableStream(serialized), createWriteStream(this._path, { flags: append ? 'a' : 'w', encoding: undefined }));
     }

@@ -59,7 +59,7 @@ export class FormParser extends Parser {
     }
 
     serialize(data: FormData | FormField[]): Buffer {
-        this.assertSerializebleData(data && typeof data === 'object' || data?.[FIELDS] && Array.isArray(data?.[FIELDS]), data);
+        this._assertSerializebleData(data && typeof data === 'object' || data?.[FIELDS] && Array.isArray(data?.[FIELDS]), data);
 
         const entries = (Array.isArray(data) ? data : data[FIELDS])?.map((f) => [f.name, f.value])
             ?? Object.fromEntries(Object.entries(data)) /* Remove symbols */;
@@ -98,7 +98,7 @@ export class MessageParser extends Parser {
     }
 
     async *serialize(data: MimeMessageLike): AsyncIterable<Buffer> {
-        this.assertSerializebleData(data && typeof data === 'object' || data?.[FIELDS] && Array.isArray(data?.[FIELDS]), data);
+        this._assertSerializebleData(data && typeof data === 'object' || data?.[FIELDS] && Array.isArray(data?.[FIELDS]), data);
 
         // Serialize first, to give Parser a chance to update the content-type
         const value = (data.value as MultiPartData)?.[FIELDS] ?? data.value;
@@ -213,7 +213,7 @@ export class MultiPartParser extends Parser {
     }
 
     private async *_serialize(data: MultiPartData | MultiPartField[]): AsyncIterable<Buffer> {
-        this.assertSerializebleData(data && typeof data === 'object' || Array.isArray(data?.[FIELDS]), data);
+        this._assertSerializebleData(data && typeof data === 'object' || Array.isArray(data?.[FIELDS]), data);
 
         const type     = MultiPartParser.defaultContentType;
         const headers  = {};

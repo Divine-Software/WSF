@@ -34,7 +34,7 @@ export class HTTPURI extends URI {
         const type     = headers['content-type'];
         const modified = headers['last-modified'];
 
-        return this.requireValidStatus<DirectoryEntry>({
+        return this._requireValidStatus<DirectoryEntry>({
             ...extractMetadata(response),
             uri:     this,
             name:    path.posix.basename(location.pathname),
@@ -45,23 +45,23 @@ export class HTTPURI extends URI {
     }
 
     async load<T extends object>(recvCT?: ContentType | string): Promise<T> {
-        return this.requireValidStatus(await this._query('GET', {}, null, undefined, recvCT));
+        return this._requireValidStatus(await this._query('GET', {}, null, undefined, recvCT));
     }
 
     async save<T extends object>(data: unknown, sendCT?: ContentType | string, recvCT?: ContentType | string): Promise<T> {
-        return this.requireValidStatus(await this._query('PUT', {}, data, sendCT, recvCT));
+        return this._requireValidStatus(await this._query('PUT', {}, data, sendCT, recvCT));
     }
 
     async append<T extends object>(data: unknown, sendCT?: ContentType | string, recvCT?: ContentType | string): Promise<T> {
-        return this.requireValidStatus(await this._query('POST', {}, data, sendCT, recvCT));
+        return this._requireValidStatus(await this._query('POST', {}, data, sendCT, recvCT));
     }
 
     async modify<T extends object>(data: unknown, sendCT?: ContentType | string, recvCT?: ContentType | string): Promise<T> {
-        return this.requireValidStatus(await this._query('PATCH', {}, data, sendCT, recvCT));
+        return this._requireValidStatus(await this._query('PATCH', {}, data, sendCT, recvCT));
     }
 
     async remove<T extends object>(recvCT?: ContentType | string): Promise<T> {
-        return this.requireValidStatus(await this._query('DELETE', {}, null, undefined, recvCT));
+        return this._requireValidStatus(await this._query('DELETE', {}, null, undefined, recvCT));
     }
 
     async query<T extends object>(method: string, headers?: KVPairs | null, data?: unknown, sendCT?: ContentType | string, recvCT?: ContentType | string): Promise<T> {
@@ -78,10 +78,10 @@ export class HTTPURI extends URI {
             throw new TypeError(`URI ${this}: query: 'recvCT' argument invalid`);
         }
 
-        return this.requireValidStatus(await this._query(method, headers ?? {}, data, this.guessContentType(sendCT), recvCT));
+        return this._requireValidStatus(await this._query(method, headers ?? {}, data, this._guessContentType(sendCT), recvCT));
     }
 
-    protected requireValidStatus<T extends object & Metadata>(result: T): T {
+    protected _requireValidStatus<T extends object & Metadata>(result: T): T {
         const status = result[STATUS];
 
         if (status && (status < 200 || status >= 300)) {
@@ -93,11 +93,11 @@ export class HTTPURI extends URI {
     }
 
     private async _getAuthorization(req: AuthSchemeRequest, payload?: Buffer | AsyncIterable<Buffer>, challenges?: WWWAuthenticate[]): Promise<Authorization | undefined> {
-        let session = this.getBestSelector(this.selectors?.session);
+        let session = this._getBestSelector(this.selectors?.session);
 
         if (!session?.authScheme) {
             const { auth, challenge } = (challenges?.length ? challenges : [undefined as WWWAuthenticate | undefined])
-                .map((challenge) => ({ auth: this.getBestSelector(this.selectors?.auth, challenge), challenge }))
+                .map((challenge) => ({ auth: this._getBestSelector(this.selectors?.auth, challenge), challenge }))
                 .filter((entry) => !!entry.auth)[0]
                 ?? { auth: null, challenge: null };
 
@@ -131,7 +131,7 @@ export class HTTPURI extends URI {
         headers = {
             'accept-encoding': 'gzip, deflate, br',
             'user-agent':      `Divine-URI/${pkg.version}`,
-            ...this.getBestSelector(this.selectors?.header)?.headers,
+            ...this._getBestSelector(this.selectors?.header)?.headers,
             ...headers
         };
 
@@ -149,7 +149,7 @@ export class HTTPURI extends URI {
         // Bug workaround?
         headers = Object.fromEntries(Object.entries(headers).filter(([, value]) => value !== undefined));
 
-        const params  = this.getBestSelector<HTTPParamsSelector>(this.selectors?.param)?.params ?? {};
+        const params  = this._getBestSelector<HTTPParamsSelector>(this.selectors?.param)?.params ?? {};
         const options = { agent: params.agent, timeout: params.timeout };
         const request = async (method: string, url: string) => {
             const request =
@@ -175,10 +175,10 @@ export class HTTPURI extends URI {
                         resolve(result);
                     }
                     catch (err) {
-                        reject(this.makeIOError(err));
+                        reject(this._makeIOError(err));
                     }
                 })
-                .on('error', (err) => reject(this.makeIOError(err)));
+                .on('error', (err) => reject(this._makeIOError(err)));
             });
 
             if (body) {

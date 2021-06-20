@@ -21,7 +21,7 @@ export class YAMLParser extends Parser {
             return new StringParser(this.contentType).serialize(strings.join('---\n'));
         }
         catch (ex) {
-            this.assertSerializebleData(false, data, ex);
+            this._assertSerializebleData(false, data, ex);
         }
 
     }

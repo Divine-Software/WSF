@@ -20,7 +20,7 @@ export class ImageParser extends Parser {
     }
 
     async *serialize(data: string[][] | object[]): AsyncIterableIterator<Buffer> {
-        this.assertSerializebleData(Array.isArray(data), data);
+        this._assertSerializebleData(Array.isArray(data), data);
 
     }
 }
