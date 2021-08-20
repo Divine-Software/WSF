@@ -4,6 +4,7 @@
         { "path": "headers" },
         { "path": "uri" },
         { "path": "uri-image-parser" },
+        { "path": "uri-postgres-protocol" },
         { "path": "uri-x4e-parser" },
         { "path": "web-service" },
         { "path": "x4e" },

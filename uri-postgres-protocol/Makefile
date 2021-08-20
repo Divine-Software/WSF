@@ -7,18 +7,15 @@ all:		build
 prepare:
 	yarn
 
-build:		prepare	src/private/dbref.ts
+build:		prepare
 	yarn run tsc --build
-
-src/private/dbref.ts:	src/private/dbref.pegjs
-	yarn run tspegjs $<
 
 docs:	build
 	rm -rf ../docs/$(BASENAME)
 	yarn run typedoc --out ../docs/$(BASENAME) src/index.ts
 
 test:		build
-	yarn run jest
+	yarn run jest --passWithNoTests
 
 clean:
 	rm -rf build coverage

@@ -88,6 +88,12 @@ export function isReadableStream(obj: NodeJS.ReadableStream): obj is NodeJS.Read
     return obj instanceof EventEmitter && typeof obj.readable === 'boolean' && typeof obj.read === 'function';
 }
 
+export function isTemplateStringsArray(strings: any): strings is TemplateStringsArray;
+export function isTemplateStringsArray(strings: TemplateStringsArray): strings is TemplateStringsArray {
+    return Array.isArray(strings) && strings.every((s) => typeof s === 'string') &&
+        Array.isArray(strings.raw) && strings.raw.every((s) => typeof s === 'string');
+}
+
 export function isDOMNode(obj: unknown): boolean {
     return !!obj && typeof (obj as any).nodeType === 'number'; /* FIXME */
 }
