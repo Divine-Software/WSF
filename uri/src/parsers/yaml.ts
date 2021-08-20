@@ -12,8 +12,8 @@ export class YAMLParser extends Parser {
         return json.length === 1 ? data : setProp(data, FIELDS, json);
     }
 
-    serialize(data: BasicTypes | WithFields<BasicTypes>): Buffer;
-    serialize(data: WithFields<BasicTypes>): Buffer {
+    serialize(data: BasicTypes): Buffer;
+    serialize(data: BasicTypes & WithFields<BasicTypes>): Buffer {
         try {
             const entries = data?.[FIELDS] ?? [data];
             const strings = entries.map((entry) => YAML.stringify(entry));
@@ -23,7 +23,6 @@ export class YAMLParser extends Parser {
         catch (ex) {
             this._assertSerializebleData(false, data, ex);
         }
-
     }
 }
 

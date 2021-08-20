@@ -3,9 +3,10 @@ import { R_OK } from 'constants';
 import { createReadStream, createWriteStream, promises as fs } from 'fs';
 import { lookup } from 'mime-types';
 import { basename, join, normalize } from 'path';
+import { encodeFilePath } from '../file-utils';
 import { Parser } from '../parsers';
 import { copyStream, toReadableStream } from '../private/utils';
-import { DirectoryEntry, encodeFilePath, Metadata, URI, VOID } from '../uri';
+import { DirectoryEntry, Metadata, URI, VOID } from '../uri';
 
 export class FileURI extends URI {
     static create(path: string, base?: URI): URI {

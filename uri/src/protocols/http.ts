@@ -1,4 +1,4 @@
-import { Authorization, ContentType, KVPairs, WWWAuthenticate } from '@divine/headers';
+import { ContentType, KVPairs } from '@divine/headers';
 import { Agent, IncomingMessage, request as requestHTTP } from 'http';
 import { request as requestHTTPS } from 'https';
 import path from 'path';
@@ -6,11 +6,10 @@ import { Readable } from 'stream';
 import { SecureContextOptions } from 'tls';
 import { URL } from 'url';
 import pkg from '../../package.json';
-import { AuthScheme, AuthSchemeRequest } from '../auth-schemes';
 import { Encoder } from '../encoders';
 import { Parser } from '../parsers';
-import { DirectoryEntry, HEADERS, IOError, Metadata, ParamsSelector, STATUS, STATUS_TEXT, URI, VOID } from '../uri';
 import { copyStream } from '../private/utils';
+import { DirectoryEntry, HEADERS, IOError, Metadata, ParamsSelector, STATUS, STATUS_TEXT, URI, VOID } from '../uri';
 
 export interface HTTPParamsSelector extends ParamsSelector {
     params: {
@@ -92,46 +91,13 @@ export class HTTPURI extends URI {
         }
     }
 
-    private async _getAuthorization(req: AuthSchemeRequest, payload?: Buffer | AsyncIterable<Buffer>, challenges?: WWWAuthenticate[]): Promise<Authorization | undefined> {
-        let session = this._getBestSelector(this.selectors?.session);
-
-        if (!session?.authScheme) {
-            const { auth, challenge } = (challenges?.length ? challenges : [undefined as WWWAuthenticate | undefined])
-                .map((challenge) => ({ auth: this._getBestSelector(this.selectors?.auth, challenge), challenge }))
-                .filter((entry) => !!entry.auth)[0]
-                ?? { auth: null, challenge: null };
-
-            if (auth && (challenge || auth.preemptive)) {
-                this.selectors = this.selectors ?? {};
-                this.selectors.session = this.selectors.session ?? [];
-
-                if (!session) {
-                    this.selectors.session.push(session = { selector: {} });
-                }
-
-                if (auth.credentials instanceof AuthScheme) {
-                    session.authScheme = auth.credentials;
-                }
-                else if (challenge) {
-                    session.authScheme = AuthScheme.create(challenge).setCredentialsProvider(auth.credentials);
-                }
-                else if (auth.selector?.authScheme) {
-                    session.authScheme = AuthScheme.create(auth.selector.authScheme).setCredentialsProvider(auth.credentials);
-                }
-            }
-        }
-
-        const challenge = challenges?.find((challenge) => challenge.scheme === session?.authScheme?.scheme);
-        return session?.authScheme?.createAuthorization(challenge, req, payload instanceof Buffer ? payload : undefined);
-    }
-
     private async _query<T>(method: string, headers: KVPairs, data: unknown, sendCT?: ContentType | string, recvCT?: ContentType | string): Promise<T & Metadata> {
         let body: Buffer | AsyncIterable<Buffer> | undefined;
 
         headers = {
             'accept-encoding': 'gzip, deflate, br',
             'user-agent':      `Divine-URI/${pkg.version}`,
-            ...this._getBestSelector(this.selectors?.header)?.headers,
+            ...this._getBestSelector(this.selectors.header)?.headers,
             ...headers
         };
 
@@ -149,7 +115,7 @@ export class HTTPURI extends URI {
         // Bug workaround?
         headers = Object.fromEntries(Object.entries(headers).filter(([, value]) => value !== undefined));
 
-        const params  = this._getBestSelector<HTTPParamsSelector>(this.selectors?.param)?.params ?? {};
+        const params  = this._getBestSelector<HTTPParamsSelector>(this.selectors.param)?.params ?? {};
         const options = { agent: params.agent, timeout: params.timeout };
         const request = async (method: string, url: string) => {
             const request =

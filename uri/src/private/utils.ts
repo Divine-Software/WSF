@@ -2,7 +2,7 @@ import { EventEmitter } from 'events';
 import { pipeline, Readable } from 'stream';
 
 export type Constructor<T> = new (...args: any[]) => T;
-export type ValueEncoder = (this: void, value: string) => string;
+export type ValueEncoder = (this: void, value: string, key: string | number) => string;
 
 export type BasicTypes = boolean | number | string | object | null;
 
@@ -24,22 +24,29 @@ export function kvWrapper(wrapped: any): Params {
     });
 }
 
+/** Percent-encode everything except 0-9, A-Z, a-z, `-`, `_`, `.`, `!` and `~`. */
+export function percentEncode(str: string) {
+    return encodeURIComponent(str)
+        .replace(/['()*]/g, c => "%" + c.charCodeAt(0).toString(16).toUpperCase());
+}
+
 export function es6Encoder(strings: TemplateStringsArray, values: unknown[], encoder: ValueEncoder) {
     let result = strings[0];
 
     for (let i = 0; i < values.length; ++i) {
-        result += encoder(String(values[i])) + strings[i + 1];
+        result += encoder(String(values[i]), i) + strings[i + 1];
     }
 
     return result;
 }
 
 export function esxxEncoder(template: string, params: Params, encoder: ValueEncoder) {
-    return template.replace(/(^|[^\\])(\\\\)*{([^{} \f\n\r\t\v\u00a0\u1680\u180e\u2000-\u200a\u2028\u2029\u202f\u205f\u3000\ufeff]+)}/g, (match) => {
+    return template.replace(/(^|[^\\])(\\\\)*{([^{}[\]()"'`\s]+)}/g, (match) => {
         const start = match.lastIndexOf('{');
-        const value = params[match.substring(start + 1, match.length - 1)];
+        const param = match.substring(start + 1, match.length - 1);
+        const value = params[param];
 
-        return match.substring(0, start) + (value !== undefined ? encoder(String(value)) : '');
+        return match.substring(0, start) + encoder(String(value), param);
     });
 }
 

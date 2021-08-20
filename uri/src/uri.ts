@@ -1,9 +1,10 @@
-import { ContentType, KVPairs, WWWAuthenticate } from '@divine/headers';
-import { extension, lookup } from 'mime-types';
-import path from 'path';
+import { Authorization, ContentType, KVPairs, WWWAuthenticate } from '@divine/headers';
 import url, { Url, URL } from 'url';
-import { AuthScheme, Credentials, CredentialsProvider } from './auth-schemes';
-import { BasicTypes, es6Encoder, esxxEncoder, kvWrapper, Params } from './private/utils';
+import { AuthScheme, AuthSchemeRequest } from './auth-schemes';
+import { guessContentType, uri } from './file-utils';
+import { BasicTypes, esxxEncoder, kvWrapper, Params } from './private/utils';
+import { AuthSelector, AuthSessionSelector, enumerateSelectors, HeadersSelector, isAuthSelector, isHeadersSelector, isParamsSelector, isSessionSelector, ParamsSelector, SelectorBase, SessionSelector } from './selectors';
+export { AuthSelector, HeadersSelector, ParamsSelector, Selector } from './selectors';
 
 const urlObject  = (url as any).Url;
 
@@ -31,50 +32,6 @@ export interface Metadata {
     [HEADERS]?:     KVPairs;
 }
 
-export interface Selector {
-    authRealm?:  string | RegExp;
-    authScheme?: string | RegExp;
-    protocol?:   string | RegExp;
-    pathname?:   string | RegExp;
-    port?:       string | RegExp | number;
-    hostname?:   string | RegExp;
-    uri?:        string | RegExp;
-}
-
-interface SelectorBase {
-    selector?: Selector;
-}
-
-export interface AuthSelector extends SelectorBase {
-    credentials: CredentialsProvider<Credentials> | Credentials | AuthScheme<Credentials>;
-    preemptive?: boolean;
-}
-
-function isAuthSelector(selector: any): selector is AuthSelector {
-    return ['function', 'object'].includes(typeof selector.credentials) &&
-        (selector.preemptive === undefined || typeof selector.preemptive === 'boolean');
-}
-
-export interface HeadersSelector extends SelectorBase {
-    headers: KVPairs;
-}
-
-function isHeadersSelector(selector: any): selector is HeadersSelector {
-    return typeof selector.headers === 'object';
-}
-
-export interface ParamsSelector extends SelectorBase {
-    params: { [key: string]: unknown };
-}
-
-function isParamsSelector(selector: any): selector is ParamsSelector {
-    return typeof selector.params === 'object';
-}
-
-export interface SessionSelector extends SelectorBase {
-    authScheme?: AuthScheme<Credentials>;
-}
-
 export interface DirectoryEntry {
     uri:      URI;
     name:     string;
@@ -94,55 +51,6 @@ export class IOError extends URIError {
     }
 }
 
-export function uri(strings: TemplateStringsArray, ...values: unknown[]): string {
-    return es6Encoder(strings, values, encodeURI);
-}
-
-export function uriComponent(strings: TemplateStringsArray, ...values: unknown[]): string {
-    return es6Encoder(strings, values, encodeURIComponent);
-}
-
-export function encodeFilePath(filepath: string, type?: 'posix' | 'windows'): string {
-    type = type || process.platform === 'win32' ? 'windows' : 'posix';
-
-    if (type === 'windows') {
-        filepath = path.win32.normalize(filepath);
-
-        let prefix = '';
-
-        if (/^[A-Za-z]:/.test(filepath)) {
-            prefix = '/' + filepath.substr(0, 2).toUpperCase();
-            filepath = filepath.substr(2);
-        }
-
-        return prefix + filepath.split(/\\/).map((part) => encodeURIComponent(part)).join('/');
-    }
-    else if (type === 'posix') {
-        filepath = path.posix.normalize(filepath);
-
-        return filepath.split('/').map((part) => encodeURIComponent(part)).join('/');
-    }
-    else {
-        throw new TypeError(`Invalid filepath type: ${type}`);
-    }
-}
-
-export function guessContentType(pathname: string, knownContentType: ContentType | string): ContentType;
-export function guessContentType(pathname: string, knownContentType?: ContentType | string): ContentType | undefined;
-export function guessContentType(pathname: string, knownContentType?: ContentType | string): ContentType | undefined {
-    const ct = knownContentType ?? lookup(pathname);
-
-    return ct ? new ContentType(ct) : undefined;
-}
-
-export function guessFileExtension(contentType: ContentType | string, invent: true, knownExtension?: string): string;
-export function guessFileExtension(contentType: ContentType | string, invent: false, knownExtension: string): string;
-export function guessFileExtension(contentType: ContentType | string, invent?: boolean, knownExtension?: string): string | undefined {
-    const ct = ContentType.create(contentType);
-
-    return knownExtension ?? (extension(ct.type) || invent && ct.type.replace(/.*?([^/+.]+)$/, '$1') || undefined);
-}
-
 export class URI extends URL {
     static readonly VOID        = VOID;
     static readonly NULL        = NULL;
@@ -158,12 +66,12 @@ export class URI extends URL {
     }
 
     static $(strings: TemplateStringsArray, ...values: unknown[]): URI {
-        return new URI(uriComponent(strings, ...values));
+        return new URI(uri(strings, ...values));
     }
 
     private static protocols = new Map<string, typeof URI>();
 
-    selectors?: {
+    selectors: {
         auth?:    AuthSelector[];
         header?:  HeadersSelector[];
         param?:   ParamsSelector[];
@@ -184,12 +92,13 @@ export class URI extends URL {
             return;
         }
 
-        if (base instanceof URI) {
-            this.selectors = base.selectors;
-        }
+        this.selectors = base instanceof URI ? base.selectors : {};
 
         if (this.username || this.password) {
-            // this.auth = ...;
+            this.addSelector({ credentials: {
+                identity: this.username,
+                secret:   this.password,
+            }});
 
             // Always strip credentials from URI for security reasons
             this.username = this.password = '';
@@ -199,25 +108,29 @@ export class URI extends URL {
     }
 
     $(strings: TemplateStringsArray, ...values: unknown[]): URI {
-        return new URI(uriComponent(strings, ...values), this);
+        return new URI(uri(strings, ...values), this);
     }
 
-    addSelector<T extends AuthSelector | HeadersSelector | ParamsSelector>(selector: T): this {
-        const selectors = (this.selectors = this.selectors ?? {});
+    addSelector<T extends AuthSelector | HeadersSelector | ParamsSelector | SessionSelector>(selector: T): this {
         let valid = false;
 
         if (isAuthSelector(selector)) {
-            (selectors.auth = selectors.auth ?? []).push(selector);
+            (this.selectors.auth ??= []).push(selector);
             valid = true;
         }
 
         if (isHeadersSelector(selector)) {
-            (selectors.header = selectors.header ?? []).push(selector);
+            (this.selectors.header ??= []).push(selector);
             valid = true;
         }
 
         if (isParamsSelector(selector)) {
-            (selectors.param = selectors.param ?? []).push(selector);
+            (this.selectors.param ??= []).push(selector);
+            valid = true;
+        }
+
+        if (isSessionSelector(selector)) {
+            (this.selectors.session ??= []).push(selector);
             valid = true;
         }
 
@@ -264,8 +177,35 @@ export class URI extends URL {
         yield* await this.load<AsyncIterable<Buffer>>('application/vnd.esxx.octet-stream');
     }
 
-    protected makeIOError(err: NodeJS.ErrnoException): IOError {
-        return new IOError(`URI ${this} operation failed`, err, err instanceof IOError ? undefined : metadata(err));
+    protected async _getAuthorization(req: AuthSchemeRequest, payload?: Buffer | AsyncIterable<Buffer>, challenges?: WWWAuthenticate[]): Promise<Authorization | undefined> {
+        let session = this._getBestSelector<AuthSessionSelector>(this.selectors.session)?.states;
+
+        if (!session?.authScheme) {
+            const { auth, challenge } = (challenges?.length ? challenges : [undefined as WWWAuthenticate | undefined])
+                .map((challenge) => ({ auth: this._getBestSelector(this.selectors.auth, challenge), challenge }))
+                .filter((entry) => !!entry.auth)[0]
+                ?? { auth: null, challenge: null };
+
+            if (auth && (challenge || auth.preemptive)) {
+                if (!session) {
+                    session = {};
+                    this.addSelector<AuthSessionSelector>({ states: session });
+                }
+
+                if (auth.credentials instanceof AuthScheme) {
+                    session.authScheme = auth.credentials;
+                }
+                else if (challenge) {
+                    session.authScheme = AuthScheme.create(challenge).setCredentialsProvider(auth.credentials);
+                }
+                else if (auth.selector?.authScheme) {
+                    session.authScheme = AuthScheme.create(auth.selector.authScheme).setCredentialsProvider(auth.credentials);
+                }
+            }
+        }
+
+        const challenge = challenges?.find((challenge) => challenge.scheme === session?.authScheme?.scheme);
+        return session?.authScheme?.createAuthorization(challenge, req, payload instanceof Buffer ? payload : undefined);
     }
 
     protected _guessContentType(knownContentType?: ContentType | string): ContentType | undefined {
@@ -333,37 +273,5 @@ function resolveURL(url?: string | URL | Url, base?: string | URL | Url | Params
     }
     catch (err) {
         throw new IOError(`Failed to construct URI`, err, metadata(err));
-    }
-}
-
-function *enumerateSelectors<T extends SelectorBase>(sels: T[] | undefined, url: URL, challenge?: WWWAuthenticate): Generator<{ sel: T, score: number }> {
-    for (const sel of sels ?? []) {
-        let score = 0;
-
-        score += selectorScore(sel, 'authRealm',  challenge?.realm)  * 1;
-        score += selectorScore(sel, 'authScheme', challenge?.scheme) * 2;
-        score += selectorScore(sel, 'protocol',   url.protocol)      * 4;
-        score += selectorScore(sel, 'pathname',   url.pathname)      * 8;
-        score += selectorScore(sel, 'port',       url.port)          * 16;
-        score += selectorScore(sel, 'hostname',   url.hostname)      * 32;
-        score += selectorScore(sel, 'uri',        url.toString())    * 64;
-
-        if (score >= 0) {
-            yield { sel, score };
-        }
-    }
-}
-
-function selectorScore(sel: SelectorBase, key: keyof Selector, value?: string): number {
-    const expected = sel.selector?.[key];
-
-    if (expected === undefined || value === undefined) {
-        return 0;
-    }
-    else if (expected instanceof RegExp) {
-        return expected.test(value) ? 1 : -Infinity;
-    }
-    else {
-        return String(expected) === value ? 1 : -Infinity;
     }
 }
