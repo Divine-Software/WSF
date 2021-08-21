@@ -1,6 +1,6 @@
 import { WWWAuthenticate } from '@divine/headers';
-import { BasicAuthScheme, DatabaseURI, DBDriver, DBQuery, q, URI } from '@divine/uri';
-import { PGConnectionPool } from './private/connection';
+import { BasicAuthScheme, DatabaseURI, URI } from '@divine/uri';
+import { PGConnectionPool, PGReference } from './private/connection';
 
 export class PostgresURI extends DatabaseURI {
     protected _createDBReference(): PGReference {
@@ -17,20 +17,7 @@ export class PostgresURI extends DatabaseURI {
     }
 }
 
-class PGReference extends DBDriver.DBReference {
-    getSaveQuery(value: unknown): DBQuery {
-        const [ _scope, objects, key ] = this.checkSaveArguments(value);
-        const columns = this.columns ?? Object.keys(objects[0]);
-
-        return q`\
-insert into ${this.getTable()} as _dst_ ${q.values(objects, this.columns)} \
-on conflict (${q.quoted(key)}) do update set ${
-    q.join(',', columns.map((column) => q`${q.quoted(column)} = "excluded".${q.quoted(column)}`))
-}`;
-    }
-}
-
-// From <https://www.postgresql.org/docs/current/errcodes-appendix.html>
+// From <https://www.postgresql.org/docs/13/errcodes-appendix.html>
 export enum SQLState {
     SUCCESSFUL_COMPLETION                                = "00000",
     WARNING                                              = "01000",

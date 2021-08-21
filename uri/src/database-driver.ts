@@ -9,7 +9,7 @@ const als = new AsyncLocalStorage<{ ref: number, conn: DBConnection }>();
 export interface DBConnection {
     open(): Promise<void>;
     close(): Promise<void>;
-    query<T extends object>(query: DBQuery, withColumnInfo: boolean): Promise<T[] & DBMetadata>;
+    query<T extends object>(query: DBQuery): Promise<T[] & DBMetadata>;
     transaction<T>(dtp: DBTransactionParams, cb: () => Promise<T>): Promise<T>;
 }
 

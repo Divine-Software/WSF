@@ -1,5 +1,5 @@
-import { BasicCredentials, DatabaseURI, DBColumnInfo, DBDriver, DBError, DBMetadata, DBQuery, DBResult, DBTransactionParams, q } from '@divine/uri';
-import { Client, ClientConfig, FieldDef, types } from 'pg';
+import { BasicCredentials, DatabaseURI, DBColumnInfo, DBDriver, DBError, DBMetadata, DBQuery, DBResult, DBTransactionParams, q, URI } from '@divine/uri';
+import { Client, ClientConfig, FieldDef, QueryArrayResult, types } from 'pg';
 import { URL } from 'url';
 
 const parseBigIntArray = types.getTypeParser(1016);
@@ -45,7 +45,7 @@ export class PGConnectionPool extends DBDriver.DBConnectionPool {
         dbURL.username = creds?.identity ?? '';
         dbURL.password = creds?.secret ?? '';
 
-        return new PGDatabaseConnection({
+        return new PGDatabaseConnection(this.dbURI, {
             connectionString: dbURL.href,
             types: {
                 getTypeParser: (id, format) =>
@@ -65,9 +65,8 @@ class PGDatabaseConnection implements DBDriver.DBConnection {
     private savepoint = 0;
     private columnInfoCache: { [key: string]: Omit<DBColumnInfo, 'label'> | undefined } = {};
 
-    constructor(config: ClientConfig) {
+    constructor(private dbURI: DatabaseURI, config: ClientConfig) {
         this.client = new Client(config);
-        console.debug('PGDatabaseConnection', config);
     }
 
     async open() {
@@ -81,7 +80,7 @@ class PGDatabaseConnection implements DBDriver.DBConnection {
         await this.client.end();
     }
 
-    async query<T>(query: DBQuery, withColumnInfo = false): Promise<T[] & DBMetadata> {
+    async query<T>(query: DBQuery): Promise<T[] & DBMetadata> {
         const text = query.toString((index) => `$${index + 1}`);
 
         if (query.batches.length > 1) {
@@ -89,11 +88,8 @@ class PGDatabaseConnection implements DBDriver.DBConnection {
         }
 
         try {
-            console.debug('query', text);
-
             const rs = await this.client.query({ rowMode: 'array', text, values: query.batches[0] as any[] });
-            const dr = new DBResult(await this.getColumnInfo(rs.fields, withColumnInfo), rs.rows);
-            console.debug('result 2', dr);
+            const dr = new PGResult(this.dbURI, rs);
 
             return dr.toObjects([ dr ]);
         }
@@ -222,5 +218,88 @@ class PGDatabaseConnection implements DBDriver.DBConnection {
         }
 
         return result.map((r) => ({ label: r.label, ...(this.columnInfoCache[r.key] ?? noColumnInfo) }));
+    }
+}
+
+interface KeyedInformationSchema extends Omit<DBColumnInfo, 'label'> {
+    _key?: string;
+}
+
+export class PGResult extends DBResult {
+    private _db!: DatabaseURI;
+    private _rs!: QueryArrayResult<unknown[]>;
+
+    constructor(db: DatabaseURI, rs: QueryArrayResult<unknown[]>) {
+        super(rs.fields.map((f) => ({ label: f.name })), rs.rows);
+
+        Object.defineProperty(this, '_db', { enumerable: false, value: db});
+        Object.defineProperty(this, '_rs', { enumerable: false, value: rs});
+    }
+
+    async updateColumnInfo(): Promise<DBColumnInfo[]> {
+        const tables = [...new Set(this._rs.fields.filter((f) => f.tableID !== 0 && f.columnID !== 0).map((f) => f.tableID))];
+        const dtypes = [...new Set(this._rs.fields.filter((f) => f.tableID === 0 && f.columnID === 0).map((f) => f.dataTypeID))];
+        const nfomap: { [key: string]: KeyedInformationSchema | undefined } = {};
+
+        if (tables.length) {
+            const colInfo = await this._db.query<KeyedInformationSchema[]>(q`
+                select c.*, concat_ws(':', cast(attrelid as text), cast(attnum as text), cast(atttypid as text), cast(attlen as text), cast(atttypmod as text)) as _key
+                from  pg_catalog.pg_attribute    as pga
+                inner join pg_catalog.pg_class      pgc on pgc.oid = pga.attrelid
+                inner join pg_catalog.pg_namespace  pgn on pgn.oid = pgc.relnamespace
+                inner join information_schema.columns c on c.table_schema = pgn.nspname and c.table_name = pgc.relname and c.column_name = pga.attname
+                where ${q.join('or', tables.map((t) => q`(pga.attrelid = ${t})`))}
+            `);
+
+            for (const ci of colInfo) {
+                for (const k of (Object.keys(ci) as (keyof typeof ci)[])) {
+                    if (k === '_key') {
+                        nfomap[ci._key!] = ci;
+                        delete ci._key;
+                    }
+                    else if (ci[k] === null || ci[k] === undefined) {
+                        delete ci[k];
+                    }
+                    else if (numericColInfoProps[k]) {
+                        (ci[k] as any) = Number(ci[k]);
+                    }
+                    else if (booleanColInfoProps[k]) {
+                        (ci[k] as any) = (ci[k] === 'YES');
+                    }
+                }
+            }
+        }
+
+        if (dtypes.length) {
+            const dtInfo = await this._db.query<{ udt_name: string, _key?: string }[]>(q`
+                select typname as udt_name, concat_ws(':', '0', '0', cast(oid as text), cast(typlen as text), cast(typtypmod as text)) as _key
+                from pg_catalog.pg_type t
+                where ${q.join('or', dtypes.map((t) => q`(oid = ${t})`))}
+            `);
+
+            for (const dt of dtInfo) {
+                nfomap[dt._key!] = dt;
+                delete dt._key;
+            }
+        }
+
+        this._rs.fields.forEach((f, i) => {
+            Object.assign(this.columns[i], nfomap[`${f.tableID}:${f.columnID}:${f.dataTypeID}:${f.dataTypeSize}:${f.dataTypeModifier}`]);
+        });
+
+        return this.columns;
+    }
+}
+
+export class PGReference extends DBDriver.DBReference {
+    getSaveQuery(value: unknown): DBQuery {
+        const [ _scope, objects ] = this.checkSaveArguments(value);
+        const columns = this.columns ?? Object.keys(objects[0]);
+
+        return q`\
+insert into ${this.getTable()} as _dst_ ${q.values(objects, this.columns)} \
+on conflict (${this.getKeys()}) do update set ${
+    q.join(',', columns.map((column) => q`${q.quote(column)} = "excluded".${q.quote(column)}`))
+}`;
     }
 }

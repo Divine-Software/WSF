@@ -34,6 +34,7 @@ const db = new URI('pg://root@localhost:26257/leviticus') as DatabaseURI;
 
             const r1 = await db.query`insert into kv values (${Date.now()}, ${obj}) returning *`;
             const r2 = await db.query(`select 1::int4 as one, 'text' as two, '{}'::json, key as nyckel, value as värde from kv where key < {limit} order by ${'key'} desc`, { limit: 1000 });
+            await r2[FIELDS][0].updateColumnInfo();
 
             return [r1, r2];
         });

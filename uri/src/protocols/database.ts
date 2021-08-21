@@ -188,7 +188,7 @@ export class DBQuery {
     }
 }
 
-export class DBResult extends Array<unknown[]> {
+export abstract class DBResult extends Array<unknown[]> {
     static get [Symbol.species]() {
         return Array;
     }
@@ -200,6 +200,8 @@ export class DBResult extends Array<unknown[]> {
             this[r] = records[r];
         }
     }
+
+    abstract updateColumnInfo(): Promise<DBColumnInfo[]>;
 
     toObjects<T>(): T[];
     toObjects<T>(fields: DBResult[]): T[] & DBMetadata;
@@ -289,10 +291,10 @@ export abstract class DatabaseURI extends URI {
 
         return states.database!.session(async (conn) => {
             if (first instanceof DBQuery && rest.length === 0) {
-                return conn.query(first, true);
+                return conn.query(first);
             }
             else if (isTemplateStringsArray(first)) {
-                return conn.query(new DBQuery(first, rest), true);
+                return conn.query(new DBQuery(first, rest));
             }
             else if (typeof first === 'string' && rest.length >= 1 && typeof rest[0] === 'object' /* Params required! */) {
                 const batches = rest as Params[];
@@ -305,7 +307,7 @@ export abstract class DatabaseURI extends URI {
                     return invalidCharacter;
                 });
 
-                return conn.query(new DBQuery(query.split(invalidCharacter), ...values), true);
+                return conn.query(new DBQuery(query.split(invalidCharacter), ...values));
             }
             else if (isDatabaseTransactionParams(first) && rest.length === 1 && isDBCallback<T>(rest[0])) {
                 return conn.transaction(first, rest[0])
