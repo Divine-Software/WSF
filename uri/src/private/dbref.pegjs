@@ -1,9 +1,8 @@
-dbreference = table:table columns:('?' columns? ('?' scope? ('?' filter? ('?' params? )? )? )? )?
-              { return { table, columns: columns?.[1], scope: columns?.[2]?.[1], filter: columns?.[2]?.[2]?.[1], params: columns?.[2]?.[2]?.[2]?.[1] } }
-// dbreference = table:table columns:('(' columns ')')? scope:(';' scope)? filter:('?' filter )? params:params?
-//               { return { table, columns: columns?.[1], scope: scope?.[1], filter: filter?.[1], params: params } }
+dbreference = table:table keys:('[' keys ']')? columns:('(' columns ')')? scope:(';' scope)? filter:('?' filter )? params:params?
+              { return { table, keys: keys?.[1], columns: columns?.[1], scope: scope?.[1], filter: filter?.[1], params: params } }
 
 table       = table_path
+keys        = column_list
 columns     = column_list
 scope       = $('scalar' / 'one' / 'unique' / 'all')
 filter      = expr
@@ -17,11 +16,10 @@ expr_ops    = 'lt' / 'le' / 'eq' / 'ne' / 'ge' / 'gt'
 
 table_path  = head:word tail:('/' word)*                           { return [ head, ...tail.map((t: string[]) => t[1]) ] }
 column_list = head:word tail:(',' word)*                           { return [ head, ...tail.map((t: string[]) => t[1]) ] }
-param_list  = head:param tail:(',' param)*                         { return Object.fromEntries([ head, ...tail.map((t: object[]) => t[1]) ]) }
-// param_list  = params:('&' param)+                                  { return Object.fromEntries(params.map((t: object[]) => t[1])) }
+param_list  = params:('&' param)+                                  { return Object.fromEntries(params.map((t: object[]) => t[1])) }
 
 param       = key:param_key '=' value:word                         { return [ key, value ] }
-param_key   = 'offset' / 'count' / 'sort' / 'key'
+param_key   = 'offset' / 'count' / 'sort'
 
 word        = word:$character+                                     { return decodeURIComponent(word) }
 character   = unreserved / special / encoded

@@ -57,12 +57,12 @@ namespace DBReference {
         offset?: string;
         count?:  string;
         sort?:   string;
-        key?:    string;
     }
 }
 
 export class DBReference {
     table:    string[];
+    keys?:    string[];
     columns?: string[];
     scope?:   DBReference.Scope;
     filter?:  DBReference.Filter;
@@ -73,6 +73,7 @@ export class DBReference {
             const parts = parseDBRef(dbURI.hash.substr(1));
 
             this.table   = parts.table;
+            this.keys    = parts.keys;
             this.columns = parts.columns ?? undefined;
             this.scope   = parts.scope   ?? undefined;
             this.filter  = parts.filter  ?? undefined;
@@ -87,19 +88,23 @@ export class DBReference {
         return new IOError(message, err, this.dbURI);
     }
 
-    protected quoted(ddl: string): DBQuery {
-        return q.quoted(ddl);
+    protected quote(ddl: string): DBQuery {
+        return q.quote(ddl);
     }
 
     protected getTable(): DBQuery {
-        return q.join('.', this.table.map((t) => this.quoted(t)));
+        return q.join('.', this.table.map((t) => this.quote(t)));
+    }
+
+    protected getKeys(): DBQuery {
+        return q.join(',', this.keys?.map((c) => this.quote(c)) ?? [])
     }
 
     protected getColumns(defaultColumns?: string[]): DBQuery {
         const columns = this.columns ?? defaultColumns;
 
         return columns
-            ? q.join(',', columns.map((c) => this.quoted(c)))
+            ? q.join(',', columns.map((c) => this.quote(c)))
             : q`*`;
     }
 
@@ -108,12 +113,12 @@ export class DBReference {
             case 'and':  return q.join('and', filter.value.map((f) => q`(${this.getFilter(f)})`));
             case 'or':   return q.join('or',  filter.value.map((f) => q`(${this.getFilter(f)})`));
             case 'not':  return q`not (${this.getFilter(filter.value)})`;
-            case 'lt':   return q`${this.quoted(filter.column)} < ${filter.value}`;
-            case 'le':   return q`${this.quoted(filter.column)} <= ${filter.value}`;
-            case 'eq':   return q`${this.quoted(filter.column)} = ${filter.value}`;
-            case 'ne':   return q`${this.quoted(filter.column)} <> ${filter.value}`;
-            case 'ge':   return q`${this.quoted(filter.column)} >= ${filter.value}`;
-            case 'gt':   return q`${this.quoted(filter.column)} > ${filter.value}`;
+            case 'lt':   return q`${this.quote(filter.column)} < ${filter.value}`;
+            case 'le':   return q`${this.quote(filter.column)} <= ${filter.value}`;
+            case 'eq':   return q`${this.quote(filter.column)} = ${filter.value}`;
+            case 'ne':   return q`${this.quote(filter.column)} <> ${filter.value}`;
+            case 'ge':   return q`${this.quote(filter.column)} >= ${filter.value}`;
+            case 'gt':   return q`${this.quote(filter.column)} > ${filter.value}`;
         }
 
         throw this.makeIOError(`Unexpected filter operator ${filter['op']}`);
@@ -149,7 +154,7 @@ export class DBReference {
     protected getOrderClause(): DBQuery {
         const [ column, desc ] = this.getSortOrder();
 
-        return column ? q`order by ${this.quoted(column)} ${desc ? q`desc` : q``}` : q``;
+        return column ? q`order by ${this.quote(column)} ${desc ? q`desc` : q``}` : q``;
     }
 
     protected getPagingClause(): DBQuery {
@@ -161,11 +166,11 @@ export class DBReference {
         }
 
     protected checkLoadArguments(): void {
-        if (this.scope === 'scalar' && this.columns?.length !== 1) {
-            throw this.makeIOError(`One and only one column must be specified when scope 'scalar' is used`);
+        if (this.keys) {
+            throw this.makeIOError(`No primary keys may me be specified for this query`);
         }
-        else if (this.params.key) {
-            throw this.makeIOError(`Parameter 'key' cannot be used for this query`);
+        else if (this.scope === 'scalar' && this.columns?.length !== 1) {
+            throw this.makeIOError(`One and only one column must be specified when scope 'scalar' is used`);
         }
     }
 
@@ -180,22 +185,21 @@ ${this.getOrderClause()} \
 ${this.getPagingClause()}`;
     }
 
-    protected checkSaveArguments(value: unknown): [ scope: DBReference.Scope, value: object[], key: string ] {
+    protected checkSaveArguments(value: unknown): [ scope: DBReference.Scope, value: object[] ] {
         const [ scope, objects ] = this.checkSaveAndAppendArguments(value);
-        const key = this.params.key
 
-        if (this.params.count || this.params.offset || this.params.sort) {
-            throw this.makeIOError(`Parameters 'count', 'offset' or 'sort' may be specified for this query`);
+        if (!this.keys) {
+            throw this.makeIOError(`Primary keys is required for this query`);
         }
-        else if (!key) {
-            throw this.makeIOError(`Parameter 'key' is required for this query`);
+        else if (Object.keys(this.params).length) {
+            throw this.makeIOError(`No parameters may be specified for this query`);
         }
 
-        return [ scope, objects, key ];
+        return [ scope, objects ];
     }
 
     public getSaveQuery(value: unknown): DBQuery {
-        const [ _scope, _objects, _key ] = this.checkSaveArguments(value);
+        const [ _scope, _objects ] = this.checkSaveArguments(value);
 
         throw this.makeIOError(`Operation is not supported for this database`);
     }
@@ -203,11 +207,14 @@ ${this.getPagingClause()}`;
     protected checkAppendArguments(value: unknown): [ scope: DBReference.Scope, objects: object[] ] {
         const [ scope, objects ] = this.checkSaveAndAppendArguments(value);
 
-        if (Object.keys(this.params).length) {
+        if (this.keys) {
+            throw this.makeIOError(`No primary keys may me be specified for this query`);
+        }
+        else if (Object.keys(this.params).length) {
             throw this.makeIOError(`No parameters may be specified for this query`);
         }
 
-        return [ scope, objects];
+        return [ scope, objects ];
     }
 
     private checkSaveAndAppendArguments(value: unknown): [ scope: DBReference.Scope, objects: object[] ] {
@@ -282,7 +289,10 @@ ${this.getPagingClause()}`;
             throw this.makeIOError(`Unsupported scope '${scope}`);
         }
 
-        if (Object.keys(this.params).length) {
+        if (this.keys) {
+            throw this.makeIOError(`No primary keys may me be specified for this query`);
+        }
+        else if (Object.keys(this.params).length) {
             throw this.makeIOError(`No parameters may be specified for this query`);
         }
 
@@ -296,7 +306,10 @@ ${this.getPagingClause()}`;
     }
 
     public checkRemoveArguments(): void {
-        if (this.columns) {
+        if (this.keys) {
+            throw this.makeIOError(`No primary keys may me be specified for this query`);
+        }
+        else if (this.columns) {
             throw this.makeIOError(`No columns may be specified for this query`);
         }
         else if (this.scope && this.scope !== 'all') {

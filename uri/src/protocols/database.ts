@@ -10,7 +10,7 @@ export function q(query: TemplateStringsArray, ...params: unknown[]): DBQuery {
     return new DBQuery(query, params);
 }
 
-q.quoted = function(ident: string): DBQuery {
+q.quote = function(ident: string): DBQuery {
     return q.raw(`"${ident.replace(/"/g, '""')}"`);
 }
 
@@ -22,7 +22,7 @@ q.join = function(delimiter: string, queries: DBQuery[]): DBQuery {
     return new DBQuery([...queries.map((_, i) => i === 0 ? '' : delimiter), ''], queries);
 }
 
-q.values = function(data: object | object[], columns?: string[], quoted = q.quoted): DBQuery {
+q.values = function(data: object | object[], columns?: string[], quote = q.quote): DBQuery {
     const params = Array.isArray(data) ? data : [ data ];
     const values = (param: any): DBQuery => {
         return q.join(',', columns!.map((column) => q`${param[column]}`))
@@ -30,13 +30,13 @@ q.values = function(data: object | object[], columns?: string[], quoted = q.quot
 
     columns ??= Object.keys(params[0]);
 
-    return q`(${q.join(',', columns.map((column) => quoted(column)))}) values ${q.join(',', params.map((object) => q`(${values(object)})`))}`
+    return q`(${q.join(',', columns.map((column) => quote(column)))}) values ${q.join(',', params.map((object) => q`(${values(object)})`))}`
 }
 
-q.assign = function(data: object, columns?: string[], quoted = q.quoted): DBQuery {
+q.assign = function(data: object, columns?: string[], quote = q.quote): DBQuery {
     columns ??= Object.keys(data);
 
-    return q.join(',', columns.map((column) => q`${quoted(column)} = ${(data as any)[column]}`));
+    return q.join(',', columns.map((column) => q`${quote(column)} = ${(data as any)[column]}`));
 }
 
 export interface DBParamsSelector extends ParamsSelector {
