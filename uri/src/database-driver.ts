@@ -57,6 +57,7 @@ namespace DBReference {
         offset?: string;
         count?:  string;
         sort?:   string;
+        lock?:   string;
     }
 }
 
@@ -138,10 +139,10 @@ export class DBReference {
         const offset = typeof this.params.offset === 'string' ? Number(this.params.offset) : undefined;
 
         if (count !== undefined && isNaN(count)) {
-            throw this.makeIOError(`Invalid count param: ${count}`);
+            throw this.makeIOError(`Invalid 'count' param: ${count}`);
         }
         else if (offset !== undefined && isNaN(offset)) {
-            throw this.makeIOError(`Invalid offset param: ${offset}`);
+            throw this.makeIOError(`Invalid 'offset' param: ${offset}`);
         }
 
         return [ count, offset ];
@@ -165,6 +166,23 @@ export class DBReference {
             : q``;
         }
 
+    protected getLockClause(): DBQuery {
+        const lock = this.params.lock;
+
+        if (lock === 'write') {
+            return q`for update`;
+        }
+        else if (lock === 'read') {
+            return q`for share`;
+        }
+        else if (lock === undefined) {
+            return q``;
+        }
+        else {
+            throw this.makeIOError(`Invalid 'lock' param: ${lock}: must be 'read' or 'write'`);
+        }
+    }
+
     protected checkLoadArguments(): void {
         if (this.keys) {
             throw this.makeIOError(`No primary keys may me be specified for this query`);
@@ -174,7 +192,7 @@ export class DBReference {
         }
     }
 
-    public getLoadQuery(): DBQuery {
+    getLoadQuery(): DBQuery {
         this.checkLoadArguments();
 
         return q`\
@@ -182,7 +200,9 @@ select ${this.scope === 'unique' ? q`distinct` : q``} ${this.getColumns()} \
 from ${this.getTable()} \
 ${this.getWhereClause()} \
 ${this.getOrderClause()} \
-${this.getPagingClause()}`;
+${this.getPagingClause()} \
+${this.getLockClause()} \
+`;
     }
 
     protected checkSaveArguments(value: unknown): [ scope: DBReference.Scope, value: object[] ] {
@@ -198,7 +218,7 @@ ${this.getPagingClause()}`;
         return [ scope, objects ];
     }
 
-    public getSaveQuery(value: unknown): DBQuery {
+    getSaveQuery(value: unknown): DBQuery {
         const [ _scope, _objects ] = this.checkSaveArguments(value);
 
         throw this.makeIOError(`Operation is not supported for this database`);
@@ -259,7 +279,7 @@ ${this.getPagingClause()}`;
         return [ scope, objects ];
     }
 
-    public getAppendQuery(value: unknown): DBQuery {
+    getAppendQuery(value: unknown): DBQuery {
         const [ _scope, objects ] = this.checkAppendArguments(value);
 
         return q`insert into ${this.getTable()} ${q.values(objects, this.columns)}`
@@ -299,13 +319,13 @@ ${this.getPagingClause()}`;
         return [ scope, object ];
     }
 
-    public getModifyQuery(value: unknown): DBQuery {
+    getModifyQuery(value: unknown): DBQuery {
         const [ _scope, object ] = this.checkModifyArguments(value);
 
         return q`update ${this.getTable()} set ${q.assign(object, this.columns)} ${this.getWhereClause()}`;
     }
 
-    public checkRemoveArguments(): void {
+    checkRemoveArguments(): void {
         if (this.keys) {
             throw this.makeIOError(`No primary keys may me be specified for this query`);
         }
@@ -320,7 +340,7 @@ ${this.getPagingClause()}`;
         }
     }
 
-    public getRemoveQuery(): DBQuery {
+    getRemoveQuery(): DBQuery {
         this.checkRemoveArguments();
 
         return q`delete from ${this.getTable()} ${this.getWhereClause()}`;

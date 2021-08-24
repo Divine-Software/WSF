@@ -3,7 +3,6 @@ import { Client, ClientConfig, FieldDef, QueryArrayResult, types } from 'pg';
 import { URL } from 'url';
 
 const parseBigIntArray = types.getTypeParser(1016);
-const noColumnInfo = Object.freeze({});
 
 type PropTypeMap<Obj, PropType> = {
     [K in { [P in keyof Obj]: Required<Obj>[P] extends PropType ? P : never }[keyof Obj] ]: true
@@ -63,7 +62,6 @@ class PGDatabaseConnection implements DBDriver.DBConnection {
     private crdb = false;
     private tlevel = 0;
     private savepoint = 0;
-    private columnInfoCache: { [key: string]: Omit<DBColumnInfo, 'label'> | undefined } = {};
 
     constructor(private dbURI: DatabaseURI, config: ClientConfig) {
         this.client = new Client(config);
@@ -159,66 +157,6 @@ class PGDatabaseConnection implements DBDriver.DBConnection {
             this.tlevel--;
         }
     }
-
-    private async getColumnInfo(fields: FieldDef[], withColumnInfo: boolean): Promise<DBColumnInfo[]> {
-        const result = fields.map((field) => {
-            // By including the datatype props in the key, the cache will kind of invalidate automatically on schema changes
-            const key = `${field.tableID}:${field.columnID}:${field.dataTypeID}:${field.dataTypeSize}:${field.dataTypeModifier}`;
-            return { key, field, label: field.name, info: this.columnInfoCache[key] };
-        });
-
-        const missingTables = [...new Set(result.filter((r) => withColumnInfo && !r.info &&  (r.field.tableID && r.field.columnID)).map((r) => r.field.tableID))];
-        const missingColDTs = [...new Set(result.filter((r) => withColumnInfo && !r.info && !(r.field.tableID && r.field.columnID)).map((r) => r.field.dataTypeID))];
-
-        if (missingTables.length) {
-            const colInfo = await this.query<DBColumnInfo>(q`
-                select c.*, concat_ws(':', cast(attrelid as text), cast(attnum as text), cast(atttypid as text), cast(attlen as text), cast(atttypmod as text) ) as _key
-                from  pg_catalog.pg_attribute    as pga
-                inner join pg_catalog.pg_class      pgc on pgc.oid = pga.attrelid
-                inner join pg_catalog.pg_namespace  pgn on pgn.oid = pgc.relnamespace
-                inner join information_schema.columns c on c.table_schema = pgn.nspname and c.table_name = pgc.relname and c.column_name = pga.attname
-                where ${q.join('or', missingTables.map((t) => q`(pga.attrelid = ${t})`))}
-            `);
-
-            for (const ci of colInfo) {
-                let key: string | undefined = undefined;
-
-                for (const k of (Object.keys(ci) as (keyof DBColumnInfo)[])) {
-                    if (k as string === '_key') {
-                        key = ci[k] as string;
-                        delete ci[k];
-                    }
-                    else if (ci[k] === null || ci[k] === undefined) {
-                        delete ci[k];
-                    }
-                    else if (numericColInfoProps[k]) {
-                        (ci[k] as any) = Number(ci[k]);
-                    }
-                    else if (booleanColInfoProps[k]) {
-                        (ci[k] as any) = (ci[k] === 'YES');
-                    }
-                }
-
-                if (key) {
-                    this.columnInfoCache[key] = ci;
-                }
-            }
-        }
-
-        if (missingColDTs.length) {
-            const dtInfo = await this.query<{ _key: string, typname: string }>(q`
-                select typname, concat_ws(':', '0', '0', cast(oid as text), cast(typlen as text), cast(typtypmod as text)) as _key
-                from pg_catalog.pg_type t
-                where ${q.join('or', missingColDTs.map((t) => q`(oid = ${t})`))}
-            `);
-
-            for (const dt of dtInfo) {
-                this.columnInfoCache[dt._key] = { udt_name: dt.typname };
-            }
-        }
-
-        return result.map((r) => ({ label: r.label, ...(this.columnInfoCache[r.key] ?? noColumnInfo) }));
-    }
 }
 
 interface KeyedInformationSchema extends Omit<DBColumnInfo, 'label'> {
@@ -300,6 +238,10 @@ export class PGReference extends DBDriver.DBReference {
 insert into ${this.getTable()} as _dst_ ${q.values(objects, this.columns)} \
 on conflict (${this.getKeys()}) do update set ${
     q.join(',', columns.map((column) => q`${q.quote(column)} = "excluded".${q.quote(column)}`))
-}`;
+} returning *`;
+    }
+
+    getAppendQuery(value: unknown): DBQuery {
+        return q`${super.getAppendQuery(value)} returning *`;
     }
 }
