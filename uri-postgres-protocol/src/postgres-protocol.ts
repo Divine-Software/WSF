@@ -1,6 +1,6 @@
 import { WWWAuthenticate } from '@divine/headers';
 import { BasicAuthScheme, DatabaseURI, URI } from '@divine/uri';
-import { PGConnectionPool, PGReference } from './private/connection';
+import { PGConnectionPool, PGReference } from './private/postgres-impl';
 
 export class PostgresURI extends DatabaseURI {
     protected _createDBReference(): PGReference {
