@@ -1,15 +1,20 @@
+NODE_MODULES	= node_modules/.modules.yaml $(shell awk '/^ *-/ { print $$2 "/node_modules" }' pnpm-workspace.yaml)
+
 all:	build
 
-prepare:
-	yarn
+prepare:	$(NODE_MODULES)
+
+$(NODE_MODULES):package.json */package.json pnpm-lock.yaml pnpm-workspace.yaml .npmrc
+	pnpm install --frozen-lockfile
+	touch $(NODE_MODULES)
 
 build::	prepare
-	yarn run tsc --build
+	pnpm exec tsc --build --verbose
 
 docs::	build
 
 test::	build
-	yarn run jest
+	pnpm exec jest
 
 clean::
 	rm -rf coverage
