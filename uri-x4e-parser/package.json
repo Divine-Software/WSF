@@ -21,14 +21,16 @@
     "collectCoverage": true
   },
   "peerDependencies": {
-    "@divine/uri": "^0.3.0"
+    "@divine/uri": "workspace:^"
   },
   "dependencies": {
-    "@divine/x4e": "^0.3.0",
+    "@divine/x4e": "workspace:^",
     "tslib": "^2.1.0"
   },
   "devDependencies": {
-    "@types/node": "^12"
+    "@types/node": "^12",
+    "@types/xmldom": "^0.1.30",
+    "@divine/uri": "workspace:^"
   },
   "engines": {
     "node": ">= 12.17.0"

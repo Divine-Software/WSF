@@ -5,17 +5,17 @@ BASENAME	:= $(notdir $(NAME))
 all:		build
 
 prepare:
-	yarn
+	$(MAKE) -C .. $@
 
 build:		prepare
-	yarn run tsc --build
+	pnpm exec tsc --build
 
 docs:	build
 	rm -rf ../docs/$(BASENAME)
-	yarn run typedoc --out ../docs/$(BASENAME) src/index.ts
+	pnpm exec typedoc --out ../docs/$(BASENAME) src/index.ts
 
 test:		build
-	yarn run jest --passWithNoTests
+	pnpm exec jest --passWithNoTests
 
 clean:
 	rm -rf build coverage
@@ -26,6 +26,6 @@ distclean:	clean
 publish:	distclean build test
 	@[[ -z "$$(git status --porcelain)" ]] || (git status; false)
 	git tag -s $(BASENAME)-v$(VERSION) -m "$(NAME) v$(VERSION)"
-	yarn publish --non-interactive --access public
+	pnpm publish --access public
 
 .PHONY:		all prepare build docs test clean distclean publish

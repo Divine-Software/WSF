@@ -21,7 +21,8 @@
     "collectCoverage": true
   },
   "peerDependencies": {
-    "@divine/uri": "^0.4.0"
+    "@divine/headers": "workspace:^",
+    "@divine/uri": "workspace:^"
   },
   "dependencies": {
     "pg": "^8.6.0",
@@ -29,7 +30,9 @@
   },
   "devDependencies": {
     "@types/node": "^14",
-    "@types/pg": "^7.14.11"
+    "@types/pg": "^7.14.11",
+    "@divine/headers": "workspace:^",
+    "@divine/uri": "workspace:^"
   },
   "engines": {
     "node": ">= 12.17.0"

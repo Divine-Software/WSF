@@ -1,4 +1,4 @@
 export * from './postgres-protocol';
 
 // Register protocol
-import './postgres'
+import './postgres-protocol'

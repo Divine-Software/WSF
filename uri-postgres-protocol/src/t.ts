@@ -1,6 +1,8 @@
 import { DatabaseURI, FIELDS, URI } from '@divine/uri'
 import { inspect } from 'util';
 
+import '../..'
+
 inspect.defaultOptions.depth = 10;
 
 const db = new URI('pg://root@localhost:26257/leviticus') as DatabaseURI;

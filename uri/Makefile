@@ -5,20 +5,20 @@ BASENAME	:= $(notdir $(NAME))
 all:		build
 
 prepare:
-	yarn
+	$(MAKE) -C .. $@
 
-build:		prepare	src/private/dbref.ts
-	yarn run tsc --build
+build:		prepare src/private/dbref.ts
+	pnpm exec tsc --build
 
 src/private/dbref.ts:	src/private/dbref.pegjs
-	yarn run tspegjs $<
+	pnpm exec tspegjs $<
 
 docs:	build
 	rm -rf ../docs/$(BASENAME)
-	yarn run typedoc --out ../docs/$(BASENAME) src/index.ts
+	pnpm exec typedoc --out ../docs/$(BASENAME) src/index.ts
 
 test:		build
-	yarn run jest
+	pnpm exec jest
 
 clean:
 	rm -rf build coverage
@@ -29,6 +29,6 @@ distclean:	clean
 publish:	distclean build test
 	@[[ -z "$$(git status --porcelain)" ]] || (git status; false)
 	git tag -s $(BASENAME)-v$(VERSION) -m "$(NAME) v$(VERSION)"
-	yarn publish --non-interactive --access public
+	pnpm publish --access public
 
 .PHONY:		all prepare build docs test clean distclean publish

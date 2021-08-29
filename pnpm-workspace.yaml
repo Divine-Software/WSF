@@ -1,0 +1,8 @@
+packages:
+  - headers
+  - uri-image-parser
+  - uri-postgres-protocol
+  - uri-x4e-parser
+  - uri
+  - web-service
+  - x4e

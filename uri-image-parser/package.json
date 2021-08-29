@@ -21,14 +21,15 @@
     "collectCoverage": true
   },
   "peerDependencies": {
-    "@divine/uri": "^0.3.0"
+    "@divine/uri": "workspace:^"
   },
   "dependencies": {
     "canvas": "^2.6.1",
     "tslib": "^2.1.0"
   },
   "devDependencies": {
-    "@types/node": "^12"
+    "@types/node": "^12",
+    "@divine/uri": "workspace:^"
   },
   "engines": {
     "node": ">= 12.17.0"
