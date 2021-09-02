@@ -18,11 +18,17 @@ export class FileURI extends URI {
     constructor(uri: URI) {
         super(uri);
 
-        if ((this.hostname !== '' && this.hostname !== 'localhost') || this.port !== '' || this.search !== '' || this.hash !== '') {
-            throw new TypeError(`URI ${this}: Host/port/query/fragment parts not allowed`);
+        if (this.hostname !== '' && this.hostname.toLowerCase() !== 'localhost' || this.port !== '') {
+            throw new TypeError(`URI ${this}: Host parts not allowed`);
+        }
+        else if (this.search !== '') {
+            throw new TypeError(`URI ${this}: Query parts not allowed`);
+        }
+        else if (this.hash !== '') {
+            throw new TypeError(`URI ${this}: Fragment parts not allowed`);
         }
         else if (/%2F/i.test(this.pathname) /* No encoded slashes */) {
-            throw new TypeError(`URI ${this}: Path invalid`);
+            throw new TypeError(`URI ${this}: Path must not contain encoded slashes`);
         }
 
         this._path = normalize(decodeURIComponent(this.pathname));

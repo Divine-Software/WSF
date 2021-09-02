@@ -1,13 +1,13 @@
 import { WWWAuthenticate } from '@divine/headers';
-import { BasicAuthScheme, DatabaseURI, URI } from '@divine/uri';
+import { BasicAuthScheme, DatabaseURI, DBDriver, URI } from '@divine/uri';
 import { PGConnectionPool, PGReference } from './private/postgres-impl';
 
 export class PostgresURI extends DatabaseURI {
-    protected _createDBReference(): PGReference {
+    protected _createDBReference(): DBDriver.DBReference {
         return new PGReference(this);
     }
 
-    protected async _createDatabaseConnectionPool(): Promise<PGConnectionPool> {
+    protected async _createDBConnectionPool(): Promise<DBDriver.DBConnectionPool> {
         return new PGConnectionPool(this, async () => {
             const hdrs = Object.entries(this._getBestSelector(this.selectors.header)?.headers ?? {});
             const auth = await this._getAuthorization({ method: 'postgres', url: this, headers: hdrs }, undefined, WWWAuthenticate.create('basic'));

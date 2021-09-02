@@ -17,14 +17,21 @@ export abstract class DBConnectionPool {
     constructor(protected dbURI: DatabaseURI) {
     }
 
-    protected abstract createDBConnection(): DBConnection | Promise<DBConnection>;
+    protected abstract _createDBConnection(): DBConnection | Promise<DBConnection>;
 
     async session<T>(cb: (connection: DBConnection) => Promise<T>): Promise<T> {
         let tls = als.getStore();
 
         if (!tls) {
-            tls = { ref: 0, conn: await this.createDBConnection() };
-            await tls.conn.open();
+            tls = { ref: 0, conn: await this._createDBConnection() };
+
+            try {
+                await tls.conn.open();
+            }
+            catch (err) {
+                await tls.conn.close().catch(() => 0);
+                throw err;
+            }
 
             const actual = cb;
             // @ts-expect-error (@types/node is wrong)

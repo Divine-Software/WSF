@@ -2,6 +2,7 @@ packages:
   - headers
   - uri-image-parser
   - uri-postgres-protocol
+  - uri-sqlite-protocol
   - uri-x4e-parser
   - uri
   - web-service

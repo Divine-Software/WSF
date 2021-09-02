@@ -9,11 +9,11 @@ export {
 } from './xml-utils';
 
 export function parseHTMLFromString(document: string): Document {
-    return parse(document, { treeAdapter: new XMLTreeAdapter() }) as Document;
+    return parse(document, { treeAdapter: new XMLTreeAdapter() }) as unknown as Document;
 }
 
 export function parseHTMLFragmentFromString(fragment: string): DocumentFragment {
-    return parseFragment(fragment, { treeAdapter: new XMLTreeAdapter() }) as DocumentFragment;
+    return parseFragment(fragment, { treeAdapter: new XMLTreeAdapter() }) as unknown as DocumentFragment;
 }
 
 export function serializeHTMLToString(node: Node): string {
@@ -32,7 +32,7 @@ export function serializeHTMLToString(node: Node): string {
         } as unknown as Document;
     }
 
-    return serialize(node, { treeAdapter: new XMLTreeAdapter() });
+    return serialize(node as any, { treeAdapter: new XMLTreeAdapter() });
 }
 
 class XMLTreeAdapter implements AST.TreeAdapter {

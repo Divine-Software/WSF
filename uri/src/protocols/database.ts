@@ -116,12 +116,12 @@ export interface DBColumnInfo {
 }
 
 export class DBError extends IOError {
-    constructor(public status: string, message: string, cause?: Error, data?: object & Metadata) {
+    constructor(public status: string, public state: string, message: string, cause?: Error, data?: object & Metadata) {
         super(message, cause, data);
     }
 
     toString(): string {
-        return `[${this.constructor.name}: ${this.status} ${this.message}]`;
+        return `[${this.constructor.name}: ${this.status}/${this.state} ${this.message}]`;
     }
 }
 
@@ -236,7 +236,7 @@ function withDBMetadata<T extends object>(meta: DBMetadata, value: object): T & 
 
 export abstract class DatabaseURI extends URI {
     protected abstract _createDBReference(): DBReference | Promise<DBReference>;
-    protected abstract _createDatabaseConnectionPool(): DBConnectionPool | Promise<DBConnectionPool>;
+    protected abstract _createDBConnectionPool(): DBConnectionPool | Promise<DBConnectionPool>;
 
     async load<T extends object>(_recvCT?: ContentType | string): Promise<T & DBMetadata> {
         const dbRef  = await this._createDBReference();
@@ -285,7 +285,7 @@ export abstract class DatabaseURI extends URI {
         let states = this._getBestSelector<DBSessionSelector>(this.selectors.session)?.states;
 
         if (!states) {
-            states = { database: await this._createDatabaseConnectionPool() };
+            states = { database: await this._createDBConnectionPool() };
             this.addSelector({ states });
         }
 

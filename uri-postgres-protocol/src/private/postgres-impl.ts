@@ -33,12 +33,12 @@ const booleanColInfoProps: PropTypeMap<DBColumnInfo, boolean> = {
 }
 
 export class PGConnectionPool extends DBDriver.DBConnectionPool {
-    constructor(dbURI: DatabaseURI, private getCredentials: () => Promise<BasicCredentials | undefined>) {
+    constructor(dbURI: DatabaseURI, private _getCredentials: () => Promise<BasicCredentials | undefined>) {
         super(dbURI);
     }
 
-    protected async createDBConnection(): Promise<PGDatabaseConnection> {
-        const creds = await this.getCredentials();
+    protected async _createDBConnection(): Promise<DBDriver.DBConnection> {
+        const creds = await this._getCredentials();
         const dbURL = new URL(this.dbURI.href);
 
         dbURL.username = creds?.identity ?? '';
@@ -57,47 +57,48 @@ export class PGConnectionPool extends DBDriver.DBConnectionPool {
 }
 
 class PGDatabaseConnection implements DBDriver.DBConnection {
-    private client: Client;
-    private version?: string;
-    private crdb = false;
-    private tlevel = 0;
-    private savepoint = 0;
+    private _client: Client;
+    private _version?: string;
+    private _crdb = false;
+    private _tlevel = 0;
+    private _savepoint = 0;
 
-    constructor(private dbURI: DatabaseURI, config: ClientConfig) {
-        this.client = new Client(config);
+    constructor(private _dbURI: DatabaseURI, config: ClientConfig) {
+        this._client = new Client(config);
     }
 
     async open() {
-        await this.client.connect();
+        await this._client.connect();
 
-        this.version = (await this.query<{ version: string }>(q`select version()`))[0]?.version;
-        this.crdb = /^CockroachDB/i.test(this.version);
+        this._version = (await this.query<{ version: string }>(q`select version()`))[0]?.version;
+        this._crdb = /^CockroachDB/i.test(this._version);
     }
 
     async close() {
-        await this.client.end();
+        await this._client.end();
     }
 
     async query<T>(query: DBQuery): Promise<T[] & DBMetadata> {
         const text = query.toString((index) => `$${index + 1}`);
 
         if (query.batches.length > 1) {
-            throw new Error(`Batch queries not supported`);
+            throw new TypeError(`Batch queries not supported`);
         }
 
         try {
-            const rs = await this.client.query({ rowMode: 'array', text, values: query.batches[0] as any[] });
-            const dr = new PGResult(this.dbURI, rs);
+            const b0 = query.batches[0] as unknown[];
+            const rs = await this._client.query({ rowMode: 'array', text, values: b0 });
+            const dr = new PGResult(this._dbURI, rs);
 
             return dr.toObjects([ dr ]);
         }
         catch (err) {
-            throw typeof err.code === 'string' ? new DBError(err.code, 'Query failed', err, query) : err;
+            throw typeof err.code === 'string' ? new DBError(err.code, err.code, 'Query failed', err, query) : err;
         }
     }
 
     async transaction<T>(dtp: DBTransactionParams, cb: () => Promise<T> | T): Promise<T> {
-        const level = this.tlevel++;
+        const level = this._tlevel++;
 
         try {
             if (level === 0) {
@@ -105,11 +106,11 @@ class PGDatabaseConnection implements DBDriver.DBConnection {
                 const backoff = dtp.backoff ?? ((count) => (2 ** count - Math.random()) * 100);
 
                 for (let retry = 0; /* Keep going */; ++retry) {
-                    if (!this.crdb || retry === 0) {
+                    if (!this._crdb || retry === 0) {
                         await this.query(dtp.begin ?? q`begin`);
                     }
 
-                    if (this.crdb && retry === 0) {
+                    if (this._crdb && retry === 0) {
                         await this.query(q`savepoint cockroach_restart`);
                     }
 
@@ -120,7 +121,7 @@ class PGDatabaseConnection implements DBDriver.DBConnection {
                     }
                     catch (err) {
                         if (err instanceof DBError && err.status === '40001' /* SERIALIZATION_FAILURE */ && retry < retries) {
-                            if (this.crdb) {
+                            if (this._crdb) {
                                 await this.query(q`rollback to savepoint cockroach_restart`);
                             }
                             else {
@@ -138,7 +139,7 @@ class PGDatabaseConnection implements DBDriver.DBConnection {
                 }
             }
             else {
-                const savepoint = `_${level}_${this.savepoint++}`;
+                const savepoint = `_${level}_${this._savepoint++}`;
 
                 await this.query(q.raw(`savepoint ${savepoint}`));
 
@@ -154,7 +155,7 @@ class PGDatabaseConnection implements DBDriver.DBConnection {
             }
         }
         finally {
-            this.tlevel--;
+            this._tlevel--;
         }
     }
 }
