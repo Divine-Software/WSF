@@ -1,6 +1,6 @@
 import { ContentType } from '@divine/headers';
 import { SecureContextOptions } from 'tls';
-import { DBConnectionPool, DBReference } from '../database-driver';
+import { DBConnection, DBConnectionPool } from '../database-driver';
 import { toObject } from '../parsers';
 import { DBCallback, DBSessionSelector, invalidCharacter, isDatabaseTransactionParams, isDBCallback } from '../private/database-utils';
 import { BasicTypes, esxxEncoder, isTemplateStringsArray, Params } from '../private/utils';
@@ -235,45 +235,54 @@ function withDBMetadata<T extends object>(meta: DBMetadata, value: object): T & 
 }
 
 export abstract class DatabaseURI extends URI {
-    protected abstract _createDBReference(): DBReference | Promise<DBReference>;
     protected abstract _createDBConnectionPool(): DBConnectionPool | Promise<DBConnectionPool>;
 
-    async load<T extends object>(_recvCT?: ContentType | string): Promise<T & DBMetadata> {
-        const dbRef  = await this._createDBReference();
-        const result = await this.query(dbRef.getLoadQuery());
+    load<T extends object>(_recvCT?: ContentType | string): Promise<T & DBMetadata> {
+        return this._session(async (conn) => {
+            const dbRef  = await conn.reference(this);
+            const result = await conn.query(dbRef.getLoadQuery());
 
-        if (dbRef.scope === 'scalar' || dbRef.scope === 'one') {
-            if (result.length === 0) {
-                return withDBMetadata(result, Object(VOID));
-            }
-            else if (result.length === 1) {
-                return dbRef.scope === 'scalar'
-                    ? withDBMetadata<T>(result, toObject(result[FIELDS][0][0][0]))
-                    : withDBMetadata<T>(result, result[0]);
+            if (dbRef.scope === 'scalar' || dbRef.scope === 'one') {
+                if (result.length === 0) {
+                    return withDBMetadata(result, Object(VOID));
+                }
+                else if (result.length === 1) {
+                    return dbRef.scope === 'scalar'
+                        ? withDBMetadata<T>(result, toObject(result[FIELDS][0][0][0]))
+                        : withDBMetadata<T>(result, result[0]);
+                }
+                else {
+                    throw new IOError(`Scope ${dbRef.scope} used with a multi-row result set`, undefined, result[FIELDS][0]);
+                }
             }
             else {
-                throw new IOError(`Scope ${dbRef.scope} used with a multi-row result set`, undefined, result[FIELDS][0]);
+                return result as T & DBMetadata;
             }
-        }
-        else {
-            return result as T & DBMetadata;
-        }
+        });
     }
 
-    async save<T extends object>(data: unknown, _sendCT?: ContentType | string, _recvCT?: ContentType | string): Promise<T & DBMetadata> {
-        return await this.query<T>((await this._createDBReference()).getSaveQuery(data));
+    save<T extends object>(data: unknown, _sendCT?: ContentType | string, _recvCT?: ContentType | string): Promise<T & DBMetadata> {
+        return this._session(async (conn) => {
+            return conn.query((await conn.reference(this)).getSaveQuery(data)) as unknown as T & DBMetadata;
+        });
     }
 
-    async append<T extends object>(data: unknown, _sendCT?: ContentType | string, _recvCT?: ContentType | string): Promise<T & DBMetadata> {
-        return await this.query<T>((await this._createDBReference()).getAppendQuery(data));
+    append<T extends object>(data: unknown, _sendCT?: ContentType | string, _recvCT?: ContentType | string): Promise<T & DBMetadata> {
+        return this._session(async (conn) => {
+            return conn.query((await conn.reference(this)).getAppendQuery(data)) as unknown as T & DBMetadata;
+        });
     }
 
-    async modify<T extends object>(data: unknown, _sendCT?: ContentType | string, _recvCT?: ContentType | string): Promise<T & DBMetadata> {
-        return await this.query<T>((await this._createDBReference()).getModifyQuery(data));
+    modify<T extends object>(data: unknown, _sendCT?: ContentType | string, _recvCT?: ContentType | string): Promise<T & DBMetadata> {
+        return this._session(async (conn) => {
+            return conn.query((await conn.reference(this)).getModifyQuery(data)) as unknown as T & DBMetadata;
+        });
     }
 
-    async remove<T extends object>(_recvCT?: ContentType | string): Promise<T & DBMetadata> {
-        return await this.query<T>((await this._createDBReference()).getRemoveQuery());
+    remove<T extends object>(_recvCT?: ContentType | string): Promise<T & DBMetadata> {
+        return this._session(async (conn) => {
+            return conn.query((await conn.reference(this)).getRemoveQuery()) as unknown as T & DBMetadata;
+        });
     }
 
     query<T extends object = object[]>(query: DBQuery): Promise<T & DBMetadata>;
@@ -282,14 +291,7 @@ export abstract class DatabaseURI extends URI {
     query<T>(params: DBTransactionParams, cb: DBCallback<T>): Promise<T>;
     query<T>(cb: DBCallback<T>): Promise<T>;
     async query<T>(first: DBQuery | TemplateStringsArray | string | DBTransactionParams | DBCallback<T>, ...rest: unknown[]): Promise<unknown & Metadata & WithFields<DBResult>> {
-        let states = this._getBestSelector<DBSessionSelector>(this.selectors.session)?.states;
-
-        if (!states) {
-            states = { database: await this._createDBConnectionPool() };
-            this.addSelector({ states });
-        }
-
-        return states.database!.session(async (conn) => {
+        return this._session(async (conn) => {
             if (first instanceof DBQuery && rest.length === 0) {
                 return conn.query(first);
             }
@@ -319,5 +321,16 @@ export abstract class DatabaseURI extends URI {
                 throw new TypeError(`Invalid query() arguments`);
             }
         });
+    }
+
+    private async _session<T>(cb: (connection: DBConnection) => Promise<T>): Promise<T> {
+        let states = this._getBestSelector<DBSessionSelector>(this.selectors.session)?.states;
+
+        if (!states) {
+            states = { database: await this._createDBConnectionPool() };
+            this.addSelector({ states });
+        }
+
+        return states.database!.session(cb);
     }
 }

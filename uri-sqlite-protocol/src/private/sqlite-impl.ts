@@ -1,36 +1,7 @@
-import { DatabaseURI, DBColumnInfo, DBDriver, DBError, DBMetadata, DBQuery, DBResult, DBTransactionParams, q, URI } from '@divine/uri';
+import { DatabaseURI, DBColumnInfo, DBDriver, DBError, DBMetadata, DBQuery, DBResult, DBTransactionParams, q } from '@divine/uri';
 import { SqliteError } from 'better-sqlite3';
-import { basename, normalize } from 'path';
 import { Worker } from 'worker_threads';
 import type { ExecuteQueryResult, SQLiteWorkerMessage, SQLiteWorkerResult } from './sqlite-worker';
-
-// type PropTypeMap<Obj, PropType> = {
-//     [K in { [P in keyof Obj]: Required<Obj>[P] extends PropType ? P : never }[keyof Obj] ]: true
-// } & {
-//     [K in { [P in keyof Obj]: Required<Obj>[P] extends PropType ? never : P }[keyof Obj] ]?: never
-// }
-
-// const numericColInfoProps: PropTypeMap<DBColumnInfo, number> = {
-//     ordinal_position:         true,
-//     character_maximum_length: true,
-//     character_octet_length:   true,
-//     numeric_precision:        true,
-//     numeric_precision_radix:  true,
-//     numeric_scale:            true,
-//     datetime_precision:       true,
-//     interval_precision:       true,
-//     maximum_cardinality:      true,
-// }
-
-// const booleanColInfoProps: PropTypeMap<DBColumnInfo, boolean> = {
-//     identity_cycle:      true,
-//     is_generated:        true,
-//     is_hidden:           true,
-//     is_identity:         true,
-//     is_nullable:         true,
-//     is_self_referencing: true,
-//     is_updatable:        true,
-// }
 
 export class SQLiteConnectionPool extends DBDriver.DBConnectionPool {
     constructor(dbURI: DatabaseURI) {
@@ -205,6 +176,10 @@ class SQLiteDatabaseConnection implements DBDriver.DBConnection {
             this._tlevel--;
         }
     }
+
+    reference(dbURI: DatabaseURI): DBDriver.DBReference {
+        return new SQLiteReference(dbURI);
+    }
 }
 
 export class SQLiteResult extends DBResult {
@@ -226,7 +201,7 @@ export class SQLiteResult extends DBResult {
 
 export class SQLiteReference extends DBDriver.DBReference {
     getSaveQuery(value: unknown): DBQuery {
-        const [ _scope, objects ] = this.checkSaveArguments(value);
+        const [ _scope, objects ] = this.checkSaveArguments(value, true);
         const columns = this.columns ?? Object.keys(objects[0]);
 
         return q`\

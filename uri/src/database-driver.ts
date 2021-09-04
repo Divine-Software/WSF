@@ -11,6 +11,7 @@ export interface DBConnection {
     close(): Promise<void>;
     query<T extends object>(query: DBQuery): Promise<T[] & DBMetadata>;
     transaction<T>(dtp: DBTransactionParams, cb: () => Promise<T>): Promise<T>;
+    reference(dbURI: DatabaseURI): DBReference | Promise<DBReference>;
 }
 
 export abstract class DBConnectionPool {
@@ -212,21 +213,21 @@ ${this.getLockClause()} \
 `;
     }
 
-    protected checkSaveArguments(value: unknown): [ scope: DBReference.Scope, value: object[] ] {
+    protected checkSaveArguments(value: unknown, keysRequired: boolean): [ scope: DBReference.Scope, objects: object[], keys?: string[] ] {
         const [ scope, objects ] = this.checkSaveAndAppendArguments(value);
 
-        if (!this.keys) {
+        if (keysRequired && !this.keys) {
             throw this.makeIOError(`Primary keys is required for this query`);
         }
         else if (Object.keys(this.params).length) {
             throw this.makeIOError(`No parameters may be specified for this query`);
         }
 
-        return [ scope, objects ];
+        return [ scope, objects, this.keys ];
     }
 
     getSaveQuery(value: unknown): DBQuery {
-        const [ _scope, _objects ] = this.checkSaveArguments(value);
+        const [ _scope, _objects ] = this.checkSaveArguments(value, false);
 
         throw this.makeIOError(`Operation is not supported for this database`);
     }

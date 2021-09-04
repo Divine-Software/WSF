@@ -19,6 +19,8 @@ const db = new URI('pg://root@localhost:26257/leviticus') as DatabaseURI;
                     console.log(await db.$`#kv;one?(eq,key,9)`.load());
                     await db.$`#kv[key]`.save({ key: 9, value: '["Martin"]'});
                     console.log(await db.$`#kv;one?(eq,key,9)`.load());
+                    await db.$`#kv`.save({ key: 9, value: '["Vilgot"]'});
+                    console.log(await db.$`#kv;one?(eq,key,9)`.load());
                     await db.$`#kv?(eq,key,9)`.modify({ value: '["Martin", "Nina"]'});
                     console.log(await db.$`#kv;one?(eq,key,9)`.load());
                 })

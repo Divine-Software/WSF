@@ -1,5 +1,5 @@
-import { BasicCredentials, DatabaseURI, DBColumnInfo, DBDriver, DBError, DBMetadata, DBQuery, DBResult, DBTransactionParams, q, URI } from '@divine/uri';
-import { Client, ClientConfig, FieldDef, QueryArrayResult, types } from 'pg';
+import { BasicCredentials, DatabaseURI, DBColumnInfo, DBDriver, DBError, DBMetadata, DBQuery, DBResult, DBTransactionParams, q } from '@divine/uri';
+import { Client, ClientConfig, QueryArrayResult, types } from 'pg';
 import { URL } from 'url';
 
 const parseBigIntArray = types.getTypeParser(1016);
@@ -158,6 +158,10 @@ class PGDatabaseConnection implements DBDriver.DBConnection {
             this._tlevel--;
         }
     }
+
+    reference(dbURI: DatabaseURI): DBDriver.DBReference {
+        return new PGReference(dbURI, this._crdb);
+    }
 }
 
 interface KeyedInformationSchema extends Omit<DBColumnInfo, 'label'> {
@@ -231,15 +235,20 @@ export class PGResult extends DBResult {
 }
 
 export class PGReference extends DBDriver.DBReference {
+    constructor(dbURI: DatabaseURI, private isCRDB: boolean) {
+        super(dbURI);
+    }
+
     getSaveQuery(value: unknown): DBQuery {
-        const [ _scope, objects ] = this.checkSaveArguments(value);
+        const [ _scope, objects, keys ] = this.checkSaveArguments(value, !this.isCRDB);
         const columns = this.columns ?? Object.keys(objects[0]);
 
-        return q`\
+        return keys ? q`\
 insert into ${this.getTable()} as _dst_ ${q.values(objects, this.columns)} \
 on conflict (${this.getKeys()}) do update set ${
     q.join(',', columns.map((column) => q`${q.quote(column)} = "excluded".${q.quote(column)}`))
-} returning *`;
+} returning *`
+            : q`upsert into ${this.getTable()} ${q.values(objects, this.columns)} returning *`;
     }
 
     getAppendQuery(value: unknown): DBQuery {

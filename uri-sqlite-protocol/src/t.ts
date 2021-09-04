@@ -5,7 +5,7 @@ import '../..'
 
 inspect.defaultOptions.depth = 10;
 
-const db = new URI('sqlite:leviticus.sql') as DatabaseURI;
+const db = new URI('sqlite:leviticus.db') as DatabaseURI;
 
 (async () => {
     const f = db.query(async () => {
