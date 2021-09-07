@@ -67,7 +67,7 @@ export interface DBColumnInfo {
     table_name?:                string;
     column_name?:               string;
     ordinal_position?:          number;
-    column_default?:            string;
+    column_default?:            unknown;
     is_nullable?:               boolean;
     data_type?:                 string;
     character_maximum_length?:  number;
@@ -195,6 +195,14 @@ export abstract class DBResult extends Array<unknown[]> {
 
     constructor(public readonly columns: DBColumnInfo[], records: unknown[][]) {
         super(records.length);
+
+        for (const c of columns) {
+            for (const k of Object.keys(c) as (keyof typeof c)[]) {
+                if (c[k] === undefined) {
+                    delete c[k];
+                }
+            }
+        }
 
         for (let r = 0, rl = records.length; r < rl; ++r) {
             this[r] = records[r];

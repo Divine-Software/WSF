@@ -35,8 +35,3 @@ import './parsers';
 import './parsers/csv';
 import './parsers/event-stream';
 import './parsers/forms';
-
-// Register all known optional parsers
-try { require('@divine/uri-image-parser')        } catch { /* ignore */ }
-try { require('@divine/uri-x4e-parser')          } catch { /* ignore */ }
-try { require('@divine/uri-postgres-protocol')   } catch { /* ignore */ }

@@ -4,34 +4,6 @@ import { URL } from 'url';
 
 const parseBigIntArray = types.getTypeParser(1016);
 
-type PropTypeMap<Obj, PropType> = {
-    [K in { [P in keyof Obj]: Required<Obj>[P] extends PropType ? P : never }[keyof Obj] ]: true
-} & {
-    [K in { [P in keyof Obj]: Required<Obj>[P] extends PropType ? never : P }[keyof Obj] ]?: never
-}
-
-const numericColInfoProps: PropTypeMap<DBColumnInfo, number> = {
-    ordinal_position:         true,
-    character_maximum_length: true,
-    character_octet_length:   true,
-    numeric_precision:        true,
-    numeric_precision_radix:  true,
-    numeric_scale:            true,
-    datetime_precision:       true,
-    interval_precision:       true,
-    maximum_cardinality:      true,
-}
-
-const booleanColInfoProps: PropTypeMap<DBColumnInfo, boolean> = {
-    identity_cycle:      true,
-    is_generated:        true,
-    is_hidden:           true,
-    is_identity:         true,
-    is_nullable:         true,
-    is_self_referencing: true,
-    is_updatable:        true,
-}
-
 export class PGConnectionPool extends DBDriver.DBConnectionPool {
     constructor(dbURI: DatabaseURI, private _getCredentials: () => Promise<BasicCredentials | undefined>) {
         super(dbURI);
@@ -92,7 +64,7 @@ class PGDatabaseConnection implements DBDriver.DBConnection {
 
             return dr.toObjects([ dr ]);
         }
-        catch (err) {
+        catch (err: any) {
             throw typeof err.code === 'string' ? new DBError(err.code, err.code, 'Query failed', err, query) : err;
         }
     }
@@ -102,8 +74,8 @@ class PGDatabaseConnection implements DBDriver.DBConnection {
 
         try {
             if (level === 0) {
-                const retries = dtp.retries ?? 8;
-                const backoff = dtp.backoff ?? ((count) => (2 ** count - Math.random()) * 100);
+                const retries = dtp.retries ?? DBDriver.DBConnectionPool.defaultRetries;
+                const backoff = dtp.backoff ?? DBDriver.DBConnectionPool.defaultBackoff;
 
                 for (let retry = 0; /* Keep going */; ++retry) {
                     if (!this._crdb || retry === 0) {
@@ -120,19 +92,19 @@ class PGDatabaseConnection implements DBDriver.DBConnection {
                         return result;
                     }
                     catch (err) {
-                        if (err instanceof DBError && err.status === '40001' /* SERIALIZATION_FAILURE */ && retry < retries) {
+                        if (err instanceof DBError && err.state === '40001' /* SERIALIZATION_FAILURE */ && retry < retries) {
                             if (this._crdb) {
-                                await this.query(q`rollback to savepoint cockroach_restart`);
+                                await this.query(q`rollback to savepoint cockroach_restart`).catch(() => { throw err });
                             }
                             else {
-                                await this.query(q`rollback`);
+                                await this.query(q`rollback`).catch(() => { throw err });
                             }
 
                             // Sleep a bit, then retry
                             await new Promise((resolve) => setTimeout(resolve, backoff(retry)));
                         }
                         else {
-                            await this.query(q`rollback`);
+                            await this.query(q`rollback`).catch(() => { throw err });
                             throw err;
                         }
                     }
@@ -149,7 +121,7 @@ class PGDatabaseConnection implements DBDriver.DBConnection {
                     return result;
                 }
                 catch (err) {
-                    await this.query(q.raw(`rollback to savepoint ${savepoint}`));
+                    await this.query(q.raw(`rollback to savepoint ${savepoint}`)).catch(() => { throw err });
                     throw err;
                 }
             }
@@ -169,14 +141,11 @@ interface KeyedInformationSchema extends Omit<DBColumnInfo, 'label'> {
 }
 
 export class PGResult extends DBResult {
-    private _db!: DatabaseURI;
-    private _rs!: QueryArrayResult<unknown[]>;
+    constructor(private _db: DatabaseURI, private _rs: QueryArrayResult<unknown[]>) {
+        super(_rs.fields.map((f) => ({ label: f.name })), _rs.rows);
 
-    constructor(db: DatabaseURI, rs: QueryArrayResult<unknown[]>) {
-        super(rs.fields.map((f) => ({ label: f.name })), rs.rows);
-
-        Object.defineProperty(this, '_db', { enumerable: false, value: db});
-        Object.defineProperty(this, '_rs', { enumerable: false, value: rs});
+        Object.defineProperty(this, '_db', { enumerable: false });
+        Object.defineProperty(this, '_rs', { enumerable: false });
     }
 
     async updateColumnInfo(): Promise<DBColumnInfo[]> {
@@ -195,7 +164,7 @@ export class PGResult extends DBResult {
             `);
 
             for (const ci of colInfo) {
-                for (const k of (Object.keys(ci) as (keyof typeof ci)[])) {
+                for (const k of Object.keys(ci) as (keyof typeof ci)[]) {
                     if (k === '_key') {
                         nfomap[ci._key!] = ci;
                         delete ci._key;
@@ -203,10 +172,10 @@ export class PGResult extends DBResult {
                     else if (ci[k] === null || ci[k] === undefined) {
                         delete ci[k];
                     }
-                    else if (numericColInfoProps[k]) {
+                    else if (DBDriver.numericColInfoProps[k]) {
                         (ci[k] as any) = Number(ci[k]);
                     }
-                    else if (booleanColInfoProps[k]) {
+                    else if (DBDriver.booleanColInfoProps[k]) {
                         (ci[k] as any) = (ci[k] === 'YES');
                     }
                 }

@@ -1,6 +1,6 @@
 import { WWWAuthenticate } from '@divine/headers';
 import { BasicAuthScheme, DatabaseURI, DBDriver, URI } from '@divine/uri';
-import { PGConnectionPool, PGReference } from './private/postgres-impl';
+import { PGConnectionPool } from './private/postgres-impl';
 
 export class PostgresURI extends DatabaseURI {
     protected async _createDBConnectionPool(): Promise<DBDriver.DBConnectionPool> {

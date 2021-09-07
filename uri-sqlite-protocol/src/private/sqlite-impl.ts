@@ -132,8 +132,8 @@ class SQLiteDatabaseConnection implements DBDriver.DBConnection {
 
         try {
             if (level === 0) {
-                const retries = dtp.retries ?? 8;
-                const backoff = dtp.backoff ?? ((count) => (2 ** count - Math.random()) * 100);
+                const retries = dtp.retries ?? DBDriver.DBConnectionPool.defaultRetries;
+                const backoff = dtp.backoff ?? DBDriver.DBConnectionPool.defaultBackoff;
 
                 for (let retry = 0; /* Keep going */; ++retry) {
                     await this.query(dtp.begin ?? q`begin`);
@@ -144,7 +144,7 @@ class SQLiteDatabaseConnection implements DBDriver.DBConnection {
                         return result;
                     }
                     catch (err) {
-                        await this.query(q`rollback`);
+                        await this.query(q`rollback`).catch(() => { throw err });
 
                         if (err instanceof DBError && err.status === 'SQLITE_BUSY' && retry < retries) {
                             // Sleep a bit, then retry
@@ -167,7 +167,7 @@ class SQLiteDatabaseConnection implements DBDriver.DBConnection {
                     return result;
                 }
                 catch (err) {
-                    await this.query(q.raw(`rollback to savepoint ${savepoint}`));
+                    await this.query(q.raw(`rollback to savepoint ${savepoint}`)).catch(() => { throw err });
                     throw err;
                 }
             }

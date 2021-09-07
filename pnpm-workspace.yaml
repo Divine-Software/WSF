@@ -1,6 +1,7 @@
 packages:
   - headers
   - uri-image-parser
+  - uri-mysql-protocol
   - uri-postgres-protocol
   - uri-sqlite-protocol
   - uri-x4e-parser
