@@ -81,9 +81,9 @@ function selectorScore(sel: SelectorBase, key: keyof Selector, value?: string): 
         return 0;
     }
     else if (expected instanceof RegExp) {
-        return expected.test(value) ? 1 : -Infinity;
+        return expected.test(decodeURIComponent(value)) ? 1 : -Infinity;
     }
     else {
-        return String(expected) === value ? 1 : -Infinity;
+        return String(expected) === decodeURIComponent(value) ? 1 : -Infinity;
     }
 }

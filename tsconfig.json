@@ -7,6 +7,7 @@
         { "path": "uri-mysql-protocol" },
         { "path": "uri-postgres-protocol" },
         { "path": "uri-sqlite-protocol" },
+        { "path": "uri-tds-protocol" },
         { "path": "uri-x4e-parser" },
         { "path": "web-service" },
         { "path": "x4e" },

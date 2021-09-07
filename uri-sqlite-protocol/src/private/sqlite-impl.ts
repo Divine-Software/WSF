@@ -163,11 +163,11 @@ class SQLiteDatabaseConnection implements DBDriver.DBConnection {
 
                 try {
                     const result = await cb();
-                    await this.query(q.raw(`release savepoint ${savepoint}`));
+                    await this.query(q.raw(`release ${savepoint}`)).catch(() => 0);
                     return result;
                 }
                 catch (err) {
-                    await this.query(q.raw(`rollback to savepoint ${savepoint}`)).catch(() => { throw err });
+                    await this.query(q.raw(`rollback to ${savepoint}`)).catch(() => 0);
                     throw err;
                 }
             }

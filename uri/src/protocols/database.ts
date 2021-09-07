@@ -223,7 +223,7 @@ export abstract class DBResult extends Array<unknown[]> {
             const d = result[r] = {} as any;
 
             for (let h = 0; h < hl; ++h) {
-                d[this.columns[h].label] = s[h];
+                d[this.columns[h].label || h] = s[h];
             }
         }
 

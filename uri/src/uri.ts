@@ -96,8 +96,8 @@ export class URI extends URL {
 
         if (this.username || this.password) {
             this.addSelector({ credentials: {
-                identity: this.username,
-                secret:   this.password,
+                identity: decodeURIComponent(this.username),
+                secret:   decodeURIComponent(this.password),
             }});
 
             // Always strip credentials from URI for security reasons

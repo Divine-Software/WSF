@@ -4,6 +4,7 @@ packages:
   - uri-mysql-protocol
   - uri-postgres-protocol
   - uri-sqlite-protocol
+  - uri-tds-protocol
   - uri-x4e-parser
   - uri
   - web-service

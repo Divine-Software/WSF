@@ -29,6 +29,7 @@ docs clean distclean::
 	$(MAKE) -C uri-mysql-protocol $@
 	$(MAKE) -C uri-postgres-protocol $@
 	$(MAKE) -C uri-sqlite-protocol $@
+	$(MAKE) -C uri-tds-protocol $@
 	$(MAKE) -C uri-x4e-parser $@
 	$(MAKE) -C web-service $@
 	$(MAKE) -C x4e $@

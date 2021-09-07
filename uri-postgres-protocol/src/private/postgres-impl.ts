@@ -10,13 +10,27 @@ export class PGConnectionPool extends DBDriver.DBConnectionPool {
     }
 
     protected async _createDBConnection(): Promise<DBDriver.DBConnection> {
-        const creds = await this._getCredentials();
-        const dbURL = new URL(this.dbURI.href);
+        return new PGDatabaseConnection(this.dbURI, await this._getCredentials());
+    }
+}
 
-        dbURL.username = creds?.identity ?? '';
-        dbURL.password = creds?.secret ?? '';
+class PGDatabaseConnection implements DBDriver.DBConnection {
+    private _client?: Client;
+    private _version?: string;
+    private _crdb = false;
+    private _tlevel = 0;
+    private _savepoint = 0;
 
-        return new PGDatabaseConnection(this.dbURI, {
+    constructor(private _dbURI: DatabaseURI, private _creds?: BasicCredentials) {
+    }
+
+    async open() {
+        const dbURL = new URL(this._dbURI.href);
+
+        dbURL.username = this._creds?.identity ?? '';
+        dbURL.password = this._creds?.secret ?? '';
+
+        this._client = new Client({
             connectionString: dbURL.href,
             types: {
                 getTypeParser: (id, format) =>
@@ -24,22 +38,7 @@ export class PGConnectionPool extends DBDriver.DBConnectionPool {
                     id === 1016 ? (value: string) => parseBigIntArray(value).map(BigInt) :
                     types.getTypeParser(id, format)
             }
-        });
-    }
-}
-
-class PGDatabaseConnection implements DBDriver.DBConnection {
-    private _client: Client;
-    private _version?: string;
-    private _crdb = false;
-    private _tlevel = 0;
-    private _savepoint = 0;
-
-    constructor(private _dbURI: DatabaseURI, config: ClientConfig) {
-        this._client = new Client(config);
-    }
-
-    async open() {
+        });console.log(this._creds);
         await this._client.connect();
 
         this._version = (await this.query<{ version: string }>(q`select version()`))[0]?.version;
@@ -47,19 +46,21 @@ class PGDatabaseConnection implements DBDriver.DBConnection {
     }
 
     async close() {
-        await this._client.end();
+        await this._client?.end();
+        delete this._client;
     }
 
     async query<T>(query: DBQuery): Promise<T[] & DBMetadata> {
-        const text = query.toString((index) => `$${index + 1}`);
-
-        if (query.batches.length > 1) {
+        if (!this._client) {
+            throw new ReferenceError('Driver not open');
+        }
+        else if (query.batches.length > 1) {
             throw new TypeError(`Batch queries not supported`);
         }
 
         try {
             const b0 = query.batches[0] as unknown[];
-            const rs = await this._client.query({ rowMode: 'array', text, values: b0 });
+            const rs = await this._client.query({ rowMode: 'array', text: query.toString((i) => `$${i + 1}`), values: b0 });
             const dr = new PGResult(this._dbURI, rs);
 
             return dr.toObjects([ dr ]);
@@ -70,6 +71,10 @@ class PGDatabaseConnection implements DBDriver.DBConnection {
     }
 
     async transaction<T>(dtp: DBTransactionParams, cb: () => Promise<T> | T): Promise<T> {
+        if (!this._client) {
+            throw new ReferenceError('Driver not open');
+        }
+
         const level = this._tlevel++;
 
         try {
@@ -94,7 +99,7 @@ class PGDatabaseConnection implements DBDriver.DBConnection {
                     catch (err) {
                         if (err instanceof DBError && err.state === '40001' /* SERIALIZATION_FAILURE */ && retry < retries) {
                             if (this._crdb) {
-                                await this.query(q`rollback to savepoint cockroach_restart`).catch(() => { throw err });
+                                await this.query(q`rollback to cockroach_restart`).catch(() => { throw err });
                             }
                             else {
                                 await this.query(q`rollback`).catch(() => { throw err });
@@ -117,11 +122,11 @@ class PGDatabaseConnection implements DBDriver.DBConnection {
 
                 try {
                     const result = await cb();
-                    await this.query(q.raw(`release savepoint ${savepoint}`));
+                    await this.query(q.raw(`release ${savepoint}`)).catch(() => 0);
                     return result;
                 }
                 catch (err) {
-                    await this.query(q.raw(`rollback to savepoint ${savepoint}`)).catch(() => { throw err });
+                    await this.query(q.raw(`rollback to ${savepoint}`)).catch(() => 0);
                     throw err;
                 }
             }

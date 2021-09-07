@@ -60,9 +60,9 @@ export abstract class DBConnectionPool {
             try {
                 await tls.conn.open();
             }
-            catch (err) {
+            catch (err: any) {
                 await tls.conn.close().catch(() => 0);
-                throw err;
+                throw err instanceof IOError ? err : new IOError('Failed to open new database connection', err, this.dbURI);
             }
 
             const actual = cb;
@@ -78,7 +78,7 @@ export abstract class DBConnectionPool {
             if (--tls.ref === 0) {
                 const conn = tls.conn;
                 tls.conn = null!
-                await conn.close();
+                await conn.close().catch(() => 0);
             }
         }
     }

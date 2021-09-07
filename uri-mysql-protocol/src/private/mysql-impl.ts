@@ -19,7 +19,7 @@ export class MyConnectionPool extends DBDriver.DBConnectionPool {
 }
 
 class MyDatabaseConnection implements DBDriver.DBConnection {
-    private _client!: Connection;
+    private _client?: Connection;
     private _version!: string;
     private _tlevel = 0;
     private _savepoint = 0;
@@ -52,11 +52,15 @@ class MyDatabaseConnection implements DBDriver.DBConnection {
     }
 
     async close() {
-        await this._client.end();
+        await this._client?.end();
+        delete this._client;
     }
 
     async query<T>(query: DBQuery): Promise<T[] & DBMetadata> {
-        if (query.batches.length > 1) {
+        if (!this._client) {
+            throw new ReferenceError('Driver not open');
+        }
+        else if (query.batches.length > 1) {
             throw new TypeError(`Batch queries not supported`);
         }
 
@@ -71,10 +75,10 @@ class MyDatabaseConnection implements DBDriver.DBConnection {
                 return value.toISOString().slice(0, -1); // UTC date without time-zone
             }
             else if (typeof value === 'string') {
-                return this._client.escape(value);
+                return this._client!.escape(value);
             }
             else if (typeof value === 'object') {
-                return this._client.escape(JSON.stringify(value));
+                return this._client!.escape(JSON.stringify(value));
             }
             else {
                 throw new TypeError(`Cannot handle datatype ${typeof value}`);
@@ -95,6 +99,10 @@ class MyDatabaseConnection implements DBDriver.DBConnection {
     }
 
     async transaction<T>(dtp: DBTransactionParams, cb: () => Promise<T> | T): Promise<T> {
+        if (!this._client) {
+            throw new ReferenceError('Driver not open');
+        }
+
         const level = this._tlevel++;
 
         try {
@@ -130,11 +138,11 @@ class MyDatabaseConnection implements DBDriver.DBConnection {
 
                 try {
                     const result = await cb();
-                    await this.query(q.raw(`release savepoint ${savepoint}`));
+                    await this.query(q.raw(`release savepoint ${savepoint}`)).catch(() => 0);
                     return result;
                 }
                 catch (err) {
-                    await this.query(q.raw(`rollback to savepoint ${savepoint}`)).catch(() => { throw err });
+                    await this.query(q.raw(`rollback to savepoint ${savepoint}`)).catch(() => 0);
                     throw err;
                 }
             }

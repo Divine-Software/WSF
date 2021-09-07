@@ -18,7 +18,7 @@ export class FileURI extends URI {
     constructor(uri: URI) {
         super(uri);
 
-        if (this.hostname !== '' && this.hostname.toLowerCase() !== 'localhost' || this.port !== '') {
+        if (this.hostname !== '' && decodeURIComponent(this.hostname).toLowerCase() !== 'localhost' || this.port !== '') {
             throw new TypeError(`URI ${this}: Host parts not allowed`);
         }
         else if (this.search !== '') {
