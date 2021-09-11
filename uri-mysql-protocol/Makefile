@@ -15,7 +15,7 @@ docs:	build
 	pnpm exec typedoc --out ../docs/$(BASENAME) src/index.ts
 
 test:		build
-	pnpm exec jest  --passWithNoTests
+	pnpm exec jest
 
 clean:
 	rm -rf build coverage

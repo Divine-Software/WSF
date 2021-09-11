@@ -1,5 +1,6 @@
 import { BasicCredentials, DatabaseURI, DBColumnInfo, DBDriver, DBError, DBMetadata, DBQuery, DBResult, DBTransactionParams, q } from '@divine/uri';
 import { ColumnMetaData, Connection, Request, TYPES } from 'tedious';
+import { types } from 'util';
 
 export class TDSConnectionPool extends DBDriver.DBConnectionPool {
     constructor(dbURI: DatabaseURI, private _getCredentials: () => Promise<BasicCredentials | undefined>) {
@@ -38,11 +39,12 @@ class TDSDatabaseConnection implements DBDriver.DBConnection {
                     database:     decodeURIComponent(this._dbURI.pathname).substr(1),
                     instanceName: instance.join('\\') || undefined,
                     port:         Number(this._dbURI.port) || undefined,
+                    useUTC:       false,
+                    // debug: { packet: true, data: true, payload: true }
                 }
             })
-            .on('connect', (err) => {
-                err ? reject(err) : resolve(client);
-            });
+            // .on('debug',   (msg) => { console.debug(msg) })
+            .on('connect', (err) => { err ? reject(err) : resolve(client) });
 
             client.connect();
         });
@@ -78,8 +80,19 @@ class TDSDatabaseConnection implements DBDriver.DBConnection {
                     .on('columnMetadata', (ci) => columns = ci)
                     .on('row', (row) => rows.push(row.map((c) => c.value)));
 
-                for (const [i, v] of batch0.entries()) {
-                    request.addParameter(String(i), TYPES.NVarChar, v !== null && typeof v === 'object' ? JSON.stringify(v) : v);
+                for (const [i, _v] of batch0.entries()) {
+                    const v =
+                        _v instanceof Date ? _v :
+                        _v instanceof Uint8Array ? Buffer.from(_v) :
+                        _v !== null && typeof _v === 'object' && !Array.isArray(_v) ? JSON.stringify(_v) :
+                        _v;
+
+                    const t =
+                        _v instanceof Buffer ? TYPES.VarBinary :
+                        _v instanceof Date ? TYPES.DateTimeOffset :
+                        TYPES.NVarChar;
+
+                    request.addParameter(String(i), t, v);
                 }
 
                 this._client!.execSql(request);
@@ -159,12 +172,16 @@ export class TDSResult extends DBResult {
     constructor(private _db: DatabaseURI, private _ci: ColumnMetaData[], rows: unknown[][]) {
         super(_ci.map((ci) => ({ label: ci.colName })), rows);
 
-        // Fixup BigInt
-        for (const row of this) {
-            for (const col in _ci) {
-                if (_ci[col].type.name === 'BigInt') {
-                    row[col] = BigInt(row[col] as any);
-                }
+        // Fixup BigInt, Numeric/Decimal
+        for (let c = 0; c < _ci.length; ++c) {
+            const { colName, type: { name } , dataLength } = _ci[c];
+
+            if (name === 'BigInt' || name === 'IntN' && dataLength === 8) {
+                this.forEach((row) => row[c] = row[c] === null ? null : BigInt(row[c] as any))
+            }
+            else if (name === 'NumericN' || name === 'DecimalN') {
+                console.warn(`${name} data in column "${colName}" may be truncated (see tediousjs/tedious#163)`);
+                this.forEach((row) => row[c] = row[c] === null ? null : String(row[c]));
             }
         }
 

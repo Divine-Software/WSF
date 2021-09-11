@@ -33,7 +33,7 @@ class MyDatabaseConnection implements DBDriver.DBConnection {
             user:              this._creds?.identity,
             password:          this._creds?.secret,
             rowsAsArray:       true,
-            dateStrings:       true,
+            timezone:          '+00:00',
             supportBigNumbers: true,
             bigNumberStrings:  true,
             typeCast:    (field, next) => {
@@ -72,12 +72,15 @@ class MyDatabaseConnection implements DBDriver.DBConnection {
                 return String(value);
             }
             else if (value instanceof Date) {
-                return value.toISOString().slice(0, -1); // UTC date without time-zone
+                return `'${value.toISOString().slice(0, -1)}'`; // UTC date without time-zone
+            }
+            else if (value instanceof Uint8Array) {
+                return `0x${Buffer.from(value).toString('hex')}`;
             }
             else if (typeof value === 'string') {
                 return this._client!.escape(value);
             }
-            else if (typeof value === 'object') {
+            else if (typeof value === 'object' && !Array.isArray(value)) {
                 return this._client!.escape(JSON.stringify(value));
             }
             else {

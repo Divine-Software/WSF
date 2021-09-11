@@ -1,5 +1,5 @@
 import { BasicCredentials, DatabaseURI, DBColumnInfo, DBDriver, DBError, DBMetadata, DBQuery, DBResult, DBTransactionParams, q } from '@divine/uri';
-import { Client, ClientConfig, QueryArrayResult, types } from 'pg';
+import { Client, QueryArrayResult, types } from 'pg';
 import { URL } from 'url';
 
 const parseBigIntArray = types.getTypeParser(1016);
@@ -38,7 +38,8 @@ class PGDatabaseConnection implements DBDriver.DBConnection {
                     id === 1016 ? (value: string) => parseBigIntArray(value).map(BigInt) :
                     types.getTypeParser(id, format)
             }
-        });console.log(this._creds);
+        });
+
         await this._client.connect();
 
         this._version = (await this.query<{ version: string }>(q`select version()`))[0]?.version;

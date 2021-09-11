@@ -67,7 +67,9 @@ parentPort?.on('message', (message: SQLiteWorkerMessage) => {
                 throw new Error(`Database '${database.name}' already open`);
             }
 
-            database = new Database(message.dbPath, message.params);
+            database = new Database(message.dbPath, message.params)
+                .defaultSafeIntegers(true);
+
             sendResult({ type: message.type })
         }
         else if (message.type === 'close') {
@@ -77,6 +79,7 @@ parentPort?.on('message', (message: SQLiteWorkerMessage) => {
 
             database.close();
             database = null;
+
             sendResult({ type: message.type })
         }
         else if (message.type === 'execute') {

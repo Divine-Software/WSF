@@ -116,7 +116,7 @@ class SQLiteDatabaseConnection implements DBDriver.DBConnection {
         }
 
         try {
-            const b0 = query.batches[0].map(convertObjectToString);
+            const b0 = query.batches[0].map(toSQLiteType);
             const rs = await this._execute<ExecuteQueryResult>({ type: 'execute', query: text, params: b0 });
             const dr = new SQLiteResult(this._dbPath, rs);
 
@@ -192,6 +192,15 @@ export class SQLiteResult extends DBResult {
             column_name:   c.column   ?? undefined,
             data_type:     c.type     ?? undefined,
         })) ?? [], rs.rows ?? []);
+
+        // Convert Uint8Array back to Buffer
+        for (let c = 0; c < this.columns.length; ++c) {
+            const { data_type } = this.columns[c];
+
+            if (data_type === 'blob') {
+                this.forEach((row) => row[c] = row[c] === null ? null : Buffer.from(row[c] as any));
+            }
+        }
     }
 
     async updateColumnInfo(): Promise<DBColumnInfo[]> {
@@ -216,11 +225,17 @@ on conflict (${this.getKeys()}) do update set ${
     }
 }
 
-function convertObjectToString(value: unknown): unknown {
-    if (value instanceof Date) {
+function toSQLiteType(value: unknown): unknown {
+    if (typeof value === 'boolean') {
+        return value ? 1 : 0;
+    }
+    else if (value instanceof Date) {
         return value.toISOString();
     }
-    else if (value && typeof value === 'object') {
+    else if (value instanceof Uint8Array) {
+        return Buffer.from(value);
+    }
+    else if (value !== null && typeof value === 'object' && !Array.isArray(value)) {
         return JSON.stringify(value);
     }
     else {
