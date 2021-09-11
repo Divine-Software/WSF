@@ -18,7 +18,9 @@ q.raw = function(raw: string | number): DBQuery {
     return new DBQuery([String(raw)], []);
 }
 
-q.join = function(delimiter: string, queries: DBQuery[]): DBQuery {
+q.join = function(delimiter: string, queries: (DBQuery | undefined)[]): DBQuery {
+    queries = queries.filter((q) => q !== undefined);
+
     return new DBQuery([...queries.map((_, i) => i === 0 ? '' : delimiter), ''], queries);
 }
 
@@ -29,12 +31,14 @@ q.values = function(data: object | object[], columns?: string[], quote = q.quote
     }
 
     columns ??= Object.keys(params[0]);
+    columns = columns.filter((c) => (params[0] as any)[c] !== undefined);
 
-    return q`(${q.join(',', columns.map((column) => quote(column)))}) values ${q.join(',', params.map((object) => q`(${values(object)})`))}`
+    return q`(${q.join(',', columns.map((column) => quote(column)))}) values ${q.join(',', params.map((param) => q`(${values(param)})`))}`
 }
 
 q.assign = function(data: object, columns?: string[], quote = q.quote): DBQuery {
     columns ??= Object.keys(data);
+    columns = columns.filter((c) => (data as any)[c] !== undefined);
 
     return q.join(',', columns.map((column) => q`${quote(column)} = ${(data as any)[column]}`));
 }
@@ -294,7 +298,7 @@ export abstract class DatabaseURI extends URI {
     }
 
     query<T extends object = object[]>(query: DBQuery): Promise<T & DBMetadata>;
-    query<T extends object = object[]>(query: TemplateStringsArray, ...params: BasicTypes[]): Promise<T & DBMetadata>;
+    query<T extends object = object[]>(query: TemplateStringsArray, ...params: (BasicTypes | bigint)[]): Promise<T & DBMetadata>;
     query<T extends object = object[]>(query: string, ...batches: Params[] ): Promise<T & DBMetadata>;
     query<T>(params: DBTransactionParams, cb: DBCallback<T>): Promise<T>;
     query<T>(cb: DBCallback<T>): Promise<T>;
