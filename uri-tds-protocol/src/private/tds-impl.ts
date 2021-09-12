@@ -176,7 +176,10 @@ export class TDSResult extends DBResult {
                 this.forEach((row) => row[c] = row[c] === null ? null : BigInt(row[c] as any))
             }
             else if (name === 'NumericN' || name === 'DecimalN') {
-                console.warn(`${name} data in column "${colName}" may be truncated (see tediousjs/tedious#163)`);
+                if (rows.some((row) => row[c] !== null)) {
+                    console.warn(`${name} data in column "${colName}" may be truncated (see tediousjs/tedious#163)`);
+                }
+
                 this.forEach((row) => row[c] = row[c] === null ? null : String(row[c]));
             }
         }

@@ -97,10 +97,10 @@ export function describeCommonDBTest(def: CommonDBTestParams) {
         it('builds and executes queries', async () => {
             expect.assertions(11);
 
-            await db.query`insert into ${q.quote('dt')} ${q.values({text: 'q2', double: 10})}`;
+            await db.query`insert into ${q.quote('dt')} ${q.values({ text: 'q2', double: 10 })}`;
             const res = await db.query<(DataTypes[])>(
-                q`insert into dt (text, "double") values ('q1', 11)`,
-                q`update dt set "real" = "double" * 2 where "text" in ('q1', 'q2')`,
+                q('insert into dt (text, "double") values ({t}, {d})', { t: 'q1', d: 11}),
+                q`update dt set "real" = "double" * 2 where "text" in ${q.list(['q1', 'q2'])}`,
                 q`select * from dt where ${q.join('or', ['q1', 'q2'].map((t) => q`(${q.quote('text')} = ${t})`))} order by text`
             );
 

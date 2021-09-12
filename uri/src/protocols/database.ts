@@ -41,7 +41,18 @@ q.join = function(delimiter: string, queries: (DBQuery | undefined)[]): DBQuery 
     return new DBQuery([...queries.map((_, i) => i === 0 ? '' : delimiter), ''], queries);
 }
 
-q.values = function(data: object | object[], columns?: string[], quote = q.quote): DBQuery {
+q.list = function(list: (BasicTypes | undefined)[]): DBQuery {
+    list = list.filter((d) => d !== undefined);
+
+    if (list.length === 0) {
+        return new DBQuery(['()'], []);
+    }
+    else {
+        return new DBQuery(['(', ...Array(list.length - 1).fill(','), ')'], list);
+    }
+}
+
+q.values = function(data: Params | Params[], columns?: string[], quote = q.quote): DBQuery {
     const params = Array.isArray(data) ? data : [ data ];
     const values = (param: any): DBQuery => {
         return q.join(',', columns!.map((column) => q`${param[column]}`))
@@ -53,7 +64,7 @@ q.values = function(data: object | object[], columns?: string[], quote = q.quote
     return q`(${q.join(',', columns.map((column) => quote(column)))}) values ${q.join(',', params.map((param) => q`(${values(param)})`))}`
 }
 
-q.assign = function(data: object, columns?: string[], quote = q.quote): DBQuery {
+q.assign = function(data: Params, columns?: string[], quote = q.quote): DBQuery {
     columns ??= Object.keys(data);
     columns = columns.filter((c) => (data as any)[c] !== undefined);
 

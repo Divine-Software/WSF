@@ -1,6 +1,7 @@
 /* eslint-disable @typescript-eslint/no-namespace */
 import { AsyncLocalStorage } from 'async_hooks';
 import { parse as parseDBRef } from './private/dbref';
+import { Params } from './private/utils';
 import { DatabaseURI, DBColumnInfo, DBMetadata, DBQuery, DBResult, DBTransactionParams, q } from './protocols/database';
 import { IOError } from './uri';
 
@@ -244,7 +245,7 @@ ${this.getLockClause()} \
 `;
     }
 
-    protected checkSaveArguments(value: unknown, keysRequired: boolean): [ scope: DBReference.Scope, objects: object[], keys?: string[] ] {
+    protected checkSaveArguments(value: unknown, keysRequired: boolean): [ scope: DBReference.Scope, objects: Params[], keys?: string[] ] {
         const [ scope, objects ] = this.checkSaveAndAppendArguments(value);
 
         if (keysRequired && !this.keys) {
@@ -263,7 +264,7 @@ ${this.getLockClause()} \
         throw this.makeIOError(`Operation is not supported for this database`);
     }
 
-    protected checkAppendArguments(value: unknown): [ scope: DBReference.Scope, objects: object[] ] {
+    protected checkAppendArguments(value: unknown): [ scope: DBReference.Scope, objects: Params[] ] {
         const [ scope, objects ] = this.checkSaveAndAppendArguments(value);
 
         if (this.keys) {
@@ -276,7 +277,7 @@ ${this.getLockClause()} \
         return [ scope, objects ];
     }
 
-    private checkSaveAndAppendArguments(value: unknown): [ scope: DBReference.Scope, objects: object[] ] {
+    private checkSaveAndAppendArguments(value: unknown): [ scope: DBReference.Scope, objects: Params[] ] {
         const scope = this.scope ?? (Array.isArray(value) ? 'all' : 'one');
         let objects: object[];
 
@@ -315,7 +316,7 @@ ${this.getLockClause()} \
             throw this.makeIOError(`No filter may be specified for this query`);
         }
 
-        return [ scope, objects ];
+        return [ scope, objects as Params[] ];
     }
 
     getAppendQuery(value: unknown): DBQuery {
@@ -324,7 +325,7 @@ ${this.getLockClause()} \
         return q`insert into ${this.getTable()} ${q.values(objects, this.columns)}`
     }
 
-    protected checkModifyArguments(value: unknown): [ scope: DBReference.Scope, object: object ] {
+    protected checkModifyArguments(value: unknown): [ scope: DBReference.Scope, object: Params ] {
         const scope = this.scope ?? 'one';
         let object: object;
 
@@ -355,7 +356,7 @@ ${this.getLockClause()} \
             throw this.makeIOError(`No parameters may be specified for this query`);
         }
 
-        return [ scope, object ];
+        return [ scope, object as Params ];
     }
 
     getModifyQuery(value: unknown): DBQuery {

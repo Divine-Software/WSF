@@ -62,6 +62,7 @@ describe('the WebService dispatcher', () => {
 
     it('rejects with 405 if handler is missing', async () => {
         expect.assertions(1);
+        jest.spyOn(console, 'warn').mockImplementation(() => void 0);
 
         expect((await ws.dispatchRequest(fakedReq('POST', '/options'))).status).toBe(WebStatus.METHOD_NOT_ALLOWED);
     });
@@ -158,6 +159,7 @@ describe(`a WebService's resources`, () => {
 
     it('returns 404 or 405 if no resource matches', async () => {
         expect.assertions(5);
+        jest.spyOn(console, 'warn').mockImplementation(() => void 0);
 
         expect((await ws.dispatchRequest(fakedReq('POST', '/GET/1'))).status).toBe(WebStatus.METHOD_NOT_ALLOWED);
         expect((await ws.dispatchRequest(fakedReq('GET', '/GET/)'))).status).toBe(WebStatus.NOT_FOUND);

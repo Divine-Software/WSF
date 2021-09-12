@@ -266,7 +266,7 @@ export class WebService<Context> {
     private async _handleException(err: Error, webreq: WebRequest): Promise<WebResponse> {
         const messageProp = this.webServiceConfig.errorMessageProperty;
 
-        webreq.log.error(`Failed: ${err}`);
+        webreq.log.warn(`Failed: ${err}`);
 
         if (err instanceof WebError) {
             return err.toWebResponse(messageProp);
