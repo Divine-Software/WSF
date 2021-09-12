@@ -1,8 +1,9 @@
 /* eslint-disable jest/no-if */
 /* eslint-disable jest/no-conditional-expect */
 /* eslint-disable jest/no-export */
+import { kill } from 'process';
 import { __values } from 'tslib';
-import { DatabaseURI, DBQuery, q, URI } from '../../src';
+import { DatabaseURI, DBQuery, FIELDS, q, URI } from '../../src';
 
 export interface CommonDBTestParams {
     name:      string;
@@ -54,7 +55,7 @@ export function describeCommonDBTest(def: CommonDBTestParams) {
         null:      null,
     };
 
-    describe(`the driver for ${def.name}`, () => {
+    describe(`the ${def.name} driver`, () => {
         const db = def.uri as DatabaseURI;
 
         it('can manage schema', async () => {
@@ -91,6 +92,30 @@ export function describeCommonDBTest(def: CommonDBTestParams) {
             expect(res[0].tstz      ).toStrictEqual(def.enableDT.tstz ? columns.tstz : columns.tstz?.toISOString() );
             expect(res[0].bool      ).toBe(def.enableDT.bool ? columns.bool : def.enableDT.int ? Number(columns.bool) : BigInt(columns.bool!));
             expect(res[0].json      ).toStrictEqual(def.enableDT.json ? columns.json : JSON.stringify(columns.json));
+        });
+
+        it('builds and executes queries', async () => {
+            expect.assertions(11);
+
+            await db.query`insert into ${q.quote('dt')} ${q.values({text: 'q2', double: 10})}`;
+            const res = await db.query<(DataTypes[])>(
+                q`insert into dt (text, "double") values ('q1', 11)`,
+                q`update dt set "real" = "double" * 2 where "text" in ('q1', 'q2')`,
+                q`select * from dt where ${q.join('or', ['q1', 'q2'].map((t) => q`(${q.quote('text')} = ${t})`))} order by text`
+            );
+
+            expect(res[FIELDS]).toHaveLength(3)
+            expect(res[FIELDS][0]).toHaveLength(0)
+            expect(res[FIELDS][1]).toHaveLength(0)
+            expect(res[FIELDS][2]).toHaveLength(2)
+
+            expect(res).toHaveLength(2);
+            expect(res[0].text).toBe('q1');
+            expect(res[0].real).toBe(22);
+            expect(res[0].double).toBe(11);
+            expect(res[1].text).toBe('q2');
+            expect(res[1].real).toBe(20);
+            expect(res[1].double).toBe(10);
         });
     });
 }

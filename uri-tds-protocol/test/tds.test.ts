@@ -16,7 +16,7 @@ describeCommonDBTest({
             "decimal"  decimal(30,5),
             "bigints"  text,
             "words"    text,
-            "text"     ntext,
+            "text"     nvarchar(max),
             "bin"      varbinary(max),
             "ts"       datetime2,
             "tstz"     datetimeoffset,

@@ -108,23 +108,23 @@ class SQLiteDatabaseConnection implements DBDriver.DBConnection {
         }
     }
 
-    async query<T>(query: DBQuery): Promise<T[] & DBMetadata> {
-        const text = query.toString(() => '?');
+    async query(...queries: DBQuery[]): Promise<DBResult[]> {
+        const result: DBResult[] = [];
 
-        if (query.batches.length > 1) {
-            throw new TypeError(`Batch queries not supported`);
+        for (const query of queries) {
+            try {
+                result.push(new SQLiteResult(this._dbPath, await this._execute<ExecuteQueryResult>({
+                    type:   'execute',
+                    query:  query.toString(() => '?'),
+                    params: query.params.map(toSQLiteType),
+                })));
+            }
+            catch (err) {
+                throw err instanceof SqliteError ? new DBError(err.code, 'HY000', 'Query failed', err, query) : err;
+            }
         }
 
-        try {
-            const b0 = query.batches[0].map(toSQLiteType);
-            const rs = await this._execute<ExecuteQueryResult>({ type: 'execute', query: text, params: b0 });
-            const dr = new SQLiteResult(this._dbPath, rs);
-
-            return dr.toObjects([ dr ]);
-        }
-        catch (err) {
-            throw err instanceof SqliteError ? new DBError(err.code, 'HY000', 'Query failed', err, query) : err;
-        }
+        return result;
     }
 
     async transaction<T>(dtp: DBTransactionParams, cb: () => Promise<T> | T): Promise<T> {

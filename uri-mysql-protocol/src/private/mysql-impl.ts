@@ -46,7 +46,7 @@ class MyDatabaseConnection implements DBDriver.DBConnection {
             }
         });
 
-        this._version = (await this.query<{ version: string }>(q`select version()`))[0]?.version;
+        this._version = (await this.query(q`select version()`))[0][0][0] as string;
         await this.query(q`set session sql_mode = 'ansi,traditional'`);
         await this.query(q`set session time_zone = '+00:00'`);
     }
@@ -56,49 +56,46 @@ class MyDatabaseConnection implements DBDriver.DBConnection {
         delete this._client;
     }
 
-    async query<T>(query: DBQuery): Promise<T[] & DBMetadata> {
+    async query(...queries: DBQuery[]): Promise<DBResult[]> {
         if (!this._client) {
             throw new ReferenceError('Driver not open');
         }
-        else if (query.batches.length > 1) {
-            throw new TypeError(`Batch queries not supported`);
+
+        const result: DBResult[] = [];
+
+        for (const query of queries) {
+            const escaped = query.toString((value) => {
+                if (value === null || typeof value === 'number' || typeof value === 'bigint' || typeof value === 'boolean') {
+                    return String(value);
+                }
+                else if (value instanceof Date) {
+                    return `'${value.toISOString().slice(0, -1)}'`; // UTC date without time-zone
+                }
+                else if (value instanceof Uint8Array) {
+                    return `0x${Buffer.from(value).toString('hex')}`;
+                }
+                else if (typeof value === 'string') {
+                    return this._client!.escape(value);
+                }
+                else if (typeof value === 'object' && !Array.isArray(value)) {
+                    return this._client!.escape(JSON.stringify(value));
+                }
+                else {
+                    throw new TypeError(`Cannot handle datatype ${typeof value}`);
+                }
+            });
+
+            try {
+                result.push(new MyResult(this._dbURI, await this._client.query(escaped)));
+            }
+            catch (err: any) {
+                throw typeof err.errno === 'number' && typeof err.sqlState === 'string'
+                    ? new DBError(String(err.errno), err.sqlState, 'Query failed', err, query)
+                    : err;
+            }
         }
 
-        const batch0 = query.batches[0] as unknown[];
-        const escaped = query.toString((index) => {
-            const value = batch0[index];
-
-            if (value === null || typeof value === 'number' || typeof value === 'bigint' || typeof value === 'boolean') {
-                return String(value);
-            }
-            else if (value instanceof Date) {
-                return `'${value.toISOString().slice(0, -1)}'`; // UTC date without time-zone
-            }
-            else if (value instanceof Uint8Array) {
-                return `0x${Buffer.from(value).toString('hex')}`;
-            }
-            else if (typeof value === 'string') {
-                return this._client!.escape(value);
-            }
-            else if (typeof value === 'object' && !Array.isArray(value)) {
-                return this._client!.escape(JSON.stringify(value));
-            }
-            else {
-                throw new TypeError(`Cannot handle datatype ${typeof value}`);
-            }
-        });
-
-        try {
-            const rs = await this._client.query(escaped);
-            const dr = new MyResult(this._dbURI, rs);
-
-            return dr.toObjects([ dr ]);
-        }
-        catch (err: any) {
-            throw typeof err.errno === 'number' && typeof err.sqlState === 'string'
-                ? new DBError(String(err.errno), err.sqlState, 'Query failed', err, query)
-                : err;
-        }
+        return result;
     }
 
     async transaction<T>(dtp: DBTransactionParams, cb: () => Promise<T> | T): Promise<T> {

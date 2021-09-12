@@ -3,11 +3,28 @@ import { SecureContextOptions } from 'tls';
 import { DBConnection, DBConnectionPool } from '../database-driver';
 import { toObject } from '../parsers';
 import { DBCallback, DBSessionSelector, invalidCharacter, isDatabaseTransactionParams, isDBCallback } from '../private/database-utils';
-import { BasicTypes, esxxEncoder, isTemplateStringsArray, Params } from '../private/utils';
+import { BasicTypes, esxxEncoder, isTemplateStringsLike, Params } from '../private/utils';
 import { FIELDS, HEADERS, IOError, Metadata, ParamsSelector, STATUS, STATUS_TEXT, URI, VOID, WithFields } from '../uri';
 
-export function q(query: TemplateStringsArray, ...params: unknown[]): DBQuery {
-    return new DBQuery(query, params);
+export function q(query: TemplateStringsArray, ...params: unknown[]): DBQuery;
+export function q(query: string, params: Params): DBQuery;
+export function q(query: TemplateStringsArray | string, ...params: unknown[]): DBQuery {
+    if (isTemplateStringsLike(query)) {
+        return new DBQuery(query, params);
+    }
+    else if (typeof query === 'string' && params.length === 1 && params[0] !== null && typeof params[0] === 'object') {
+        const values: unknown[] = [];
+
+        query = esxxEncoder(query, params[0] as Params, (value) => {
+            values.push(value);
+            return invalidCharacter;
+        });
+
+        return new DBQuery(query.split(invalidCharacter), values);
+    }
+    else {
+        throw new TypeError()
+    }
 }
 
 q.quote = function(ident: string): DBQuery {
@@ -131,64 +148,49 @@ export class DBError extends IOError {
 
 export class DBQuery {
     private _query: ReadonlyArray<string>;
-    private _batches: ReadonlyArray<ReadonlyArray<unknown>>;
+    private _params: unknown[];
 
-    constructor(query: ReadonlyArray<string>, ...batches: ReadonlyArray<unknown>[]) {
-        if (batches.length > 1) {
-            for (let p = 0; p < query.length - 1; ++p) {
-                for (const params of batches) {
-                    const param = params[p];
-
-                    if (param === undefined || typeof param !== typeof batches[0][p]) {
-                        throw new TypeError(`Parameter #${p} must exist and be of same type in all batches`);
-                    }
-                    else if (param instanceof DBQuery) {
-                        throw new TypeError(`Nested DBQuery in param #${p} not allowed in batch mode`);
-                    }
-                }
-            }
-
-            this._query = query;
-            this._batches = batches;
+    constructor(query: ReadonlyArray<string>, params: unknown[]) {
+        if (query.length !== params.length + 1) {
+            throw new TypeError(`Expected exactly ${query.length - 1} parameters`);
         }
-        else if (batches.length !== 1 || query.length !== batches[0].length + 1) {
-            throw new TypeError(`Expected exactly ${query.length - 1} parameters in batch #0`);
-        }
-        else { // Single batch: nested Query params supported
+        else {
             const myQuery: string[] = [ query[0] ];
             const myParams: unknown[] = [];
-            const params = batches[0]
 
             for (let p = 0; p < query.length - 1; ++p) {
                 const param = params[p];
 
                 if (param instanceof DBQuery) {
-                    if (param._batches.length !== 1 && param._query.length !== param._batches[0].length + 1) {
+                    if (param._query.length !== param._params.length + 1) {
                         throw new TypeError(`Nested DBQuery in param #${p} is not nestable`);
                     }
 
                     myQuery[myQuery.length - 1] += param._query[0];
                     myQuery.push(...param._query.slice(1));
                     myQuery[myQuery.length - 1] += query[p + 1];
-                    myParams.push(...param._batches[0]);
+                    myParams.push(...param._params);
                 }
-                else {
+                else if (param !== undefined) {
                     myQuery.push(query[p + 1]);
                     myParams.push(param);
+                }
+                else {
+                    throw new TypeError(`Parameter #${p} is undefined`);
                 }
             }
 
             this._query = myQuery;
-            this._batches = [ myParams ];
+            this._params = myParams;
         }
     }
 
-    get batches(): ReadonlyArray<ReadonlyArray<unknown>> {
-        return this._batches;
+    get params(): unknown[] {
+        return this._params;
     }
 
-    toString(placeholder = function(index: number, query: DBQuery, ) { return `{${index}}` }) {
-        return this._query.reduce((query, part, index) => index === 0 ? part : `${query}${placeholder(index - 1, this)}${part}`);
+    toString(placeholder = function(value: unknown, index: number, query: DBQuery) { return `{${index}: «${value}»}` }) {
+        return this._query.reduce((query, part, index) => index === 0 ? part : `${query}${placeholder(this._params[index - 1], index - 1, this)}${part}`);
     }
 }
 
@@ -215,12 +217,9 @@ export abstract class DBResult extends Array<unknown[]> {
 
     abstract updateColumnInfo(): Promise<DBColumnInfo[]>;
 
-    toObjects<T>(): T[];
-    toObjects<T>(fields: DBResult[]): T[] & DBMetadata;
-    toObjects<T>(fields?: DBResult[]): T[] & WithFields<DBResult> {
+    toObjects<T extends object>(fields?: DBResult[]): T[] & DBMetadata {
         const result: T[] & WithFields<DBResult> = Array<T>(this.length);
-
-        result[FIELDS] = fields;
+        result[FIELDS] = fields ?? [ this ];
 
         for (let r = 0, rl = result.length, hl = this.columns.length; r < rl; ++r) {
             const s = this[r];
@@ -231,8 +230,12 @@ export abstract class DBResult extends Array<unknown[]> {
             }
         }
 
-        return result;
+        return result as T[] & DBMetadata;
     }
+}
+
+function toObjects<T extends object = object[]>(results: DBResult[]): T & DBMetadata {
+    return results[results.length - 1].toObjects(results) as T & DBMetadata;
 }
 
 function withDBMetadata<T extends object>(meta: DBMetadata, value: object): T & DBMetadata {
@@ -252,7 +255,7 @@ export abstract class DatabaseURI extends URI {
     load<T extends object>(_recvCT?: ContentType | string): Promise<T & DBMetadata> {
         return this._session(async (conn) => {
             const dbRef  = await conn.reference(this);
-            const result = await conn.query(dbRef.getLoadQuery());
+            const result = toObjects(await conn.query(dbRef.getLoadQuery()));
 
             if (dbRef.scope === 'scalar' || dbRef.scope === 'one') {
                 if (result.length === 0) {
@@ -275,53 +278,43 @@ export abstract class DatabaseURI extends URI {
 
     save<T extends object>(data: unknown, _sendCT?: ContentType | string, _recvCT?: ContentType | string): Promise<T & DBMetadata> {
         return this._session(async (conn) => {
-            return conn.query((await conn.reference(this)).getSaveQuery(data)) as unknown as T & DBMetadata;
+            return toObjects<T>(await conn.query((await conn.reference(this)).getSaveQuery(data)));
         });
     }
 
     append<T extends object>(data: unknown, _sendCT?: ContentType | string, _recvCT?: ContentType | string): Promise<T & DBMetadata> {
         return this._session(async (conn) => {
-            return conn.query((await conn.reference(this)).getAppendQuery(data)) as unknown as T & DBMetadata;
+            return toObjects<T>(await conn.query((await conn.reference(this)).getAppendQuery(data)));
         });
     }
 
     modify<T extends object>(data: unknown, _sendCT?: ContentType | string, _recvCT?: ContentType | string): Promise<T & DBMetadata> {
         return this._session(async (conn) => {
-            return conn.query((await conn.reference(this)).getModifyQuery(data)) as unknown as T & DBMetadata;
+            return toObjects<T>(await conn.query((await conn.reference(this)).getModifyQuery(data)));
         });
     }
 
     remove<T extends object>(_recvCT?: ContentType | string): Promise<T & DBMetadata> {
         return this._session(async (conn) => {
-            return conn.query((await conn.reference(this)).getRemoveQuery()) as unknown as T & DBMetadata;
+            return toObjects<T>(await conn.query((await conn.reference(this)).getRemoveQuery()));
         });
     }
 
-    query<T extends object = object[]>(query: DBQuery): Promise<T & DBMetadata>;
-    query<T extends object = object[]>(query: TemplateStringsArray, ...params: (BasicTypes | bigint)[]): Promise<T & DBMetadata>;
-    query<T extends object = object[]>(query: string, ...batches: Params[] ): Promise<T & DBMetadata>;
+    query<T extends object = object[]>(query: DBQuery, ...queries: DBQuery[]): Promise<T & DBMetadata>;
+    query<T extends object = object[]>(query: TemplateStringsArray, ...params: (BasicTypes)[]): Promise<T & DBMetadata>;
+    query<T extends object = object[]>(query: string, params: Params ): Promise<T & DBMetadata>;
     query<T>(params: DBTransactionParams, cb: DBCallback<T>): Promise<T>;
     query<T>(cb: DBCallback<T>): Promise<T>;
     async query<T>(first: DBQuery | TemplateStringsArray | string | DBTransactionParams | DBCallback<T>, ...rest: unknown[]): Promise<unknown & Metadata & WithFields<DBResult>> {
         return this._session(async (conn) => {
-            if (first instanceof DBQuery && rest.length === 0) {
-                return conn.query(first);
+            if (first instanceof DBQuery && rest.every((r) => r instanceof DBQuery)) {
+                return toObjects(await conn.query(first, ...rest as DBQuery[]));
             }
-            else if (isTemplateStringsArray(first)) {
-                return conn.query(new DBQuery(first, rest));
+            else if (isTemplateStringsLike(first)) {
+                return toObjects(await conn.query(q(first, ...rest)));
             }
-            else if (typeof first === 'string' && rest.length >= 1 && typeof rest[0] === 'object' /* Params required! */) {
-                const batches = rest as Params[];
-                const values = batches.map<unknown[]>(() => []);
-                const query = esxxEncoder(first, batches[0], (_, key) => {
-                    for (const b in values) {
-                        values[b].push(batches[b][key]);
-                    }
-
-                    return invalidCharacter;
-                });
-
-                return conn.query(new DBQuery(query.split(invalidCharacter), ...values));
+            else if (typeof first === 'string' && rest.length === 1 && rest[0] !== null && typeof rest[0] === 'object') {
+                return toObjects(await conn.query(q(first, rest[0] as Params)));
             }
             else if (isDatabaseTransactionParams(first) && rest.length === 1 && isDBCallback<T>(rest[0])) {
                 return conn.transaction(first, rest[0])

@@ -1,5 +1,5 @@
 import { WWWAuthenticate } from '@divine/headers';
-import { BasicAuthScheme, DatabaseURI, DBDriver, DBMetadata, URI } from '@divine/uri';
+import { BasicAuthScheme, DatabaseURI, DBDriver, URI } from '@divine/uri';
 import { TDSConnectionPool } from './private/tds-impl';
 
 export class TDSURI extends DatabaseURI {

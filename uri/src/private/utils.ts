@@ -4,7 +4,7 @@ import { pipeline, Readable } from 'stream';
 export type Constructor<T> = new (...args: any[]) => T;
 export type ValueEncoder = (this: void, value: string, key: string | number) => string;
 
-export type BasicTypes = boolean | number | string | object | null;
+export type BasicTypes = boolean | number | bigint | string | object | null;
 
 export interface Params {
     [key: string]: BasicTypes | undefined;
@@ -88,10 +88,9 @@ export function isReadableStream(obj: NodeJS.ReadableStream): obj is NodeJS.Read
     return obj instanceof EventEmitter && typeof obj.readable === 'boolean' && typeof obj.read === 'function';
 }
 
-export function isTemplateStringsArray(strings: any): strings is TemplateStringsArray;
-export function isTemplateStringsArray(strings: TemplateStringsArray): strings is TemplateStringsArray {
-    return Array.isArray(strings) && strings.every((s) => typeof s === 'string') &&
-        Array.isArray(strings.raw) && strings.raw.every((s) => typeof s === 'string');
+export function isTemplateStringsLike(strings: any): strings is TemplateStringsArray;
+export function isTemplateStringsLike(strings: TemplateStringsArray): strings is TemplateStringsArray {
+    return Array.isArray(strings) && strings.every((s) => typeof s === 'string');
 }
 
 export function isDOMNode(obj: unknown): boolean {

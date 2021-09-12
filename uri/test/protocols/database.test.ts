@@ -1,8 +1,8 @@
 import { DBQuery, q } from '../../src';
 
 describe('query', () => {
-    const withValues = (index: number, query: DBQuery) => {
-        return `[${query.batches[0][index]}]`;
+    const withValues = (value: unknown) => {
+        return `[${value}]`;
     }
 
     it('build simple queries', () => {
@@ -10,13 +10,13 @@ describe('query', () => {
 
         expect(q`select 10`.toString()).toBe('select 10');
 
-        expect(q`select ${10}`.toString()).toBe('select {0}');
+        expect(q`select ${10}`.toString()).toBe('select {0: «10»}');
         expect(q`select ${10}`.toString(withValues)).toBe('select [10]');
 
-        expect(q`select ${10}!`.toString()).toBe('select {0}!');
+        expect(q`select ${10}!`.toString()).toBe('select {0: «10»}!');
         expect(q`select ${10}!`.toString(withValues)).toBe('select [10]!');
 
-        expect(q`${10}${'a'} ${20}`.toString()).toBe('{0}{1} {2}');
+        expect(q`${10}${'a'} ${20}`.toString()).toBe('{0: «10»}{1: «a»} {2: «20»}');
         expect(q`${10}${'a'} ${20}`.toString(withValues)).toBe('[10][a] [20]');
     });
 

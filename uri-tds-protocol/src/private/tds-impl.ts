@@ -60,53 +60,51 @@ class TDSDatabaseConnection implements DBDriver.DBConnection {
         }
     }
 
-    async query<T>(query: DBQuery): Promise<T[] & DBMetadata> {
+    async query(...queries: DBQuery[]): Promise<DBResult[]> {
         if (!this._client) {
             throw new ReferenceError('Driver not open');
         }
-        else if (query.batches.length > 1) {
-            throw new TypeError(`Batch queries not supported`);
+
+        const result: DBResult[] = [];
+
+        for (const query of queries) {
+            try {
+                let columns: ColumnMetaData[] = []
+                const  rows: unknown[][] = [];
+
+                await new Promise<void>((resolve, reject) => {
+                    const request = new Request(query.toString((_v, i) => `@${i}`), (err) => err ? reject(err) : resolve())
+                        .on('columnMetadata', (ci) => columns = ci)
+                        .on('row', (row) => rows.push(row.map((c) => c.value)));
+
+                    for (const [i, _v] of query.params.entries()) {
+                        const v =
+                            _v instanceof Date ? _v :
+                            _v instanceof Uint8Array ? Buffer.from(_v) :
+                            _v !== null && typeof _v === 'object' && !Array.isArray(_v) ? JSON.stringify(_v) :
+                            _v;
+
+                        const t =
+                            _v instanceof Buffer ? TYPES.VarBinary :
+                            _v instanceof Date ? TYPES.DateTimeOffset :
+                            TYPES.NVarChar;
+
+                        request.addParameter(String(i), t, v);
+                    }
+
+                    this._client!.execSql(request);
+                });
+
+                result.push(new TDSResult(this._dbURI, columns, rows));
+            }
+            catch (err: any) {
+                throw typeof err.errno === 'number' && typeof err.sqlState === 'string'
+                    ? new DBError(String(err.errno), err.sqlState, 'Query failed', err, query)
+                    : err;
+            }
         }
 
-        const batch0 = query.batches[0] as unknown[];
-        const pquery = query.toString((i) => `@${i}`);
-
-        try {
-            let columns: ColumnMetaData[] = []
-            const  rows: unknown[][] = [];
-
-            await new Promise<void>((resolve, reject) => {
-                const request = new Request(pquery, (err) => err ? reject(err) : resolve())
-                    .on('columnMetadata', (ci) => columns = ci)
-                    .on('row', (row) => rows.push(row.map((c) => c.value)));
-
-                for (const [i, _v] of batch0.entries()) {
-                    const v =
-                        _v instanceof Date ? _v :
-                        _v instanceof Uint8Array ? Buffer.from(_v) :
-                        _v !== null && typeof _v === 'object' && !Array.isArray(_v) ? JSON.stringify(_v) :
-                        _v;
-
-                    const t =
-                        _v instanceof Buffer ? TYPES.VarBinary :
-                        _v instanceof Date ? TYPES.DateTimeOffset :
-                        TYPES.NVarChar;
-
-                    request.addParameter(String(i), t, v);
-                }
-
-                this._client!.execSql(request);
-            });
-
-            const dr = new TDSResult(this._dbURI, columns, rows);
-
-            return dr.toObjects([ dr ]);
-        }
-        catch (err: any) {
-            throw typeof err.errno === 'number' && typeof err.sqlState === 'string'
-                ? new DBError(String(err.errno), err.sqlState, 'Query failed', err, query)
-                : err;
-        }
+        return result;
     }
 
     async transaction<T>(dtp: DBTransactionParams, cb: () => Promise<T> | T): Promise<T> {
@@ -165,8 +163,6 @@ class TDSDatabaseConnection implements DBDriver.DBConnection {
         return new TDSReference(dbURI);
     }
 }
-
-type InformationSchema = Omit<DBColumnInfo, 'label'>;
 
 export class TDSResult extends DBResult {
     constructor(private _db: DatabaseURI, private _ci: ColumnMetaData[], rows: unknown[][]) {

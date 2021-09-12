@@ -111,7 +111,7 @@ parentPort?.on('message', (message: SQLiteWorkerMessage) => {
             throw new Error(`Invalid action '${message['type']}'`);
         }
     }
-    catch (err) {
+    catch (err: any) {
         // console.error(`*** SQLiteWorker message exception`, err, message);
         sendResult({ type: 'error', message: err?.message ?? String(err), code: err.code });
     }

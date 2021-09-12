@@ -42,7 +42,7 @@ class PGDatabaseConnection implements DBDriver.DBConnection {
 
         await this._client.connect();
 
-        this._version = (await this.query<{ version: string }>(q`select version()`))[0]?.version;
+        this._version = (await this.query(q`select version()`))[0][0][0] as string;
         this._crdb = /^CockroachDB/i.test(this._version);
     }
 
@@ -51,24 +51,27 @@ class PGDatabaseConnection implements DBDriver.DBConnection {
         delete this._client;
     }
 
-    async query<T>(query: DBQuery): Promise<T[] & DBMetadata> {
+    async query(...queries: DBQuery[]): Promise<DBResult[]> {
         if (!this._client) {
             throw new ReferenceError('Driver not open');
         }
-        else if (query.batches.length > 1) {
-            throw new TypeError(`Batch queries not supported`);
+
+        const result: DBResult[] = [];
+
+        for (const query of queries) {
+            try {
+                result.push(new PGResult(this._dbURI, await this._client.query({
+                    text:    query.toString((_v, i) => `$${i + 1}`),
+                    values:  query.params,
+                    rowMode: 'array',
+                })));
+            }
+            catch (err: any) {
+                throw typeof err.code === 'string' ? new DBError(err.code, err.code, 'Query failed', err, query) : err;
+            }
         }
 
-        try {
-            const b0 = query.batches[0] as unknown[];
-            const rs = await this._client.query({ rowMode: 'array', text: query.toString((i) => `$${i + 1}`), values: b0 });
-            const dr = new PGResult(this._dbURI, rs);
-
-            return dr.toObjects([ dr ]);
-        }
-        catch (err: any) {
-            throw typeof err.code === 'string' ? new DBError(err.code, err.code, 'Query failed', err, query) : err;
-        }
+        return result;
     }
 
     async transaction<T>(dtp: DBTransactionParams, cb: () => Promise<T> | T): Promise<T> {

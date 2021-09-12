@@ -1,7 +1,7 @@
 /* eslint-disable @typescript-eslint/no-namespace */
 import { AsyncLocalStorage } from 'async_hooks';
 import { parse as parseDBRef } from './private/dbref';
-import { DatabaseURI, DBColumnInfo, DBMetadata, DBQuery, DBTransactionParams, q } from './protocols/database';
+import { DatabaseURI, DBColumnInfo, DBMetadata, DBQuery, DBResult, DBTransactionParams, q } from './protocols/database';
 import { IOError } from './uri';
 
 const als = new AsyncLocalStorage<{ ref: number, conn: DBConnection }>();
@@ -37,7 +37,7 @@ export const booleanColInfoProps: PropTypeMap<DBColumnInfo, boolean> = {
 export interface DBConnection {
     open(): Promise<void>;
     close(): Promise<void>;
-    query<T extends object>(query: DBQuery): Promise<T[] & DBMetadata>;
+    query(...queries: DBQuery[]): Promise<DBResult[]>;
     transaction<T>(dtp: DBTransactionParams, cb: () => Promise<T>): Promise<T>;
     reference(dbURI: DatabaseURI): DBReference | Promise<DBReference>;
 }
@@ -119,7 +119,7 @@ export class DBReference {
             this.filter  = parts.filter  ?? undefined;
             this.params  = parts.params  ?? {};
         }
-        catch (err) {
+        catch (err: any) {
             throw this.makeIOError(`Failed to parse fragment as DB reference: ${err.message}`, err);
         }
     }

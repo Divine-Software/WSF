@@ -1,5 +1,5 @@
-import { ContentType, WWWAuthenticate } from '@divine/headers';
-import { BasicAuthScheme, DatabaseURI, DBDriver, DBMetadata, URI } from '@divine/uri';
+import { WWWAuthenticate } from '@divine/headers';
+import { BasicAuthScheme, DatabaseURI, DBDriver, URI } from '@divine/uri';
 import { MyConnectionPool } from './private/mysql-impl';
 
 export class MySQLURI extends DatabaseURI {
