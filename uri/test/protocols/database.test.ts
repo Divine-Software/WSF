@@ -10,13 +10,13 @@ describe('query', () => {
 
         expect(q`select 10`.toString()).toBe('select 10');
 
-        expect(q`select ${10}`.toString()).toBe('select {0: «10»}');
+        expect(q`select ${10}`.toString()).toBe('select «10»');
         expect(q`select ${10}`.toString(withValues)).toBe('select [10]');
 
-        expect(q`select ${10}!`.toString()).toBe('select {0: «10»}!');
+        expect(q`select ${10}!`.toString()).toBe('select «10»!');
         expect(q`select ${10}!`.toString(withValues)).toBe('select [10]!');
 
-        expect(q`${10}${'a'} ${20}`.toString()).toBe('{0: «10»}{1: «a»} {2: «20»}');
+        expect(q`${10}${'a'} ${20}`.toString()).toBe('«10»«a» «20»');
         expect(q`${10}${'a'} ${20}`.toString(withValues)).toBe('[10][a] [20]');
     });
 

@@ -164,13 +164,17 @@ type InformationSchema = Omit<DBColumnInfo, 'label'>;
 export class MyResult extends DBResult {
     constructor(private _db: DatabaseURI, private _rs: [ result: MySQLResult, fields?: FixedFields[] ]) {
         super(_rs[1]?.map((f) => ({
-            label:         f.name,
-            table_catalog: f.catalog  || undefined,
-            table_schema:  f.schema   || undefined,
-            table_name:    f.orgTable || undefined,
-            column_name:   f.orgName  || undefined,
-            // udt_name:      MySQLTypes[f.columnType ?? -1] || undefined,
-        })) ?? [], Array.isArray(_rs[0]) && Array.isArray(_rs[0]?.[0]) ? _rs[0] as unknown[][] : []);
+                label:         f.name,
+                table_catalog: f.catalog  || undefined,
+                table_schema:  f.schema   || undefined,
+                table_name:    f.orgTable || undefined,
+                column_name:   f.orgName  || undefined,
+                // udt_name:      MySQLTypes[f.columnType ?? -1] || undefined,
+            })) ?? [],
+            Array.isArray(_rs[0]) && Array.isArray(_rs[0]?.[0]) ? _rs[0] as unknown[][] : [],
+            !Array.isArray(_rs[0]) ? _rs[0].affectedRows : undefined,
+            !Array.isArray(_rs[0]) ? _rs[0].insertId?.toString() : undefined
+        );
 
         Object.defineProperty(this, '_db', { enumerable: false });
         Object.defineProperty(this, '_rs', { enumerable: false });

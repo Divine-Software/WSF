@@ -44,7 +44,7 @@ export interface ExecuteQueryResult {
     columns?:          Database.ColumnDefinition[]
     rows?:             unknown[][];
     changes?:          number;
-    lastInsertRowid?:  bigint;
+    lastInsertRowid?:  string;
 }
 
 export type SQLiteWorkerMessage = OpenDatabaseMessage | CloseDatabaseMessage | ExecuteQueryMessage | ShutdownMessage;
@@ -99,7 +99,7 @@ parentPort?.on('message', (message: SQLiteWorkerMessage) => {
             else {
                 const info = query.run(...message.params);
 
-                sendResult({ type: message.type, changes: info.changes, lastInsertRowid: BigInt(info.lastInsertRowid) });
+                sendResult({ type: message.type, changes: info.changes, lastInsertRowid: info.lastInsertRowid?.toString() });
             }
         }
         else if (message.type === 'shutdown') {

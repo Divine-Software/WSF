@@ -72,10 +72,10 @@ class TDSDatabaseConnection implements DBDriver.DBConnection {
                 let columns: ColumnMetaData[] = []
                 const  rows: unknown[][] = [];
 
-                await new Promise<void>((resolve, reject) => {
-                    const request = new Request(query.toString((_v, i) => `@${i}`), (err) => err ? reject(err) : resolve())
+                const rowCount = await new Promise<number>((resolve, reject) => {
+                    const request = new Request(query.toString((_v, i) => `@${i}`), (err, rowCount) => err ? reject(err) : resolve(rowCount))
                         .on('columnMetadata', (ci) => columns = ci)
-                        .on('row', (row) => rows.push(row.map((c) => c.value)));
+                        .on('row', (row) => rows.push(row.map((c) => c.value)))
 
                     for (const [i, _v] of query.params.entries()) {
                         const v =
@@ -95,7 +95,7 @@ class TDSDatabaseConnection implements DBDriver.DBConnection {
                     this._client!.execSql(request);
                 });
 
-                result.push(new TDSResult(this._dbURI, columns, rows));
+                result.push(new TDSResult(this._dbURI, columns, rows, rowCount));
             }
             catch (err: any) {
                 throw typeof err.errno === 'number' && typeof err.sqlState === 'string'
@@ -164,9 +164,21 @@ class TDSDatabaseConnection implements DBDriver.DBConnection {
     }
 }
 
+// nullable: !!(column.flags & 0x01),
+// caseSensitive: !!(column.flags & 0x02),
+// identity: !!(column.flags & 0x10),
+// readOnly: !(column.flags & 0x0C)
+// if (column.udtInfo) {
+//     outColumn.udt = {
+//       name: column.udtInfo.typeName,
+//       database: column.udtInfo.dbname,
+//       schema: column.udtInfo.owningSchema,
+//       assembly: column.udtInfo.assemblyName
+//     }
+
 export class TDSResult extends DBResult {
-    constructor(private _db: DatabaseURI, private _ci: ColumnMetaData[], rows: unknown[][]) {
-        super(_ci.map((ci) => ({ label: ci.colName })), rows);
+    constructor(private _db: DatabaseURI, private _ci: ColumnMetaData[], rows: unknown[][], rowCount: number) {
+        super(_ci.map((ci) => ({ label: ci.colName })), rows, rowCount);
 
         // Fixup BigInt, Numeric/Decimal
         for (let c = 0; c < _ci.length; ++c) {

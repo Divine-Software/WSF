@@ -6,10 +6,13 @@ import { __values } from 'tslib';
 import { DatabaseURI, DBQuery, FIELDS, q, URI } from '../../src';
 
 export interface CommonDBTestParams {
-    name:      string;
-    uri:       URI;
-    createDT:  DBQuery,
-    enableDT:  EnabledDataTypes
+    name:        string;
+    uri:         URI;
+    createDT:    DBQuery,
+    enableDT:    EnabledDataTypes,
+    returning:   boolean,
+    rowKey:      boolean,
+    selectCount: boolean,
 }
 
 export interface DataTypes {
@@ -95,7 +98,7 @@ export function describeCommonDBTest(def: CommonDBTestParams) {
         });
 
         it('builds and executes queries', async () => {
-            expect.assertions(11);
+            expect.assertions(14);
 
             await db.query`insert into ${q.quote('dt')} ${q.values({ text: 'q2', double: 10 })}`;
             const res = await db.query<(DataTypes[])>(
@@ -104,10 +107,14 @@ export function describeCommonDBTest(def: CommonDBTestParams) {
                 q`select * from dt where ${q.join('or', ['q1', 'q2'].map((t) => q`(${q.quote('text')} = ${t})`))} order by text`
             );
 
-            expect(res[FIELDS]).toHaveLength(3)
-            expect(res[FIELDS][0]).toHaveLength(0)
-            expect(res[FIELDS][1]).toHaveLength(0)
-            expect(res[FIELDS][2]).toHaveLength(2)
+            expect(res[FIELDS]).toHaveLength(3);
+            expect(res[FIELDS][0]).toHaveLength(0);
+            expect(res[FIELDS][1]).toHaveLength(0);
+            expect(res[FIELDS][2]).toHaveLength(2);
+
+            expect(res[FIELDS][0].rowCount).toBe(1);
+            expect(res[FIELDS][1].rowCount).toBe(2);
+            expect(res[FIELDS][2].rowCount).toBe(def.selectCount ? 2 : undefined);
 
             expect(res).toHaveLength(2);
             expect(res[0].text).toBe('q1');
@@ -116,6 +123,35 @@ export function describeCommonDBTest(def: CommonDBTestParams) {
             expect(res[1].text).toBe('q2');
             expect(res[1].real).toBe(20);
             expect(res[1].double).toBe(10);
+        });
+
+        it('returns insert/update/delete metadata', async () => {
+            expect.assertions(11);
+
+            const { [FIELDS]: [ rs1 ] } = await db.query`insert into dt (text) values ('md1'), ('md2'), ('md3')`;
+
+            const { [FIELDS]: [ rs2 ] } = def.returning
+                ? db.protocol === 'sqlserver:' // SQL Server quirk
+                    ? await db.query`insert into dt (text) output inserted.serial values ('md4')`
+                    : await db.query`insert into dt (text) values ('md4') returning serial`
+                : await db.query`insert into dt (text) values ('md4')`
+            const serial = def.returning ? String(rs2[0][0]): rs2.rowKey!;
+
+            const { [FIELDS]: [ rs3 ] } = await db.query`select serial, text from dt where serial=${serial}`;
+
+            expect(rs1).toHaveLength(0);
+            expect(rs1.rowCount).toBe(3);
+            expect(typeof rs1.rowKey).toBe(def.rowKey ? 'string' : 'undefined');
+
+            expect(rs2).toHaveLength(def.returning ? 1 : 0);
+            expect(rs2.rowCount).toBe(db.protocol === 'sqlite:' ? undefined : 1); // SQLite quirk
+            expect(typeof rs2.rowKey).toBe(def.rowKey && !def.returning ? 'string' : 'undefined');
+            expect(typeof serial).toBe('string');
+
+            expect(rs3).toHaveLength(1);
+            expect(rs3.rowCount).toBe(def.selectCount ? 1 : undefined);
+            expect(String(rs3[0][0])).toBe(serial);
+            expect(rs3[0][1]).toBe('md4');
         });
     });
 }

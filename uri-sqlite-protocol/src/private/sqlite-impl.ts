@@ -191,7 +191,7 @@ export class SQLiteResult extends DBResult {
             table_name:    c.table    ?? undefined,
             column_name:   c.column   ?? undefined,
             data_type:     c.type     ?? undefined,
-        })) ?? [], rs.rows ?? []);
+        })) ?? [], rs.rows ?? [], rs.changes, rs.lastInsertRowid);
 
         // Convert Uint8Array back to Buffer
         for (let c = 0; c < this.columns.length; ++c) {

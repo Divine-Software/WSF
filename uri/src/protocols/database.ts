@@ -200,7 +200,7 @@ export class DBQuery {
         return this._params;
     }
 
-    toString(placeholder = function(value: unknown, index: number, query: DBQuery) { return `{${index}: «${value}»}` }) {
+    toString(placeholder = (value: unknown, index: number, query: DBQuery) =>`«${value}»`) {
         return this._query.reduce((query, part, index) => index === 0 ? part : `${query}${placeholder(this._params[index - 1], index - 1, this)}${part}`);
     }
 }
@@ -210,7 +210,7 @@ export abstract class DBResult extends Array<unknown[]> {
         return Array;
     }
 
-    constructor(public readonly columns: DBColumnInfo[], records: unknown[][]) {
+    constructor(public readonly columns: DBColumnInfo[], records: unknown[][], public rowCount?: number, public rowKey?: string) {
         super(records.length);
 
         for (const c of columns) {
