@@ -59,16 +59,16 @@ q.values = function(data: Params | Params[], columns?: string[], quote = q.quote
     }
 
     columns ??= Object.keys(params[0]);
-    columns = columns.filter((c) => (params[0] as any)[c] !== undefined);
+    columns = columns.filter((c) => (params[0])[c] !== undefined);
 
     return q`(${q.join(',', columns.map((column) => quote(column)))}) values ${q.join(',', params.map((param) => q`(${values(param)})`))}`
 }
 
 q.assign = function(data: Params, columns?: string[], quote = q.quote): DBQuery {
     columns ??= Object.keys(data);
-    columns = columns.filter((c) => (data as any)[c] !== undefined);
+    columns = columns.filter((c) => (data)[c] !== undefined);
 
-    return q.join(',', columns.map((column) => q`${quote(column)} = ${(data as any)[column]}`));
+    return q.join(',', columns.map((column) => q`${quote(column)} = ${(data)[column]}`));
 }
 
 export interface DBParamsSelector extends ParamsSelector {

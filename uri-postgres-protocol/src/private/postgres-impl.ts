@@ -182,10 +182,10 @@ export class PGResult extends DBResult {
                         delete ci[k];
                     }
                     else if (DBDriver.numericColInfoProps[k]) {
-                        (ci[k] as any) = Number(ci[k]);
+                        ci[k] = Number(ci[k]) as any;
                     }
                     else if (DBDriver.booleanColInfoProps[k]) {
-                        (ci[k] as any) = (ci[k] === 'YES');
+                        ci[k] = (ci[k] === 'YES') as any;
                     }
                 }
             }

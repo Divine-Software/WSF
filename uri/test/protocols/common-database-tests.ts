@@ -1,9 +1,7 @@
 /* eslint-disable jest/no-if */
 /* eslint-disable jest/no-conditional-expect */
 /* eslint-disable jest/no-export */
-import { kill } from 'process';
-import { __values } from 'tslib';
-import { DatabaseURI, DBQuery, FIELDS, q, URI } from '../../src';
+import { DatabaseURI, DBQuery, FIELDS, q, URI, VOID } from '../../src';
 
 export interface CommonDBTestParams {
     name:        string;
@@ -100,11 +98,11 @@ export function describeCommonDBTest(def: CommonDBTestParams) {
         it('builds and executes queries', async () => {
             expect.assertions(14);
 
-            await db.query`insert into ${q.quote('dt')} ${q.values({ text: 'q2', double: 10 })}`;
+            await db.query`insert into ${q.quote('dt')} ${q.values({ text: '🐈 2', double: 10 })}`;
             const res = await db.query<(DataTypes[])>(
-                q('insert into dt (text, "double") values ({t}, {d})', { t: 'q1', d: 11}),
-                q`update dt set "real" = "double" * 2 where "text" in ${q.list(['q1', 'q2'])}`,
-                q`select * from dt where ${q.join('or', ['q1', 'q2'].map((t) => q`(${q.quote('text')} = ${t})`))} order by text`
+                q('insert into dt (text, "double") values ({t}, {d})', { t: '🐈 1', d: 11 }),
+                q`update dt set "real" = "double" * 2 where "text" in ${q.list(['🐈 1', undefined, '🐈 2'])}`,
+                q`select * from dt where ${q.join('or', ['🐈 1', '🐈 2'].map((t) => q`(${q.quote('text')} = ${t})`))} order by text`
             );
 
             expect(res[FIELDS]).toHaveLength(3);
@@ -117,10 +115,10 @@ export function describeCommonDBTest(def: CommonDBTestParams) {
             expect(res[FIELDS][2].rowCount).toBe(def.selectCount ? 2 : undefined);
 
             expect(res).toHaveLength(2);
-            expect(res[0].text).toBe('q1');
+            expect(res[0].text).toBe('🐈 1');
             expect(res[0].real).toBe(22);
             expect(res[0].double).toBe(11);
-            expect(res[1].text).toBe('q2');
+            expect(res[1].text).toBe('🐈 2');
             expect(res[1].real).toBe(20);
             expect(res[1].double).toBe(10);
         });
@@ -152,6 +150,57 @@ export function describeCommonDBTest(def: CommonDBTestParams) {
             expect(rs3.rowCount).toBe(def.selectCount ? 1 : undefined);
             expect(String(rs3[0][0])).toBe(serial);
             expect(rs3[0][1]).toBe('md4');
+        });
+
+        it('handles transactions', async () => {
+            expect.assertions(10);
+
+            await expect(db.query(async () => {
+                await db.$`#dt`.append({ text: '🦮 1.1' });
+
+                const t1a = await db.$`#dt(text);scalar?(eq,text,🦮 1.1)`.load();
+                expect(t1a.valueOf()).toBe('🦮 1.1');
+
+                throw new Error('Force failure');
+            })).rejects.toThrow('Force failure');
+
+            // Transaction #1 should be rolled back completely
+            const t1b = await db.$`#dt(text);scalar?(eq,text,🦮 1.1)`.load();
+            expect(t1b.valueOf()).toBe(VOID)
+
+            const t2a = await db.query(async () => {
+                await db.$`#dt`.append({ text: '🦮 2.1' });
+
+                const t2b = await db.query(async () => {
+                    await db.$`#dt`.append({ text: '🦮 2.2' });
+
+                    const t2c = await db.query`select text from dt where text like ${'🦮 2.%'}`;
+                    expect(t2c).toHaveLength(2);
+
+                    await expect(db.query(async () => {
+                        await db.$`#dt`.append({ text: '🦮 2.3' });
+
+                        const t2d = await db.query`select text from dt where text like ${'🦮 2.%'}`;
+                        expect(t2d).toHaveLength(3);
+
+                        throw new Error('SP reject');
+                    })).rejects.toThrow('SP reject')
+
+                    return db.query`select text from dt where text like ${'🦮 2.%'}`;
+                });
+
+                expect(t2b).toHaveLength(2);
+
+                return db.query`select text from dt where text like ${'🦮 2.%'}`;
+            });
+
+            // Only the last SP should be rolled back
+            const t2e = await db.query`select text from dt where text like ${'🦮 2.%'}`;
+
+            expect(t2a).toHaveLength(2);
+            expect(t2e).toHaveLength(2);
+
+            expect(t2a).toStrictEqual(t2e);
         });
     });
 }
