@@ -8,6 +8,7 @@ export interface CommonDBTestParams {
     uri:         URI;
     createDT:    DBQuery,
     enableDT:    EnabledDataTypes,
+    schemaInfo:  boolean,
     returning:   boolean,
     rowKey:      boolean,
     selectCount: boolean,
@@ -166,7 +167,7 @@ export function describeCommonDBTest(def: CommonDBTestParams) {
 
             // Transaction #1 should be rolled back completely
             const t1b = await db.$`#dt(text);scalar?(eq,text,🦮 1.1)`.load();
-            expect(t1b.valueOf()).toBe(VOID)
+            expect(t1b.valueOf()).toBe(VOID);
 
             const t2a = await db.query(async () => {
                 await db.$`#dt`.append({ text: '🦮 2.1' });
@@ -201,6 +202,58 @@ export function describeCommonDBTest(def: CommonDBTestParams) {
             expect(t2e).toHaveLength(2);
 
             expect(t2a).toStrictEqual(t2e);
+        });
+
+        it('provides result set metadata', async () => {
+            expect.assertions(26);
+
+            await db.query(q`drop table if exists j`,
+                           q`create table j (col integer)`,
+                           q`insert into j values (10)`,
+                           q`insert into dt (text, "int") values ('j', 10)`);
+
+            const res = await db.query<{ text: string, first: number | bigint, second: number | bigint, now: Date }[]>`
+                select text, main.int as first, joined.col as second, current_timestamp as now from dt as main
+                inner join j as joined on joined.col = main.int
+                where text = ${'j'}`;
+
+            expect(res).toHaveLength(1);
+            expect(res[0].text).toBe('j')
+            expect(Number(res[0].first)).toBe(10)
+            expect(Number(res[0].second)).toBe(10)
+            def.enableDT.tstz ? expect(res[0].now).toBeInstanceOf(Date) : expect(typeof res[0].now).toBe('string');
+
+            const { columns } = res[FIELDS][0];
+            expect(columns).toHaveLength(4);
+
+            expect(columns[0].label).toBe('text');
+            expect(columns[1].label).toBe('first');
+            expect(columns[2].label).toBe('second');
+            expect(columns[3].label).toBe('now');
+
+            expect(typeof columns[0].type_id).toBe('number');
+            expect(typeof columns[1].type_id).toBe('number');
+            expect(typeof columns[2].type_id).toBe('number');
+            expect(typeof columns[3].type_id).toBe(db.protocol !== 'sqlite:' ? 'number' : 'undefined');
+
+            await res[FIELDS][0].updateColumnInfo();
+
+            expect(columns[0].table_name).toBe(def.schemaInfo ? 'dt' : undefined);
+            expect(columns[1].table_name).toBe(def.schemaInfo ? 'dt' : undefined);
+            expect(columns[2].table_name).toBe(def.schemaInfo ? 'j'  : undefined);
+            expect(columns[3].table_name).toBeUndefined()
+
+            expect(columns[0].column_name).toBe(def.schemaInfo ? 'text' : undefined);
+            expect(columns[1].column_name).toBe(def.schemaInfo ? 'int'  : undefined);
+            expect(columns[2].column_name).toBe(def.schemaInfo ? 'col'  : undefined);
+            expect(columns[3].column_name).toBeUndefined()
+
+            expect(typeof columns[0].data_type).toBe(def.schemaInfo ? 'string' : 'undefined');
+            expect(typeof columns[1].data_type).toBe(def.schemaInfo ? 'string' : 'undefined');
+            expect(typeof columns[2].data_type).toBe(def.schemaInfo ? 'string' : 'undefined');
+            // `data_type` for non-table columns may or may not be available, so don't test
+
+            expect(def.schemaInfo ? [columns[0].table_catalog, columns[0].table_schema] : [ '_divine_uri_test_' ]).toContain('_divine_uri_test_');
         });
     });
 }

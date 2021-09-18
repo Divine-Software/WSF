@@ -14,6 +14,7 @@ type PropTypeMap<Obj, PropType> = {
 }
 
 export const numericColInfoProps: PropTypeMap<DBColumnInfo, number> = {
+    type_id:                  true,
     ordinal_position:         true,
     character_maximum_length: true,
     character_octet_length:   true,

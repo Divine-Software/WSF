@@ -1,12 +1,5 @@
 import { BasicCredentials, DatabaseURI, DBColumnInfo, DBDriver, DBError, DBMetadata, DBQuery, DBResult, DBTransactionParams, q } from '@divine/uri';
 import { createConnection, Connection, ConnectionOptions, ResultSetHeader, FieldPacket, RowDataPacket, OkPacket } from 'mysql2/promise';
-// import mysql2 from 'mysql2';
-
-// const MySQLTypes: string[] = [];
-
-// for (const [name, value] of Object.entries<number>((mysql2 as any).Types)) {
-//     MySQLTypes[value] = name;
-// }
 
 export class MyConnectionPool extends DBDriver.DBConnectionPool {
     constructor(dbURI: DatabaseURI, private _getCredentials: () => Promise<BasicCredentials | undefined>) {
@@ -165,11 +158,11 @@ export class MyResult extends DBResult {
     constructor(private _db: DatabaseURI, private _rs: [ result: MySQLResult, fields?: FixedFields[] ]) {
         super(_rs[1]?.map((f) => ({
                 label:         f.name,
+                type_id:       f.columnType,
                 table_catalog: f.catalog  || undefined,
                 table_schema:  f.schema   || undefined,
                 table_name:    f.orgTable || undefined,
                 column_name:   f.orgName  || undefined,
-                // udt_name:      MySQLTypes[f.columnType ?? -1] || undefined,
             })) ?? [],
             Array.isArray(_rs[0]) && Array.isArray(_rs[0]?.[0]) ? _rs[0] as unknown[][] : [],
             !Array.isArray(_rs[0]) ? _rs[0].affectedRows : undefined,

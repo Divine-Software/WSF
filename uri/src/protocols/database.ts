@@ -93,6 +93,7 @@ export interface DBMetadata extends Metadata, Required<WithFields<DBResult>> {
 
 export interface DBColumnInfo {
     label:                      string;
+    type_id?:                   number;
 
     table_catalog?:             string;
     table_schema?:              string;

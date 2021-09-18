@@ -43,6 +43,7 @@ describeCommonDBTest({
         json:     true,
         null:     true,
     },
+    schemaInfo:   true,
     returning:    false,
     rowKey:       true,
     selectCount:  false,

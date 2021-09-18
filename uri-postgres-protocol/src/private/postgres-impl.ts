@@ -151,7 +151,10 @@ interface KeyedInformationSchema extends Omit<DBColumnInfo, 'label'> {
 
 export class PGResult extends DBResult {
     constructor(private _db: DatabaseURI, private _rs: QueryArrayResult<unknown[]>) {
-        super(_rs.fields.map((f) => ({ label: f.name })), _rs.rows, _rs.rowCount ?? undefined);
+        super(_rs.fields.map((f) => ({
+                label:   f.name,
+                type_id: f.dataTypeID,
+            })), _rs.rows, _rs.rowCount ?? undefined);
 
         Object.defineProperty(this, '_db', { enumerable: false });
         Object.defineProperty(this, '_rs', { enumerable: false });
