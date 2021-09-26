@@ -47,4 +47,6 @@ describeCommonDBTest({
     returning:    true,
     rowKey:       false,
     selectCount:  true,
+    comments:     false,
+    upsert:       'no',
 });

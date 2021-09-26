@@ -409,6 +409,17 @@ function withDBMetadata<T extends object>(meta: DBMetadata, value: object): T & 
 export abstract class DatabaseURI extends URI {
     protected abstract _createDBConnectionPool(): DBConnectionPool | Promise<DBConnectionPool>;
 
+    $(strings: TemplateStringsArray, ...values: unknown[]): DatabaseURI {
+        const result = super.$(strings, ...values);
+
+        if (result instanceof DatabaseURI) {
+            return result;
+        }
+        else {
+            throw new TypeError(`When using $ on a DatabaseURI, the URI type must not change`)
+        }
+    }
+
     load<T extends object>(_recvCT?: ContentType | string): Promise<T & DBMetadata> {
         return this._session(async (conn) => {
             const dbRef  = await conn.reference(this);
@@ -457,7 +468,7 @@ export abstract class DatabaseURI extends URI {
         });
     }
 
-    query<T extends object = object[]>(query: DBQuery, ...queries: DBQuery[]): Promise<T & DBMetadata>;
+    query<T extends object = object[]>(...queries: DBQuery[]): Promise<T & DBMetadata>;
     query<T extends object = object[]>(query: TemplateStringsArray, ...params: (BasicTypes)[]): Promise<T & DBMetadata>;
     query<T extends object = object[]>(query: string, params: Params ): Promise<T & DBMetadata>;
     query<T>(params: DBTransactionParams, cb: DBCallback<T>): Promise<T>;

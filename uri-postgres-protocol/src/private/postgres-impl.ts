@@ -210,7 +210,7 @@ export class PGReference extends DBDriver.DBReference {
 
     getSaveQuery(value: unknown): DBQuery {
         const [ _scope, objects, keys ] = this.checkSaveArguments(value, !this.isCRDB);
-        const columns = this.columns ?? Object.keys(objects[0]);
+        const columns = (this.columns ?? Object.keys(objects[0])).filter((c) => !keys?.includes(c));
 
         return keys ? q`\
 insert into ${this.getTable()} as _dst_ ${q.values(objects, this.columns)} \

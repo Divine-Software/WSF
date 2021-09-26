@@ -16,7 +16,7 @@ describeCommonDBTest({
             "decimal" decimal(30,5),
             "bigints" text,
             "words"   text,
-            "text"    text,
+            "text"    text comment 'This is plain text',
             "bin"     blob,
             "ts"      datetime(3),
             "tstz"    timestamp(3),
@@ -47,4 +47,6 @@ describeCommonDBTest({
     returning:    false,
     rowKey:       true,
     selectCount:  false,
+    comments:     true,
+    upsert:       'no',
 });

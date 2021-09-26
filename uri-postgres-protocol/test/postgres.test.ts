@@ -5,7 +5,7 @@ import '../src';
 describeCommonDBTest({
     name: 'CockroachDB',
     uri:  new URI('pg://root@localhost:26257/_divine_uri_test_'),
-    createDT: q`
+    createDT: [q`
         create table dt (
             "serial"  serial unique primary key,
             "uuid"    uuid,
@@ -24,7 +24,7 @@ describeCommonDBTest({
             "json"    jsonb,
             "null"    text
         )
-    `,
+    `, q`comment on column dt.text is 'This is plain text'`],
     enableDT: {
         serial:   true,
         uuid:     true,
@@ -47,14 +47,16 @@ describeCommonDBTest({
     returning:    true,
     rowKey:       false,
     selectCount:  true,
+    comments:     true,
+    upsert:       'yes',
 });
 
 describeCommonDBTest({
     name: 'PostgreSQL',
     uri:  new URI('pg://localhost/_divine_uri_test_'),
-    createDT: q`
+    createDT: [q`
         create table dt (
-            "serial"   bigint generated always as identity unique primary key,
+            "serial"   bigserial unique primary key,
             "uuid"     uuid,
             "int"      int,
             "bigint"   bigint,
@@ -71,7 +73,7 @@ describeCommonDBTest({
             "json"     jsonb,
             "null"     text
         )
-    `,
+    `, q`comment on column dt.text is 'This is plain text'`],
     enableDT: {
         serial:   true,
         uuid:     true,
@@ -94,4 +96,6 @@ describeCommonDBTest({
     returning:    true,
     rowKey:       false,
     selectCount:  true,
+    comments:     false, // No column_comment in information_schema.columns
+    upsert:       'with-key',
 });

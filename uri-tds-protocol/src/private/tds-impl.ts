@@ -130,7 +130,7 @@ class TDSDatabaseConnection implements DBDriver.DBConnection {
                     catch (err) {
                         await new Promise<void>((resolve, reject) => this._client?.rollbackTransaction((err) => err ? reject(err) : resolve()));
 
-                        if (err instanceof DBError && err.state === '40001' /* 1213: ER_LOCK_DEADLOCK */ && retry < retries) {
+                        if (err instanceof DBError && err.state === '40001' && retry < retries) {
                             // Sleep a bit, then retry
                             await new Promise((resolve) => setTimeout(resolve, backoff(retry)));
                         }
@@ -208,8 +208,19 @@ export class TDSResult extends DBResult {
 }
 
 export class TDSReference extends DBDriver.DBReference {
-    constructor(dbURI: DatabaseURI) {
-        super(dbURI);
+    protected getPagingClause(): DBQuery {
+        const [ count, offset ] = this.getCountAndOffset();
+
+        return count !== undefined || offset !== undefined
+            ? q`offset ${q.raw(offset ?? 0)} rows ${count !== undefined ? q`fetch next ${q.raw(count)} rows only` : q``}`
+            : q``;
     }
 
+    getAppendQuery(value: unknown): DBQuery {
+        const [ _scope, objects ] = this.checkAppendArguments(value);
+        const columns = q.values(objects, this.columns, 'columns');
+        const values  = q.values(objects, this.columns, 'values');
+
+        return q`insert into ${this.getTable()} ${columns} output "inserted".* values ${values}`;
+    }
 }

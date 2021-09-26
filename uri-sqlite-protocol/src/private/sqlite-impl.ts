@@ -212,9 +212,17 @@ export class SQLiteResult extends DBResult {
 }
 
 export class SQLiteReference extends DBDriver.DBReference {
+    protected getPagingClause(): DBQuery {
+        const [ count, offset ] = this.getCountAndOffset();
+
+        return count !== undefined || offset !== undefined
+            ? q`limit ${q.raw(count ?? -1)} offset ${q.raw(offset ?? 0)}`
+            : q``;
+    }
+
     getSaveQuery(value: unknown): DBQuery {
-        const [ _scope, objects ] = this.checkSaveArguments(value, true);
-        const columns = this.columns ?? Object.keys(objects[0]);
+        const [ _scope, objects, keys] = this.checkSaveArguments(value, true);
+        const columns = (this.columns ?? Object.keys(objects[0])).filter((c) => !keys?.includes(c));
 
         return q`\
 insert into ${this.getTable()} as _dst_ ${q.values(objects, this.columns)} \

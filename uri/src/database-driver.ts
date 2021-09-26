@@ -146,7 +146,7 @@ export class DBReference {
                 : [ undefined, undefined ];
     }
 
-    protected getCountAndOffice(): [ count?: number, offset?: number ] {
+    protected getCountAndOffset(): [ count?: number, offset?: number ] {
         const count  = typeof this.params.count  === 'string' ? Number(this.params.count)  : undefined;
         const offset = typeof this.params.offset === 'string' ? Number(this.params.offset) : undefined;
 
@@ -171,7 +171,7 @@ export class DBReference {
     }
 
     protected getPagingClause(): DBQuery {
-        const [ count, offset ] = this.getCountAndOffice();
+        const [ count, offset ] = this.getCountAndOffset();
 
         return count !== undefined || offset !== undefined
             ? q`offset ${q.raw(offset ?? 0)} rows fetch next ${q.raw(count ?? 'null')} rows only`
@@ -327,6 +327,9 @@ ${this.getLockClause()} \
         else if (Object.keys(this.params).length) {
             throw this.makeIOError(`No parameters may be specified for this query`);
         }
+        else if (!this.filter) {
+            throw this.makeIOError('A filter is required to this query');
+        }
 
         return [ scope, object as Params ];
     }
@@ -349,6 +352,9 @@ ${this.getLockClause()} \
         }
         else if (Object.keys(this.params).length) {
             throw this.makeIOError(`No parameters may be specified for this query`);
+        }
+        else if (!this.filter) {
+            throw this.makeIOError('A filter is required to this query');
         }
     }
 
