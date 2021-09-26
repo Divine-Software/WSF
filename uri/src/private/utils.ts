@@ -6,9 +6,7 @@ export type ValueEncoder = (this: void, value: string, key: string | number) => 
 
 export type BasicTypes = boolean | number | bigint | string | object | null;
 
-export interface Params {
-    [key: string]: BasicTypes | undefined;
-}
+export interface Params extends Record<string, BasicTypes | undefined> {}
 
 export function kvWrapper(wrapped: any): Params {
     return new Proxy(wrapped, {

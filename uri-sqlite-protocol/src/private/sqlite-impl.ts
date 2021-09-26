@@ -5,10 +5,6 @@ import { Worker } from 'worker_threads';
 import type { ExecuteQueryResult, SQLiteWorkerMessage, SQLiteWorkerResult } from './sqlite-worker';
 
 export class SQLiteConnectionPool extends DBDriver.DBConnectionPool {
-    constructor(dbURI: DatabaseURI) {
-        super(dbURI);
-    }
-
     protected async _createDBConnection(): Promise<DBDriver.DBConnection> {
         return new SQLiteDatabaseConnection(this.dbURI);
     }
@@ -31,8 +27,8 @@ class SQLiteDatabaseConnection implements DBDriver.DBConnection {
     private _tlevel = 0;
     private _savepoint = 0;
 
-    constructor(dbURI: DatabaseURI) {
-        this._dbPath = decodeURIComponent(dbURI.pathname);
+    constructor(private _dbURI: DatabaseURI) {
+        this._dbPath = decodeURIComponent(_dbURI.pathname);
         this._dbName = basename(this._dbPath, extname(this._dbPath));
         this._worker = new Worker(require.resolve('./sqlite-worker'))
             .on('online',       ()       => this._transmitNext(true))
@@ -116,7 +112,7 @@ class SQLiteDatabaseConnection implements DBDriver.DBConnection {
 
         for (const query of queries) {
             try {
-                result.push(new SQLiteResult(this._dbName, await this._execute<ExecuteQueryResult>({
+                result.push(new SQLiteResult(this._dbURI, this._dbName, await this._execute<ExecuteQueryResult>({
                     type:   'execute',
                     query:  query.toString(() => '?'),
                     params: query.params.map(toSQLiteType),
@@ -189,8 +185,8 @@ class SQLiteDatabaseConnection implements DBDriver.DBConnection {
 const TypeIDs: Record<string, number> = { integer: 1, real: 2, text: 3, blob: 4, null: 5 };
 
 export class SQLiteResult extends DBResult {
-    constructor(dbPath: string, rs: ExecuteQueryResult) {
-        super(rs.columns?.map((c) => ({
+    constructor(db: DatabaseURI, dbPath: string, rs: ExecuteQueryResult) {
+        super(db, rs.columns?.map((c) => ({
                 label:         c.name,
                 type_id:       TypeIDs[c.type ?? ''],
                 table_catalog: (c.database && dbPath) ?? undefined,

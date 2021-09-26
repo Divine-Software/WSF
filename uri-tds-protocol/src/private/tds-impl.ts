@@ -177,8 +177,8 @@ class TDSDatabaseConnection implements DBDriver.DBConnection {
 //     }
 
 export class TDSResult extends DBResult {
-    constructor(private _db: DatabaseURI, private _ci: ColumnMetaData[], rows: unknown[][], rowCount: number) {
-        super(_ci.map((ci) => ({
+    constructor(db: DatabaseURI, private _ci: ColumnMetaData[], rows: unknown[][], rowCount: number) {
+        super(db, _ci.map((ci) => ({
                 label:   ci.colName,
                 type_id: (ci.type as any).id,
             })), rows, rowCount);
@@ -199,7 +199,6 @@ export class TDSResult extends DBResult {
             }
         }
 
-        Object.defineProperty(this, '_db', { enumerable: false });
         Object.defineProperty(this, '_ci', { enumerable: false });
     }
 

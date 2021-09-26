@@ -150,13 +150,12 @@ interface KeyedInformationSchema extends Omit<DBColumnInfo, 'label'> {
 }
 
 export class PGResult extends DBResult {
-    constructor(private _db: DatabaseURI, private _rs: QueryArrayResult<unknown[]>) {
-        super(_rs.fields.map((f) => ({
+    constructor(db: DatabaseURI, private _rs: QueryArrayResult<unknown[]>) {
+        super(db, _rs.fields.map((f) => ({
                 label:   f.name,
                 type_id: f.dataTypeID,
             })), _rs.rows, _rs.rowCount ?? undefined);
 
-        Object.defineProperty(this, '_db', { enumerable: false });
         Object.defineProperty(this, '_rs', { enumerable: false });
     }
 
@@ -175,22 +174,11 @@ export class PGResult extends DBResult {
                 where ${q.join('or', tables.map((t) => q`(pga.attrelid = ${t})`))}
             `);
 
-            for (const ci of colInfo) {
-                for (const k of Object.keys(ci) as (keyof typeof ci)[]) {
-                    if (k === '_key') {
-                        nfomap[ci._key!] = ci;
-                        delete ci._key;
-                    }
-                    else if (ci[k] === null || ci[k] === undefined) {
-                        delete ci[k];
-                    }
-                    else if (DBDriver.numericColInfoProps[k]) {
-                        ci[k] = Number(ci[k]) as any;
-                    }
-                    else if (DBDriver.booleanColInfoProps[k]) {
-                        ci[k] = (ci[k] === 'YES') as any;
-                    }
-                }
+            for (const _ci of colInfo) {
+                const ci: KeyedInformationSchema = this._fixColumnInfo(_ci);
+
+                nfomap[ci._key!] = ci;
+                delete ci._key;
             }
         }
 

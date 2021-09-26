@@ -7,35 +7,6 @@ import { IOError } from './uri';
 
 const als = new AsyncLocalStorage<{ ref: number, conn: DBConnection }>();
 
-type PropTypeMap<Obj, PropType> = {
-    [K in { [P in keyof Obj]: Required<Obj>[P] extends PropType ? P : never }[keyof Obj] ]: true
-} & {
-    [K in { [P in keyof Obj]: Required<Obj>[P] extends PropType ? never : P }[keyof Obj] ]?: never
-}
-
-export const numericColInfoProps: PropTypeMap<DBColumnInfo, number> = {
-    type_id:                  true,
-    ordinal_position:         true,
-    character_maximum_length: true,
-    character_octet_length:   true,
-    numeric_precision:        true,
-    numeric_precision_radix:  true,
-    numeric_scale:            true,
-    datetime_precision:       true,
-    interval_precision:       true,
-    maximum_cardinality:      true,
-}
-
-export const booleanColInfoProps: PropTypeMap<DBColumnInfo, boolean> = {
-    identity_cycle:      true,
-    is_generated:        true,
-    is_hidden:           true,
-    is_identity:         true,
-    is_nullable:         true,
-    is_self_referencing: true,
-    is_updatable:        true,
-}
-
 export interface DBConnection {
     open(): Promise<void>;
     close(): Promise<void>;

@@ -1,5 +1,6 @@
 import { ContentType } from '@divine/headers';
 import { SecureContextOptions } from 'tls';
+import { DBDriver } from '..';
 import { DBConnection, DBConnectionPool } from '../database-driver';
 import { toObject } from '../parsers';
 import { DBCallback, DBSessionSelector, invalidCharacter, isDatabaseTransactionParams, isDBCallback } from '../private/database-utils';
@@ -31,7 +32,7 @@ q.quote = function(ident: string): DBQuery {
     return q.raw(`"${ident.replace(/"/g, '""')}"`);
 }
 
-q.raw = function(raw: string | number): DBQuery {
+q.raw = function(raw: string | number | bigint): DBQuery {
     return new DBQuery([String(raw)], []);
 }
 
@@ -52,8 +53,8 @@ q.list = function(list: (BasicTypes | undefined)[]): DBQuery {
     }
 }
 
-q.values = function(data: Params | Params[], columns?: string[], quote = q.quote): DBQuery {
-    const params = Array.isArray(data) ? data : [ data ];
+q.values = function(data: Params | Params[], columns?: string[], parts: 'columns' | 'values' | 'expr' = 'expr', quote = q.quote): DBQuery {
+    const params = [ data ].flat();
     const values = (param: any): DBQuery => {
         return q.join(',', columns!.map((column) => q`${param[column]}`))
     }
@@ -61,14 +62,18 @@ q.values = function(data: Params | Params[], columns?: string[], quote = q.quote
     columns ??= Object.keys(params[0]);
     columns = columns.filter((c) => (params[0])[c] !== undefined);
 
-    return q`(${q.join(',', columns.map((column) => quote(column)))}) values ${q.join(',', params.map((param) => q`(${values(param)})`))}`
+    return q`${ parts === 'expr' || parts === 'columns' ? q`(${ q.join(',', columns.map((column) => quote(column))) })` : q``
+            }${ parts === 'expr'                        ? q` values ` : q``
+            }${ parts === 'expr' || parts === 'values'  ? q.join(',', params.map((param) => q`(${ values(param) })`)) : q`` }`;
+
+    // return q`(${q.join(',', columns.map((column) => quote(column)))}) values ${q.join(',', params.map((param) => q`(${values(param)})`))}`
 }
 
 q.assign = function(data: Params, columns?: string[], quote = q.quote): DBQuery {
     columns ??= Object.keys(data);
     columns = columns.filter((c) => (data)[c] !== undefined);
 
-    return q.join(',', columns.map((column) => q`${quote(column)} = ${(data)[column]}`));
+    return q.join(',', columns.map((column) => q`${quote(column)} = ${data[column]}`));
 }
 
 export interface DBParamsSelector extends ParamsSelector {
@@ -99,6 +104,7 @@ export interface DBColumnInfo {
     table_schema?:              string;
     table_name?:                string;
     column_name?:               string;
+
     ordinal_position?:          number;
     column_default?:            unknown;
     is_nullable?:               boolean;
@@ -206,13 +212,94 @@ export class DBQuery {
     }
 }
 
+interface InformationSchema extends Partial<DBColumnInfo> {
+    is_visible?: boolean;
+    type_name?:  string;
+    remarks?:    string;
+}
+
+type PropTypeMap<Obj, PropType> = {
+    [K in { [P in keyof Obj]: Required<Obj>[P] extends PropType ? P : never }[keyof Obj] ]: true
+} & {
+    [K in { [P in keyof Obj]: Required<Obj>[P] extends PropType ? never : P }[keyof Obj] ]?: never
+}
+
+const stringColInfoProps: PropTypeMap<InformationSchema, string> = {
+    label:                    true,
+    table_catalog:            true,
+    table_schema:             true,
+    table_name:               true,
+    column_name:              true,
+    data_type:                true,
+    interval_type:            true,
+    character_set_catalog:    true,
+    character_set_schema:     true,
+    character_set_name:       true,
+    collation_catalog:        true,
+    collation_schema:         true,
+    collation_name:           true,
+    domain_catalog:           true,
+    domain_schema:            true,
+    domain_name:              true,
+    udt_catalog:              true,
+    udt_schema:               true,
+    udt_name:                 true,
+    scope_catalog:            true,
+    scope_schema:             true,
+    scope_name:               true,
+    dtd_identifier:           true,
+    identity_generation:      true,
+    identity_start:           true,
+    identity_increment:       true,
+    identity_maximum:         true,
+    identity_minimum:         true,
+    generation_expression:    true,
+    crdb_sql_type:            true,
+    column_type:              true,
+    column_key:               true,
+    extra:                    true,
+    privileges:               true,
+    column_comment:           true,
+
+    // Extras
+    type_name:                true,
+    remarks:                  true,
+}
+
+const numericColInfoProps: PropTypeMap<InformationSchema, number> = {
+    type_id:                  true,
+    ordinal_position:         true,
+    character_maximum_length: true,
+    character_octet_length:   true,
+    numeric_precision:        true,
+    numeric_precision_radix:  true,
+    numeric_scale:            true,
+    datetime_precision:       true,
+    interval_precision:       true,
+    maximum_cardinality:      true,
+}
+
+const booleanColInfoProps: PropTypeMap<InformationSchema, boolean> = {
+    identity_cycle:      true,
+    is_generated:        true,
+    is_hidden:           true,
+    is_identity:         true,
+    is_nullable:         true,
+    is_self_referencing: true,
+    is_updatable:        true,
+
+    // Extras
+    is_visible:          true,
+}
+
 export abstract class DBResult extends Array<unknown[]> {
     static get [Symbol.species]() {
         return Array;
     }
 
-    constructor(public readonly columns: DBColumnInfo[], records: unknown[][], public rowCount?: number, public rowKey?: string) {
+    constructor(protected _db: DatabaseURI, public readonly columns: DBColumnInfo[], records: unknown[][], public rowCount?: number, public rowKey?: string) {
         super(records.length);
+        Object.defineProperty(this, '_db', { enumerable: false });
 
         for (const c of columns) {
             for (const k of Object.keys(c) as (keyof typeof c)[]) {
@@ -227,7 +314,65 @@ export abstract class DBResult extends Array<unknown[]> {
         }
     }
 
-    abstract updateColumnInfo(): Promise<DBColumnInfo[]>;
+    async updateColumnInfo(): Promise<DBColumnInfo[]> {
+        const columns = this.columns.filter((ci) => ci.table_catalog && ci.table_schema && ci.table_name && ci.column_name)
+            .map((ci) => q`(${ q.join(' and ', [
+                q`table_catalog = ${ci.table_catalog}`,
+                q`table_schema  = ${ci.table_schema}`,
+                q`table_name    = ${ci.table_name}`,
+                q`column_name   = ${ci.column_name}`,
+            ]) })`);
+
+        if (columns) {
+            const colInfo = await this._db.query`select * from information_schema.columns where ${ q.join('or', columns) }`;
+            const infomap: { [key: string]: InformationSchema | undefined } = {};
+
+            for (const _ci of colInfo) {
+                const ci = this._fixColumnInfo(_ci);
+
+                infomap[`${ci.table_catalog}:${ci.table_schema}:${ci.table_name}:${ci.column_name}`] = ci;
+            }
+
+            // Update metadata for all columns
+            this.columns.forEach((ci, i) => {
+                Object.assign(this.columns[i], infomap[`${ci.table_catalog}:${ci.table_schema}:${ci.table_name}:${ci.column_name}`]);
+            })
+        }
+
+        return this.columns;
+    }
+
+    protected _fixColumnInfo(columnRow: object): Partial<DBColumnInfo> {
+        const ci: InformationSchema = {};
+
+        for (const [_k, _v] of Object.entries(columnRow) ) {
+            const k = _k.toLowerCase() as keyof InformationSchema;
+            const v = _v == null || _v === undefined ? _v :
+                      stringColInfoProps[k]  ? String(_v) :
+                      numericColInfoProps[k] ? Number(_v) :
+                      booleanColInfoProps[k] ? typeof _v === 'boolean' ? _v : (_v === 'YES' || _v === 'ALWAYS') :
+                      _v;
+
+            if (v !== null && v !== undefined) {
+                ci[k] = v as any;
+            }
+        }
+
+        // Variations
+        if (Number(ci.data_type) && ci.type_name !== undefined) {
+            ci.data_type = ci.type_name;
+        }
+
+        if (typeof ci.is_visible === 'boolean') {
+            ci.is_hidden ??= !ci.is_visible;
+        }
+
+        if (ci.remarks !== undefined) {
+            ci.column_comment ??= ci.remarks;
+        }
+
+        return ci;
+    }
 
     toObjects<T extends object>(fields?: DBResult[]): T[] & DBMetadata {
         const result: T[] & WithFields<DBResult> = Array<T>(this.length);

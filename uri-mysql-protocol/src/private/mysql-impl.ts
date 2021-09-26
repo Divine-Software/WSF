@@ -152,11 +152,10 @@ class MyDatabaseConnection implements DBDriver.DBConnection {
 
 type MySQLResult = ResultSetHeader | RowDataPacket[] | RowDataPacket[][] | OkPacket | OkPacket[];
 type FixedFields = FieldPacket & { schema?: string, columnType?: number } // Missing from mysql2 d.ts file
-type InformationSchema = Omit<DBColumnInfo, 'label'>;
 
 export class MyResult extends DBResult {
-    constructor(private _db: DatabaseURI, private _rs: [ result: MySQLResult, fields?: FixedFields[] ]) {
-        super(_rs[1]?.map((f) => ({
+    constructor(_db: DatabaseURI, [result, fields]: [ result: MySQLResult, fields?: FixedFields[] ]) {
+        super(_db, fields?.map((f) => ({
                 label:         f.name,
                 type_id:       f.columnType,
                 table_catalog: f.catalog  || undefined,
@@ -164,46 +163,10 @@ export class MyResult extends DBResult {
                 table_name:    f.orgTable || undefined,
                 column_name:   f.orgName  || undefined,
             })) ?? [],
-            Array.isArray(_rs[0]) && Array.isArray(_rs[0]?.[0]) ? _rs[0] as unknown[][] : [],
-            !Array.isArray(_rs[0]) ? _rs[0].affectedRows : undefined,
-            !Array.isArray(_rs[0]) ? _rs[0].insertId?.toString() : undefined
+            Array.isArray(result) && Array.isArray(result?.[0]) ? result as unknown[][] : [],
+            !Array.isArray(result) ? result.affectedRows : undefined,
+            !Array.isArray(result) ? result.insertId?.toString() : undefined
         );
-
-        Object.defineProperty(this, '_db', { enumerable: false });
-        Object.defineProperty(this, '_rs', { enumerable: false });
-    }
-
-    async updateColumnInfo(): Promise<DBColumnInfo[]> {
-        const columns = this._rs[1]?.filter((f) => f.catalog && (f as any).schema && f.orgTable && f.orgName)
-            .map((f) => q`(table_catalog = ${f.catalog} and table_schema = ${f.schema} and table_name = ${f.orgTable} and column_name = ${f.orgName})`)
-
-        if (columns) {
-            const colInfo = await this._db.query`select * from information_schema.columns where ${q.join('or', columns)}`;
-            const infomap: { [key: string]: InformationSchema | undefined } = {};
-
-            for (const _ci of colInfo) {
-                const ci: InformationSchema = {};
-
-                for (const [_k, v] of Object.entries(_ci) ) {
-                    const k = _k.toLowerCase() as keyof typeof ci;
-
-                    if (v !== null && v !== undefined) {
-                        ci[k] = DBDriver.numericColInfoProps[k] ? Number(v) :
-                                DBDriver.booleanColInfoProps[k] ? (v === 'YES') :
-                                v;
-                    }
-                }
-
-                infomap[`${ci.table_catalog}:${ci.table_schema}:${ci.table_name}:${ci.column_name}`] = ci;
-            }
-
-            // Update metadata for all columns
-            this._rs[1]?.forEach((f, i) => {
-                Object.assign(this.columns[i], infomap[`${f.catalog}:${f.schema}:${f.orgTable}:${f.orgName}`]);
-            })
-        }
-
-        return this.columns;
     }
 }
 
