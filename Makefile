@@ -9,6 +9,7 @@ $(NODE_MODULES):package.json */package.json pnpm-lock.yaml pnpm-workspace.yaml .
 	touch $(NODE_MODULES)
 
 build::	prepare
+	$(MAKE) -C uri-jdbc-protocol build-deps
 	pnpm exec tsc --build --verbose
 
 docs::	build
@@ -26,6 +27,7 @@ docs clean distclean::
 	$(MAKE) -C headers $@
 	$(MAKE) -C uri $@
 	$(MAKE) -C uri-image-parser $@
+	$(MAKE) -C uri-jdbc-protocol $@
 	$(MAKE) -C uri-mysql-protocol $@
 	$(MAKE) -C uri-postgres-protocol $@
 	$(MAKE) -C uri-sqlite-protocol $@
