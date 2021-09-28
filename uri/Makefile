@@ -7,8 +7,10 @@ all:		build
 prepare:
 	$(MAKE) -C .. $@
 
-build:		prepare src/private/dbref.ts
+build:		prepare build-deps
 	pnpm exec tsc --build
+
+build-deps:	src/private/dbref.ts
 
 src/private/dbref.ts:	src/private/dbref.pegjs
 	pnpm exec tspegjs $<

@@ -7,11 +7,13 @@ import { IOError } from './uri';
 
 const als = new AsyncLocalStorage<{ ref: number, conn: DBConnection }>();
 
+export type DBCallback<T> = (retryCount: number | null) => Promise<T>;
+
 export interface DBConnection {
     open(): Promise<void>;
     close(): Promise<void>;
     query(...queries: DBQuery[]): Promise<DBResult[]>;
-    transaction<T>(dtp: DBTransactionParams, cb: () => Promise<T>): Promise<T>;
+    transaction<T>(dtp: DBTransactionParams, cb: DBCallback<T>): Promise<T>;
     reference(dbURI: DatabaseURI): DBReference | Promise<DBReference>;
 }
 

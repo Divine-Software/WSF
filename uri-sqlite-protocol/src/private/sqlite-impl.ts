@@ -1,7 +1,8 @@
-import { DatabaseURI, DBColumnInfo, DBDriver, DBError, DBMetadata, DBQuery, DBResult, DBTransactionParams, q } from '@divine/uri';
+import { DatabaseURI, DBColumnInfo, DBDriver, DBError, DBQuery, DBResult, DBTransactionParams, q } from '@divine/uri';
 import { SqliteError } from 'better-sqlite3';
 import { basename, extname } from 'path';
 import { Worker } from 'worker_threads';
+import { SQLiteStatus } from '../sqlite-errors';
 import type { ExecuteQueryResult, SQLiteWorkerMessage, SQLiteWorkerResult } from './sqlite-worker';
 
 export class SQLiteConnectionPool extends DBDriver.DBConnectionPool {
@@ -126,7 +127,7 @@ class SQLiteDatabaseConnection implements DBDriver.DBConnection {
         return result;
     }
 
-    async transaction<T>(dtp: DBTransactionParams, cb: () => Promise<T> | T): Promise<T> {
+    async transaction<T>(dtp: DBTransactionParams, cb: DBDriver.DBCallback<T>): Promise<T> {
         const level = this._tlevel++;
 
         try {
@@ -135,17 +136,17 @@ class SQLiteDatabaseConnection implements DBDriver.DBConnection {
                 const backoff = dtp.backoff ?? DBDriver.DBConnectionPool.defaultBackoff;
 
                 for (let retry = 0; /* Keep going */; ++retry) {
-                    await this.query(dtp.begin ?? q`begin`);
+                    await this.query(q`begin ${dtp.options ?? q``}`);
 
                     try {
-                        const result = await cb();
+                        const result = await cb(retry);
                         await this.query(q`commit`);
                         return result;
                     }
                     catch (err) {
                         await this.query(q`rollback`).catch(() => { throw err });
 
-                        if (err instanceof DBError && err.status === 'SQLITE_BUSY' && retry < retries) {
+                        if (err instanceof DBError && err.status === SQLiteStatus.SQLITE_BUSY && retry < retries) {
                             // Sleep a bit, then retry
                             await new Promise((resolve) => setTimeout(resolve, backoff(retry)));
                         }
@@ -161,7 +162,7 @@ class SQLiteDatabaseConnection implements DBDriver.DBConnection {
                 await this.query(q.raw(`savepoint ${savepoint}`));
 
                 try {
-                    const result = await cb();
+                    const result = await cb(null);
                     await this.query(q.raw(`release ${savepoint}`)).catch(() => 0);
                     return result;
                 }
@@ -218,6 +219,11 @@ export class SQLiteReference extends DBDriver.DBReference {
         return count !== undefined || offset !== undefined
             ? q`limit ${q.raw(count ?? -1)} offset ${q.raw(offset ?? 0)}`
             : q``;
+    }
+
+    protected getLockClause(): DBQuery {
+        super.getLockClause(); // Check syntax
+        return q``;
     }
 
     getSaveQuery(value: unknown): DBQuery {

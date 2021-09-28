@@ -1,3 +1,4 @@
+/* eslint-disable jest/no-standalone-expect */
 /* eslint-disable jest/no-if */
 /* eslint-disable jest/no-conditional-expect */
 /* eslint-disable jest/no-export */
@@ -9,6 +10,7 @@ export interface CommonDBTestParams {
     uri:         URI;
     createDT:    DBQuery | DBQuery[];
     enableDT:    EnabledDataTypes;
+    isolation:   DBQuery;
     schemaInfo:  boolean;
     returning:   boolean;
     rowKey:      boolean;
@@ -63,12 +65,14 @@ export function describeCommonDBTest(def: CommonDBTestParams) {
     describe(`the ${def.name} driver`, () => {
         const db = def.uri as DatabaseURI;
 
-        it('can manage schema', async () => {
-            expect.assertions(1);
-
-            await db.query`drop table if exists "dt"`;
-            await db.query(...[def.createDT].flat());
-            expect(1).toBe(1);
+        // eslint-disable-next-line jest/no-hooks
+        beforeAll(async () => {
+            await db.query(
+                q`drop table if exists "dt"`,
+                q`drop table if exists "j"`,
+                q`create table "j" ("col" integer)`,
+                ...[def.createDT].flat(),
+            );
         });
 
         it('inserts and selects all supported datatypes', async () => {
@@ -156,63 +160,10 @@ export function describeCommonDBTest(def: CommonDBTestParams) {
             expect(rs3[0][1]).toBe('md4');
         });
 
-        it('handles transactions', async () => {
-            expect.assertions(10);
-
-            await expect(db.query(async () => {
-                await db.$`#dt`.append({ text: '🦮 1.1' });
-
-                const t1a = await db.$`#dt(text);scalar?(eq,text,🦮 1.1)`.load();
-                expect(t1a.valueOf()).toBe('🦮 1.1');
-
-                throw new Error('Force failure');
-            })).rejects.toThrow('Force failure');
-
-            // Transaction #1 should be rolled back completely
-            const t1b = await db.$`#dt(text);scalar?(eq,text,🦮 1.1)`.load();
-            expect(t1b.valueOf()).toBe(VOID);
-
-            const t2a = await db.query(async () => {
-                await db.$`#dt`.append({ text: '🦮 2.1' });
-
-                const t2b = await db.query(async () => {
-                    await db.$`#dt`.append({ text: '🦮 2.2' });
-
-                    const t2c = await db.query`select "text" from "dt" where "text" like ${'🦮 2.%'}`;
-                    expect(t2c).toHaveLength(2);
-
-                    await expect(db.query(async () => {
-                        await db.$`#dt`.append({ text: '🦮 2.3' });
-
-                        const t2d = await db.query`select "text" from "dt" where "text" like ${'🦮 2.%'}`;
-                        expect(t2d).toHaveLength(3);
-
-                        throw new Error('SP reject');
-                    })).rejects.toThrow('SP reject')
-
-                    return db.query`select "text" from "dt" where "text" like ${'🦮 2.%'}`;
-                });
-
-                expect(t2b).toHaveLength(2);
-
-                return db.query`select "text" from "dt" where "text" like ${'🦮 2.%'}`;
-            });
-
-            // Only the last SP should be rolled back
-            const t2e = await db.query`select "text" from "dt" where "text" like ${'🦮 2.%'}`;
-
-            expect(t2a).toHaveLength(2);
-            expect(t2e).toHaveLength(2);
-
-            expect(t2a).toStrictEqual(t2e);
-        });
-
         it('provides result set metadata', async () => {
             expect.assertions(27);
 
-            await db.query(q`drop table if exists "j"`,
-                           q`create table "j" ("col" integer)`,
-                           q`insert into "j" values (10)`,
+            await db.query(q`insert into "j" values (10)`,
                            q`insert into "dt" ("text", "int") values ('j', 10)`);
 
             const res = await db.query<{ text: string, first: number | bigint, second: number | bigint, now: Date }[]>`
@@ -265,6 +216,134 @@ export function describeCommonDBTest(def: CommonDBTestParams) {
             ).toContain('_divine_uri_test_');
         });
 
+        it('handles transactions', async () => {
+            expect.assertions(10);
+
+            await expect(db.query(async () => {
+                await db.$`#dt`.append({ text: '🦮 1.1' });
+
+                const t1a = await db.$`#dt(text);scalar?(eq,text,🦮 1.1)`.load();
+                expect(t1a.valueOf()).toBe('🦮 1.1');
+
+                throw new Error('Force failure');
+            })).rejects.toThrow('Force failure');
+
+            // Transaction #1 should be rolled back completely
+            const t1b = await db.$`#dt(text);scalar?(eq,text,🦮 1.1)`.load();
+            expect(t1b.valueOf()).toBe(VOID);
+
+            const t2a = await db.query(async () => {
+                await db.$`#dt`.append({ text: '🦮 2.1' });
+
+                const t2b = await db.query(async () => {
+                    await db.$`#dt`.append({ text: '🦮 2.2' });
+
+                    const t2c = await db.query`select "text" from "dt" where "text" like ${'🦮 2.%'}`;
+                    expect(t2c).toHaveLength(2);
+
+                    await expect(db.query(async () => {
+                        await db.$`#dt`.append({ text: '🦮 2.3' });
+
+                        const t2d = await db.query`select "text" from "dt" where "text" like ${'🦮 2.%'}`;
+                        expect(t2d).toHaveLength(3);
+
+                        throw new Error('SP reject');
+                    })).rejects.toThrow('SP reject')
+
+                    return db.query`select "text" from "dt" where "text" like ${'🦮 2.%'}`;
+                });
+
+                expect(t2b).toHaveLength(2);
+
+                return db.query`select "text" from "dt" where "text" like ${'🦮 2.%'}`;
+            });
+
+            // Only the last SP should be rolled back
+            const t2e = await db.query`select "text" from "dt" where "text" like ${'🦮 2.%'}`;
+
+            expect(t2a).toHaveLength(2);
+            expect(t2e).toHaveLength(2);
+
+            expect(t2a).toStrictEqual(t2e);
+        });
+
+        it('recovers automatically from transaction deadlocks', async () => {
+            expect.assertions(4);
+            jest.setTimeout(30_000);
+
+            let currentStep = 1;
+            const step = async (current: number) => {
+                while (currentStep < current) {
+                    await new Promise((resolve) => setTimeout(resolve, 10));
+                }
+
+                if (currentStep === current) {
+                    ++currentStep;
+                }
+            }
+
+            await db.$`#dt`.append({ text: 'rowlock', real: 110 });
+            await db.$`#j`.append({ col: 110 });
+
+            let maxRetries = 0, start = 0, end = 0;
+
+            const t1 = db.query({ options: def.isolation }, async (retry) => {
+                maxRetries = Math.max(retry!);
+                ++start;
+
+                try {
+                    await db.$`#dt?(eq,text,rowlock)&lock=write`.load();
+                }
+                finally {
+                    await step(1);
+                }
+
+                await step(3);
+
+                return db.query(async () => { // Ensure lock errors propagates savepoints too
+                    const update = db.query`update "j" set "col" = "col" + 2 where "col" = 110 or "col" = 111`;
+
+                    try {
+                        await Promise.race([ update, new Promise((resolve) => setTimeout(resolve, 1000)) ]);
+                    }
+                    finally {
+                        await step(4); // Allow t2 to continue
+                    }
+
+                    await update;
+                    ++end;
+                });
+            });
+
+            const t2 = db.query({ options: def.isolation }, async (retry) => {
+                ++start;
+                maxRetries = Math.max(retry!);
+
+                await step(2);
+
+                try {
+                    await db.query`update "j" set "col" = "col" + 1 where "col" = 110 or "col" = 112`;
+                }
+                finally {
+                    await step(3); // Allow t1 to continue
+                }
+
+                return db.query(async () => { // Ensure lock errors propagates savepoints too
+                    await step(5);
+                    await db.query`update "dt" set "real" = "real" + 1 where "text" = 'rowlock'`;
+                    ++end;
+                });
+            });
+
+            await Promise.all([t1, t2]);
+            const col = await db.$`#j(col);scalar?(eq,col,113)`.load();
+
+            expect(maxRetries).toBeGreaterThanOrEqual(1);
+            expect(start).toBeGreaterThanOrEqual(3);
+            expect(end).toBe(2);
+            expect(Number(col)).toBe(113);
+        });
+
         it('parses and executes common DB references', async () => {
             expect.assertions(16);
 
@@ -280,7 +359,7 @@ export function describeCommonDBTest(def: CommonDBTestParams) {
             expect(a1[FIELDS][0].rowCount ?? a1.length).toBe(1);
             expect(a2[FIELDS][0].rowCount ?? a2.length).toBe(2);
 
-            expect(db.$`#dt`.remove()).rejects.toThrow('A filter is required to this query');
+            await expect(db.$`#dt`.remove()).rejects.toThrow('A filter is required to this query');
 
             const r1 = await db.$`#dt?(eq,serial,${k1})`.remove();
             const r2 = await db.$`#dt?(eq,text,dbref2)`.remove();
@@ -288,7 +367,7 @@ export function describeCommonDBTest(def: CommonDBTestParams) {
             expect(r1[FIELDS][0].rowCount).toBe(1);
             expect(r2[FIELDS][0].rowCount).toBe(1);
 
-            expect(db.$`#dt`.modify({})).rejects.toThrow('A filter is required to this query');
+            await expect(db.$`#dt`.modify({})).rejects.toThrow('A filter is required to this query');
 
             const u1 = await db.$`#dt?(eq,text,dbref3)`.modify({ text: 'dbref3b', real: 1337 });
 
@@ -334,9 +413,8 @@ export function describeCommonDBTest(def: CommonDBTestParams) {
             expect([...l7]).toStrictEqual([{ real: 4 }, { real: 5 } ]);
         });
 
-        (def.upsert === 'no' ? it.skip : it)
-        ('parses and executes save() DB references', async () => {
-            expect.assertions(10);
+        (def.upsert === 'no' ? it.skip : it)('parses and executes save() DB references', async () => {
+            expect.assertions(def.upsert === 'no' ? 0 : 10);
 
             const db1 = def.upsert !== 'with-key'    ? db.$`#dt` : db.$`#dt[serial]`;
             const db2 = def.upsert !== 'without-key' ? db.$`#dt[serial]` : db.$`#dt`;

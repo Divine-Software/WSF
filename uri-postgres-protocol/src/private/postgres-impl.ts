@@ -1,8 +1,10 @@
-import { BasicCredentials, DatabaseURI, DBColumnInfo, DBDriver, DBError, DBMetadata, DBQuery, DBResult, DBTransactionParams, q } from '@divine/uri';
+import { BasicCredentials, DatabaseURI, DBColumnInfo, DBDriver, DBError, DBQuery, DBResult, DBTransactionParams, q } from '@divine/uri';
 import { Client, QueryArrayResult, types } from 'pg';
 import { URL } from 'url';
+import { PostgresSQLState as SQLState } from '../postgres-errors';
 
 const parseBigIntArray = types.getTypeParser(1016);
+const deadlocks = [ SQLState.SERIALIZATION_FAILURE, SQLState.DEADLOCK_DETECTED ] as string[];
 
 export class PGConnectionPool extends DBDriver.DBConnectionPool {
     constructor(dbURI: DatabaseURI, private _getCredentials: () => Promise<BasicCredentials | undefined>) {
@@ -67,14 +69,14 @@ class PGDatabaseConnection implements DBDriver.DBConnection {
                 })));
             }
             catch (err: any) {
-                throw typeof err.code === 'string' ? new DBError(err.code, err.code, 'Query failed', err, query) : err;
+                throw typeof err.code === 'string' ? new DBError('-1', err.code, 'Query failed', err, query) : err;
             }
         }
 
         return result;
     }
 
-    async transaction<T>(dtp: DBTransactionParams, cb: () => Promise<T> | T): Promise<T> {
+    async transaction<T>(dtp: DBTransactionParams, cb: DBDriver.DBCallback<T>): Promise<T> {
         if (!this._client) {
             throw new ReferenceError('Driver not open');
         }
@@ -88,7 +90,7 @@ class PGDatabaseConnection implements DBDriver.DBConnection {
 
                 for (let retry = 0; /* Keep going */; ++retry) {
                     if (!this._crdb || retry === 0) {
-                        await this.query(dtp.begin ?? q`begin`);
+                        await this.query(q`begin ${dtp.options ?? q``}`);
                     }
 
                     if (this._crdb && retry === 0) {
@@ -96,12 +98,12 @@ class PGDatabaseConnection implements DBDriver.DBConnection {
                     }
 
                     try {
-                        const result = await cb();
+                        const result = await cb(retry);
                         await this.query(q`commit`);
                         return result;
                     }
                     catch (err) {
-                        if (err instanceof DBError && err.state === '40001' /* SERIALIZATION_FAILURE */ && retry < retries) {
+                        if (err instanceof DBError && deadlocks.includes(err.state) && retry < retries) {
                             if (this._crdb) {
                                 await this.query(q`rollback to cockroach_restart`).catch(() => { throw err });
                             }
@@ -125,7 +127,7 @@ class PGDatabaseConnection implements DBDriver.DBConnection {
                 await this.query(q.raw(`savepoint ${savepoint}`));
 
                 try {
-                    const result = await cb();
+                    const result = await cb(null);
                     await this.query(q.raw(`release ${savepoint}`)).catch(() => 0);
                     return result;
                 }

@@ -1,6 +1,16 @@
-import { BasicCredentials, DatabaseURI, DBColumnInfo, DBDriver, DBError, DBMetadata, DBQuery, DBResult, DBTransactionParams, q } from '@divine/uri';
-import { ColumnMetaData, Connection, Request, TYPES } from 'tedious';
-import { types } from 'util';
+import { BasicCredentials, DatabaseURI, DBColumnInfo, DBDriver, DBError, DBQuery, DBResult, DBTransactionParams, q } from '@divine/uri';
+import { ColumnMetaData, Connection, ISOLATION_LEVEL, Request, TYPES } from 'tedious';
+import { SQLServerSQLState as SQLState } from '../tds-errors';
+
+const txOptions = /^ISOLATION LEVEL (READ UNCOMMITTED|READ COMMITTED|REPEATABLE READ|SNAPSHOT|SERIALIZABLE)$/;
+
+const ISOLATION_LEVELS: Record<string, ISOLATION_LEVEL | undefined> = {
+    'READ UNCOMMITTED': ISOLATION_LEVEL.READ_UNCOMMITTED,
+    'READ COMMITTED':   ISOLATION_LEVEL.READ_COMMITTED,
+    'REPEATABLE READ':  ISOLATION_LEVEL.REPEATABLE_READ,
+    'SNAPSHOT':         ISOLATION_LEVEL.SNAPSHOT,
+    'SERIALIZABLE':     ISOLATION_LEVEL.SERIALIZABLE,
+}
 
 export class TDSConnectionPool extends DBDriver.DBConnectionPool {
     constructor(dbURI: DatabaseURI, private _getCredentials: () => Promise<BasicCredentials | undefined>) {
@@ -98,8 +108,8 @@ class TDSDatabaseConnection implements DBDriver.DBConnection {
                 result.push(new TDSResult(this._dbURI, columns, rows, rowCount));
             }
             catch (err: any) {
-                throw typeof err.errno === 'number' && typeof err.sqlState === 'string'
-                    ? new DBError(String(err.errno), err.sqlState, 'Query failed', err, query)
+                throw typeof err.number === 'number' && typeof err.state === 'number'
+                    ? new DBError(String(err.number), this._toSQLState(err.number, err.state), 'Query failed', err, query)
                     : err;
             }
         }
@@ -107,7 +117,39 @@ class TDSDatabaseConnection implements DBDriver.DBConnection {
         return result;
     }
 
-    async transaction<T>(dtp: DBTransactionParams, cb: () => Promise<T> | T): Promise<T> {
+    private _toSQLState(error: number, state: number): string {
+        switch (error) { // "Inspired" by the MSSQL JDBC driver
+            case 208:   return SQLState.UNDEFINED_TABLE;
+            case 515:   return SQLState.INTEGRITY_CONSTRAINT_VIOLATION;
+            case 547:   return SQLState.INTEGRITY_CONSTRAINT_VIOLATION;
+            case 1205:  return SQLState.SERIALIZATION_FAILURE;
+            case 2601:  return SQLState.INTEGRITY_CONSTRAINT_VIOLATION;
+            case 2627:  return SQLState.INTEGRITY_CONSTRAINT_VIOLATION;
+            case 2714:  return SQLState.DUPLICATE_TABLE;
+            case 8152:  return SQLState.STRING_DATA_RIGHT_TRUNCATION;
+            default:    return 'S' + ('000' + state).slice(-4);
+        }
+    }
+
+    private _toIsolationLevel(options?: DBQuery): ISOLATION_LEVEL {
+        const expr = options?.toString().trim().toUpperCase();
+
+        if (expr) {
+            const [, level ] = txOptions.exec(expr) ?? [];
+            const result = ISOLATION_LEVELS[level];
+
+            if (result === undefined) {
+                throw new TypeError(`Invalid transaction options ${expr}; must match ${txOptions}`);
+            }
+
+            return result;
+        }
+        else {
+            return ISOLATION_LEVEL.NO_CHANGE;
+        }
+    }
+
+    async transaction<T>(dtp: DBTransactionParams, cb: DBDriver.DBCallback<T>): Promise<T> {
         if (!this._client) {
             throw new ReferenceError('Driver not open');
         }
@@ -115,22 +157,34 @@ class TDSDatabaseConnection implements DBDriver.DBConnection {
         const level = this._tlevel++;
 
         try {
+            const trxName = `_${level}_${this._savepoint++}`;
+
             if (level === 0) {
                 const retries = dtp.retries ?? DBDriver.DBConnectionPool.defaultRetries;
                 const backoff = dtp.backoff ?? DBDriver.DBConnectionPool.defaultBackoff;
+                const options = this._toIsolationLevel(dtp.options);
 
                 for (let retry = 0; /* Keep going */; ++retry) {
-                    await new Promise<void>((resolve, reject) => this._client!.beginTransaction((err) => err ? reject(err) : resolve()));
+                    await new Promise<void>((resolve, reject) => this._client!.beginTransaction((err) => err ? reject(err) : resolve(), trxName, options));
 
                     try {
-                        const result = await cb();
-                        await new Promise<void>((resolve, reject) => this._client!.commitTransaction((err) => err ? reject(err) : resolve()))
+                        const result = await cb(retry);
+                        // @ts-expect-error: trxName is a param
+                        await new Promise<void>((resolve, reject) => this._client!.commitTransaction((err) => err ? reject(err) : resolve(), trxName))
                         return result;
                     }
                     catch (err) {
-                        await new Promise<void>((resolve, reject) => this._client?.rollbackTransaction((err) => err ? reject(err) : resolve()));
+                        try {
+                            // @ts-expect-error: trxName is a param
+                            await new Promise<void>((resolve, reject) => this._client?.rollbackTransaction((err) => err ? reject(err) : resolve()), trxName);
+                        }
+                        catch (err: any) {
+                            if (err.number !== 3903) { // "The ROLLBACK TRANSACTION request has no corresponding BEGIN TRANSACTION"
+                                throw err;
+                            }
+                        }
 
-                        if (err instanceof DBError && err.state === '40001' && retry < retries) {
+                        if (err instanceof DBError && err.status === '1205' && retry < retries) {
                             // Sleep a bit, then retry
                             await new Promise((resolve) => setTimeout(resolve, backoff(retry)));
                         }
@@ -141,15 +195,17 @@ class TDSDatabaseConnection implements DBDriver.DBConnection {
                 }
             }
             else {
-                const savepoint = `_${level}_${this._savepoint++}`;
-
-                await this.query(q.raw(`save tran ${savepoint}`));
+                // // @ts-expect-error: trxName is a param
+                // await new Promise<void>((resolve, reject) => this._client!.saveTransaction((err) => err ? reject(err) : resolve(), trxName));
+                await this.query(q.raw(`save tran ${trxName}`));
 
                 try {
-                    return await cb();
+                    return await cb(null);
                 }
                 catch (err) {
-                    await this.query(q.raw(`rollback tran ${savepoint}`)).catch(() => 0);
+                    // // @ts-expect-error: trxName is a param
+                    // await new Promise<void>((resolve, reject) => this._client?.rollbackTransaction((err) => err ? reject(err) : resolve()), trxName).catch(() => 0);
+                    await this.query(q.raw(`rollback tran ${trxName}`)).catch(() => 0);
                     throw err;
                 }
             }
@@ -214,6 +270,36 @@ export class TDSReference extends DBDriver.DBReference {
         return count !== undefined || offset !== undefined
             ? q`offset ${q.raw(offset ?? 0)} rows ${count !== undefined ? q`fetch next ${q.raw(count)} rows only` : q``}`
             : q``;
+    }
+
+    protected getLockClause(): DBQuery {
+        const lock = this.params.lock;
+
+        if (lock === 'write') {
+            return q`with (updlock, holdlock)`;
+        }
+        else if (lock === 'read') {
+            return q`with (holdlock)`;
+        }
+        else if (lock === undefined) {
+            return q``;
+        }
+        else {
+            throw this.makeIOError(`Invalid 'lock' param: ${lock}: must be 'read' or 'write'`);
+        }
+    }
+
+    getLoadQuery(): DBQuery {
+        this.checkLoadArguments();
+
+        return q`\
+select ${this.scope === 'unique' ? q`distinct` : q``} ${this.getColumns()} \
+from ${this.getTable()} \
+${this.getLockClause()} \
+${this.getWhereClause()} \
+${this.getOrderClause()} \
+${this.getPagingClause()} \
+`;
     }
 
     getAppendQuery(value: unknown): DBQuery {

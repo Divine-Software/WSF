@@ -1,9 +1,8 @@
 import { ContentType } from '@divine/headers';
 import { SecureContextOptions } from 'tls';
-import { DBDriver } from '..';
-import { DBConnection, DBConnectionPool } from '../database-driver';
+import { DBCallback, DBConnection, DBConnectionPool } from '../database-driver';
 import { toObject } from '../parsers';
-import { DBCallback, DBSessionSelector, invalidCharacter, isDatabaseTransactionParams, isDBCallback } from '../private/database-utils';
+import { DBSessionSelector, invalidCharacter, isDatabaseTransactionParams, isDBCallback } from '../private/database-utils';
 import { BasicTypes, esxxEncoder, isTemplateStringsLike, Params } from '../private/utils';
 import { FIELDS, HEADERS, IOError, Metadata, ParamsSelector, STATUS, STATUS_TEXT, URI, VOID, WithFields } from '../uri';
 
@@ -90,7 +89,7 @@ export interface DBParamsSelector extends ParamsSelector {
 export interface DBTransactionParams {
     retries?: number;
     backoff?: (count: number) => number;
-    begin?:   DBQuery;
+    options?: DBQuery;
 }
 
 export interface DBMetadata extends Metadata, Required<WithFields<DBResult>> {

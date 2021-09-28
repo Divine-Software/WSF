@@ -1,5 +1,7 @@
-import { BasicCredentials, DatabaseURI, DBColumnInfo, DBDriver, DBError, DBMetadata, DBQuery, DBResult, DBTransactionParams, q } from '@divine/uri';
-import { createConnection, Connection, ConnectionOptions, ResultSetHeader, FieldPacket, RowDataPacket, OkPacket } from 'mysql2/promise';
+import { BasicCredentials, DatabaseURI, DBDriver, DBError, DBQuery, DBResult, DBTransactionParams, q } from '@divine/uri';
+import { Connection, createConnection, FieldPacket, OkPacket, ResultSetHeader, RowDataPacket } from 'mysql2/promise';
+
+const deadlocks = [ '1205' /* ER_LOCK_DEADLOCK */, '1213' /* ER_LOCK_DEADLOCK */ ];
 
 export class MyConnectionPool extends DBDriver.DBConnectionPool {
     constructor(dbURI: DatabaseURI, private _getCredentials: () => Promise<BasicCredentials | undefined>) {
@@ -91,7 +93,7 @@ class MyDatabaseConnection implements DBDriver.DBConnection {
         return result;
     }
 
-    async transaction<T>(dtp: DBTransactionParams, cb: () => Promise<T> | T): Promise<T> {
+    async transaction<T>(dtp: DBTransactionParams, cb: DBDriver.DBCallback<T>): Promise<T> {
         if (!this._client) {
             throw new ReferenceError('Driver not open');
         }
@@ -104,17 +106,19 @@ class MyDatabaseConnection implements DBDriver.DBConnection {
                 const backoff = dtp.backoff ?? DBDriver.DBConnectionPool.defaultBackoff;
 
                 for (let retry = 0; /* Keep going */; ++retry) {
-                    await this.query(dtp.begin ?? q`begin`);
+                    await (dtp.options
+                        ? this.query(q`set transaction ${dtp.options}`, q`begin`)
+                        : this.query(q`begin`));
 
                     try {
-                        const result = await cb();
+                        const result = await cb(retry);
                         await this.query(q`commit`);
                         return result;
                     }
                     catch (err) {
                         await this.query(q`rollback`).catch(() => { throw err });
 
-                        if (err instanceof DBError && err.state === '40001' /* 1213: ER_LOCK_DEADLOCK */ && retry < retries) {
+                        if (err instanceof DBError && deadlocks.includes(err.status) && retry < retries) {
                             // Sleep a bit, then retry
                             await new Promise((resolve) => setTimeout(resolve, backoff(retry)));
                         }
@@ -130,7 +134,7 @@ class MyDatabaseConnection implements DBDriver.DBConnection {
                 await this.query(q.raw(`savepoint ${savepoint}`));
 
                 try {
-                    const result = await cb();
+                    const result = await cb(null);
                     await this.query(q.raw(`release savepoint ${savepoint}`)).catch(() => 0);
                     return result;
                 }

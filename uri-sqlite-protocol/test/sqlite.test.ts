@@ -43,6 +43,7 @@ describeCommonDBTest({
         json:     false,
         null:     true,
     },
+    isolation:    q`deferred`,
     schemaInfo:   true,
     returning:    true,
     rowKey:       true,

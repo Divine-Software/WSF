@@ -1,4 +1,4 @@
-import { DatabaseURI, DBColumnInfo, DBDriver, DBError, DBMetadata, DBQuery, DBResult, DBTransactionParams, q } from '@divine/uri';
+import { DatabaseURI, DBColumnInfo, DBDriver, DBError, DBQuery, DBResult, DBTransactionParams, q } from '@divine/uri';
 import java from 'java';
 import { promisify } from 'util';
 
@@ -30,6 +30,15 @@ interface DBConnectionBridge {
     begin(isolationLevel: number): Promise<boolean>;
     rollback(): Promise<void>;
     commit(): Promise<void>;
+}
+
+const txOptions = /^ISOLATION LEVEL (READ UNCOMMITTED|READ COMMITTED|REPEATABLE READ|SERIALIZABLE)$/;
+
+const ISOLATION_LEVELS: Record<string, number | undefined>  = {
+    'READ UNCOMMITTED': 1,
+    'READ COMMITTED':   2,
+    'REPEATABLE READ':  4,
+    'SERIALIZABLE':     8,
 }
 
 export class JDBCConnectionPool extends DBDriver.DBConnectionPool {
@@ -77,15 +86,38 @@ class JDBCDatabaseConnection implements DBDriver.DBConnection {
         return result;
     }
 
-    async transaction<T>(dtp: DBTransactionParams, cb: () => Promise<T> | T): Promise<T> {
+    private _toIsolationLevel(options?: DBQuery): number {
+        const expr = options?.toString().trim().toUpperCase();
+
+        if (expr) {
+            const [, level ] = txOptions.exec(expr) ?? [];
+            const result = ISOLATION_LEVELS[level];
+
+            if (result === undefined) {
+                throw new TypeError(`Invalid transaction options ${expr}; must match ${txOptions}`);
+            }
+
+            return result;
+        }
+        else {
+            return 0;
+        }
+    }
+
+    async transaction<T>(dtp: DBTransactionParams, cb: DBDriver.DBCallback<T>): Promise<T> {
+        if (!this._client) {
+            throw new ReferenceError('Driver not open');
+        }
+
         const retries = dtp.retries ?? DBDriver.DBConnectionPool.defaultRetries;
         const backoff = dtp.backoff ?? DBDriver.DBConnectionPool.defaultBackoff;
+        const options = this._toIsolationLevel(dtp.options);
 
         for (let retry = 0; /* Keep going */; ++retry) {
-            const began = await this._client?.begin(0);
+            const began = await this._client?.begin(options);
 
             try {
-                const result = await cb();
+                const result = await cb(began ? retry : null);
                 await this._client?.commit();
                 return result;
             }

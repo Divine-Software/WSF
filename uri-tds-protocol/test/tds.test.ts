@@ -43,6 +43,7 @@ describeCommonDBTest({
         json:     false,
         null:     true,
     },
+    isolation:    q`isolation level serializable`,
     schemaInfo:   false,
     returning:    true,
     rowKey:       false,

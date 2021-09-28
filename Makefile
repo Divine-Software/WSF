@@ -9,6 +9,7 @@ $(NODE_MODULES):package.json */package.json pnpm-lock.yaml pnpm-workspace.yaml .
 	touch $(NODE_MODULES)
 
 build::	prepare
+	$(MAKE) -C uri build-deps
 	$(MAKE) -C uri-jdbc-protocol build-deps
 	pnpm exec tsc --build --verbose
 

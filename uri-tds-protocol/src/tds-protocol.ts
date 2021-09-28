@@ -2,6 +2,8 @@ import { WWWAuthenticate } from '@divine/headers';
 import { BasicAuthScheme, DatabaseURI, DBDriver, URI } from '@divine/uri';
 import { TDSConnectionPool } from './private/tds-impl';
 
+export { SQLServerSQLState } from './tds-errors'
+
 export class TDSURI extends DatabaseURI {
     protected async _createDBConnectionPool(): Promise<DBDriver.DBConnectionPool> {
         const method = this.protocol.slice(0, -1);
