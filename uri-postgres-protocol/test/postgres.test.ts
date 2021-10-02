@@ -47,7 +47,6 @@ describeCommonDBTest({
     schemaInfo:   true,
     returning:    true,
     rowKey:       false,
-    selectCount:  true,
     comments:     true,
     upsert:       'yes',
 });
@@ -97,7 +96,6 @@ describeCommonDBTest({
     schemaInfo:   true,
     returning:    true,
     rowKey:       false,
-    selectCount:  true,
     comments:     false, // No column_comment in information_schema.columns
     upsert:       'with-key',
 });

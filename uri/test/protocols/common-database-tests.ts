@@ -2,7 +2,6 @@
 /* eslint-disable jest/no-if */
 /* eslint-disable jest/no-conditional-expect */
 /* eslint-disable jest/no-export */
-import { inspect } from 'util';
 import { DatabaseURI, DBQuery, FIELDS, q, URI, VOID } from '../../src';
 
 export interface CommonDBTestParams {
@@ -14,7 +13,6 @@ export interface CommonDBTestParams {
     schemaInfo:  boolean;
     returning:   boolean;
     rowKey:      boolean;
-    selectCount: boolean;
     comments:    boolean;
     upsert:      'no' | 'with-key' | 'without-key' | 'yes';
 }
@@ -120,7 +118,7 @@ export function describeCommonDBTest(def: CommonDBTestParams) {
 
             expect(res[FIELDS][0].rowCount).toBe(1);
             expect(res[FIELDS][1].rowCount).toBe(2);
-            expect(res[FIELDS][2].rowCount).toBe(def.selectCount ? 2 : undefined);
+            expect(res[FIELDS][2].rowCount).toBe(2);
 
             expect(res).toHaveLength(2);
             expect(res[0].text).toBe('🐈 1');
@@ -150,12 +148,12 @@ export function describeCommonDBTest(def: CommonDBTestParams) {
             expect(typeof rs1.rowKey).toBe(def.rowKey ? 'string' : 'undefined');
 
             expect(rs2).toHaveLength(def.returning ? 1 : 0);
-            expect(rs2.rowCount).toBe(db.protocol === 'sqlite:' ? undefined : 1); // SQLite quirk
+            expect(rs2.rowCount).toBe(1);
             expect(typeof rs2.rowKey).toBe(def.rowKey && !def.returning ? 'string' : 'undefined');
             expect(typeof serial).toBe('string');
 
             expect(rs3).toHaveLength(1);
-            expect(rs3.rowCount).toBe(def.selectCount ? 1 : undefined);
+            expect(rs3.rowCount).toBe(1);
             expect(String(rs3[0][0])).toBe(serial);
             expect(rs3[0][1]).toBe('md4');
         });
@@ -356,8 +354,8 @@ export function describeCommonDBTest(def: CommonDBTestParams) {
             expect(k2).toBeDefined();
             expect(a1).toHaveLength(def.returning ? 1 : 0);
             expect(a2).toHaveLength(def.returning ? 2 : 0);
-            expect(a1[FIELDS][0].rowCount ?? a1.length).toBe(1);
-            expect(a2[FIELDS][0].rowCount ?? a2.length).toBe(2);
+            expect(a1[FIELDS][0].rowCount).toBe(1);
+            expect(a2[FIELDS][0].rowCount).toBe(2);
 
             await expect(db.$`#dt`.remove()).rejects.toThrow('A filter is required to this query');
 
@@ -428,10 +426,10 @@ export function describeCommonDBTest(def: CommonDBTestParams) {
             const u1 = await db2.save<DataTypes[]>({ serial: k1, real: 3 });
             const u2 = await db1.save<DataTypes[]>({ serial: k2, real: 4 });
 
-            expect(s1[FIELDS][0].rowCount ?? s1.length).toBe(1);
-            expect(s2[FIELDS][0].rowCount ?? s2.length).toBe(1);
-            expect(u1[FIELDS][0].rowCount ?? u1.length).toBe(1);
-            expect(u2[FIELDS][0].rowCount ?? u1.length).toBe(1);
+            expect(s1[FIELDS][0].rowCount).toBe(1);
+            expect(s2[FIELDS][0].rowCount).toBe(1);
+            expect(u1[FIELDS][0].rowCount).toBe(1);
+            expect(u2[FIELDS][0].rowCount).toBe(1);
 
             const l1 = await db.$`#dt;one?(eq,serial,${k1})`.load<DataTypes>();
             const l2 = await db.$`#dt;one?(or(eq,serial,${k1})(eq,serial,${k2}))&sort=-text&count=1`.load<DataTypes>();

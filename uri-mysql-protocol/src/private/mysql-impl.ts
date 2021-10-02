@@ -169,7 +169,7 @@ export class MyResult extends DBResult {
                 column_name:   f.orgName  || undefined,
             })) ?? [],
             Array.isArray(result) && Array.isArray(result?.[0]) ? result as unknown[][] : [],
-            !Array.isArray(result) ? result.affectedRows : undefined,
+            !Array.isArray(result) ? result.affectedRows : result.length,
             !Array.isArray(result) ? result.insertId?.toString() : undefined
         );
     }

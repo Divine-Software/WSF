@@ -57,7 +57,6 @@ describeCommonDBTest({
     schemaInfo:   true,
     returning:    false,
     rowKey:       true,
-    selectCount:  false,
     comments:     true,
     upsert:       'yes',
 });

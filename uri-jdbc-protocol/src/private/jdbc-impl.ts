@@ -20,7 +20,7 @@ type BridgeColumnInfo = Nullable<Required<DBColumnInfo>>
 interface DBBridgeResult {
     columns:  null | BridgeColumnInfo[];
     records:  null | BridgeType[][];
-    rowCount: number;
+    rowCount: null | number;
     rowKey:   null | string;
 }
 
@@ -145,7 +145,7 @@ export class JDBCResult extends DBResult {
         super(db,
               rs.columns?.map((ci) => toColumnInfo(ci)) ?? [],
               rs.records?.map((row) => row.map(fromBridgeType)) ?? [],
-              rs.rowCount ?? undefined,
+              rs.rowCount ?? rs.records?.length,
               rs.rowKey ?? undefined);
     }
 }
