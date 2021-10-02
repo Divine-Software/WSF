@@ -2,6 +2,8 @@ import { WWWAuthenticate } from '@divine/headers';
 import { BasicAuthScheme, DatabaseURI, DBDriver, URI } from '@divine/uri';
 import { MyConnectionPool } from './private/mysql-impl';
 
+export { MariaDBStatus, MySQLStatus } from './mysql-errors';
+
 export class MySQLURI extends DatabaseURI {
     protected async _createDBConnectionPool(): Promise<DBDriver.DBConnectionPool> {
         const method = this.protocol.slice(0, -1);

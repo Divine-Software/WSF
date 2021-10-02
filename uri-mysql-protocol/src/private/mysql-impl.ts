@@ -1,7 +1,8 @@
 import { BasicCredentials, DatabaseURI, DBDriver, DBError, DBQuery, DBResult, DBTransactionParams, q } from '@divine/uri';
 import { Connection, createConnection, FieldPacket, OkPacket, ResultSetHeader, RowDataPacket } from 'mysql2/promise';
+import { MariaDBStatus as Status } from '../mysql-errors';
 
-const deadlocks = [ '1205' /* ER_LOCK_DEADLOCK */, '1213' /* ER_LOCK_DEADLOCK */ ];
+const deadlocks = [ Status.ER_LOCK_WAIT_TIMEOUT, Status.ER_LOCK_DEADLOCK ] as string[];
 
 export class MyConnectionPool extends DBDriver.DBConnectionPool {
     constructor(dbURI: DatabaseURI, private _getCredentials: () => Promise<BasicCredentials | undefined>) {

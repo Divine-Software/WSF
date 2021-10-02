@@ -69,7 +69,7 @@ class PGDatabaseConnection implements DBDriver.DBConnection {
                 })));
             }
             catch (err: any) {
-                throw typeof err.code === 'string' ? new DBError('-1', err.code, 'Query failed', err, query) : err;
+                throw typeof err.code === 'string' ? new DBError('', err.code, 'Query failed', err, query) : err;
             }
         }
 
