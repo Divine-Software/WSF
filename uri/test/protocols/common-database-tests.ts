@@ -40,7 +40,7 @@ export type EnabledDataTypes = Record<keyof DataTypes, boolean>
 
 type Nullable<T> = { [P in keyof T]: null | T[P] }
 
-export function describeCommonDBTest(def: CommonDBTestParams) {
+export function describeCommonDBTest(def: CommonDBTestParams): void {
     const columns: Nullable<DataTypes> = {
         serial:    BigInt(1),
         uuid:      '00000000-0000-0000-0000-000000000000',
@@ -71,6 +71,11 @@ export function describeCommonDBTest(def: CommonDBTestParams) {
                 q`create table "j" ("col" integer)`,
                 ...[def.createDT].flat(),
             );
+        });
+
+        // eslint-disable-next-line jest/no-hooks
+        afterAll(async () => {
+            await db.close();
         });
 
         it('inserts and selects all supported datatypes', async () => {
@@ -296,7 +301,7 @@ export function describeCommonDBTest(def: CommonDBTestParams) {
                     await step(1);
                 }
 
-                await step(3);
+                await step(4);
 
                 return db.query(async () => { // Ensure lock errors propagates savepoints too
                     const update = db.query`update "j" set "col" = "col" + 2 where "col" = 110 or "col" = 111`;
@@ -305,7 +310,7 @@ export function describeCommonDBTest(def: CommonDBTestParams) {
                         await Promise.race([ update, new Promise((resolve) => setTimeout(resolve, 1000)) ]);
                     }
                     finally {
-                        await step(4); // Allow t2 to continue
+                        await step(5); // Allow t2 to continue
                     }
 
                     await update;
@@ -327,7 +332,7 @@ export function describeCommonDBTest(def: CommonDBTestParams) {
                 }
 
                 return db.query(async () => { // Ensure lock errors propagates savepoints too
-                    await step(5);
+                    await step(6);
                     await db.query`update "dt" set "real" = "real" + 1 where "text" = 'rowlock'`;
                     ++end;
                 });

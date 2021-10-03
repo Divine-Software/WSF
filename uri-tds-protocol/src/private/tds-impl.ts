@@ -1,4 +1,4 @@
-import { BasicCredentials, DatabaseURI, DBColumnInfo, DBDriver, DBError, DBQuery, DBResult, DBTransactionParams, q } from '@divine/uri';
+import { BasicCredentials, DatabaseURI, DBColumnInfo, DBDriver, DBError, DBParamsSelector, DBQuery, DBResult, DBTransactionParams, q } from '@divine/uri';
 import { ColumnMetaData, Connection, ISOLATION_LEVEL, Request, TYPES } from 'tedious';
 import { SQLServerSQLState as SQLState } from '../tds-errors';
 
@@ -13,12 +13,12 @@ const ISOLATION_LEVELS: Record<string, ISOLATION_LEVEL | undefined> = {
 }
 
 export class TDSConnectionPool extends DBDriver.DBConnectionPool {
-    constructor(dbURI: DatabaseURI, private _getCredentials: () => Promise<BasicCredentials | undefined>) {
-        super(dbURI);
+    constructor(dbURI: DatabaseURI, params: DBParamsSelector['params'], private _getCredentials: () => Promise<BasicCredentials | undefined>) {
+        super(dbURI, params);
     }
 
     protected async _createDBConnection(): Promise<DBDriver.DBConnection> {
-        return new TDSDatabaseConnection(this.dbURI, await this._getCredentials());
+        return new TDSDatabaseConnection(this._dbURI, await this._getCredentials());
     }
 }
 
@@ -70,9 +70,13 @@ class TDSDatabaseConnection implements DBDriver.DBConnection {
         }
     }
 
+    async ping(_timeout: number) {
+        await this.query(q`select null`);
+    }
+
     async query(...queries: DBQuery[]): Promise<DBResult[]> {
         if (!this._client) {
-            throw new ReferenceError('Driver not open');
+            throw new ReferenceError('DBConnection closed');
         }
 
         const result: DBResult[] = [];
@@ -151,7 +155,7 @@ class TDSDatabaseConnection implements DBDriver.DBConnection {
 
     async transaction<T>(dtp: DBTransactionParams, cb: DBDriver.DBCallback<T>): Promise<T> {
         if (!this._client) {
-            throw new ReferenceError('Driver not open');
+            throw new ReferenceError('DBConnection closed');
         }
 
         const level = this._tlevel++;

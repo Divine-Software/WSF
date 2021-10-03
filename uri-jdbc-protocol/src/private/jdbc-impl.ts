@@ -26,6 +26,7 @@ interface DBBridgeResult {
 
 interface DBConnectionBridge {
     close(): Promise<void>;
+    ping(timeout: number): Promise<void>;
     query(query: string, values: BridgeType[][]): Promise<DBBridgeResult>;
     begin(isolationLevel: number): Promise<boolean>;
     rollback(): Promise<void>;
@@ -43,7 +44,7 @@ const ISOLATION_LEVELS: Record<string, number | undefined>  = {
 
 export class JDBCConnectionPool extends DBDriver.DBConnectionPool {
     protected async _createDBConnection(): Promise<DBDriver.DBConnection> {
-        return new JDBCDatabaseConnection(this.dbURI);
+        return new JDBCDatabaseConnection(this._dbURI);
     }
 }
 
@@ -63,9 +64,17 @@ class JDBCDatabaseConnection implements DBDriver.DBConnection {
         delete this._client;
     }
 
+    async ping(timeout: number) {
+        if (!this._client) {
+            throw new ReferenceError('DBConnection closed');
+        }
+
+        await this._client.ping(timeout);
+    }
+
     async query(...queries: DBQuery[]): Promise<DBResult[]> {
         if (!this._client) {
-            throw new ReferenceError('Driver not open');
+            throw new ReferenceError('DBConnection closed');
         }
 
         const result: DBResult[] = [];
@@ -106,7 +115,7 @@ class JDBCDatabaseConnection implements DBDriver.DBConnection {
 
     async transaction<T>(dtp: DBTransactionParams, cb: DBDriver.DBCallback<T>): Promise<T> {
         if (!this._client) {
-            throw new ReferenceError('Driver not open');
+            throw new ReferenceError('DBConnection closed');
         }
 
         const retries = dtp.retries ?? DBDriver.DBConnectionPool.defaultRetries;

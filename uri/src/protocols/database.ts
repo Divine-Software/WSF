@@ -77,7 +77,10 @@ q.assign = function(data: Params, columns?: string[], quote = q.quote): DBQuery 
 
 export interface DBParamsSelector extends ParamsSelector {
     params: {
-        timeout?: number;
+        timeout?:        number;
+        ttl?:            number;
+        keepalive?:      number;
+        maxConnections?: number;
 
         tls?: SecureContextOptions & {
             rejectUnauthorized?: boolean;
@@ -406,7 +409,7 @@ function withDBMetadata<T extends object>(meta: DBMetadata, value: object): T & 
 }
 
 export abstract class DatabaseURI extends URI {
-    protected abstract _createDBConnectionPool(): DBConnectionPool | Promise<DBConnectionPool>;
+    protected abstract _createDBConnectionPool(params: DBParamsSelector['params']): DBConnectionPool | Promise<DBConnectionPool>;
 
     $(strings: TemplateStringsArray, ...values: unknown[]): DatabaseURI {
         const result = super.$(strings, ...values);
@@ -495,12 +498,27 @@ export abstract class DatabaseURI extends URI {
         });
     }
 
+    async close(): Promise<void> {
+        const states = this._getBestSelector<DBSessionSelector>(this.selectors.session)?.states;
+
+        if (states) {
+            const database = states.database;
+            delete states.database;
+            await database?.close();
+        }
+    }
+
     private async _session<T>(cb: (connection: DBConnection) => Promise<T>): Promise<T> {
         let states = this._getBestSelector<DBSessionSelector>(this.selectors.session)?.states;
 
         if (!states) {
-            states = { database: await this._createDBConnectionPool() };
-            this.addSelector({ states });
+            states = {};
+            this.addSelector({ selector: { uri: this.href.replace(/#.*/, '') }, states });
+        }
+
+        if (!states.database) {
+            const params = this._getBestSelector<DBParamsSelector>(this.selectors.params)?.params;
+            states.database = await this._createDBConnectionPool(params ?? {});
         }
 
         return states.database!.session(cb);

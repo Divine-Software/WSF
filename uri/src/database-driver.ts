@@ -1,27 +1,44 @@
 /* eslint-disable @typescript-eslint/no-namespace */
+import { Condition } from '@divine/synchronization';
 import { AsyncLocalStorage } from 'async_hooks';
 import { parse as parseDBRef } from './private/dbref';
 import { Params } from './private/utils';
-import { DatabaseURI, DBColumnInfo, DBMetadata, DBQuery, DBResult, DBTransactionParams, q } from './protocols/database';
+import { DatabaseURI, DBParamsSelector, DBQuery, DBResult, DBTransactionParams, q } from './protocols/database';
 import { IOError } from './uri';
 
-const als = new AsyncLocalStorage<{ ref: number, conn: DBConnection }>();
+const als = new AsyncLocalStorage<{ ref: number, conn: DBConnection, failed: boolean }>();
 
 export type DBCallback<T> = (retryCount: number | null) => Promise<T>;
 
 export interface DBConnection {
     open(): Promise<void>;
     close(): Promise<void>;
+    ping(timeout: number): Promise<void>;
     query(...queries: DBQuery[]): Promise<DBResult[]>;
     transaction<T>(dtp: DBTransactionParams, cb: DBCallback<T>): Promise<T>;
     reference(dbURI: DatabaseURI): DBReference | Promise<DBReference>;
 }
 
-export abstract class DBConnectionPool {
-    static readonly defaultRetries = 8;
-    static readonly defaultBackoff = ((count: number) => (2 ** count - Math.random()) * 100);
+interface IdleConnection {
+    conn:    DBConnection;
+    expires: number;
+}
 
-    constructor(protected dbURI: DatabaseURI) {
+export abstract class DBConnectionPool {
+    static readonly defaultRetries        = 8;
+    static readonly defaultBackoff        = ((count: number): number => (2 ** count - Math.random()) * 100);
+    static readonly defaultTimeout        = 60_000;
+    static readonly defaultTTL            = 30_000;
+    static readonly defaultKeepalive      = 10_000;
+    static readonly defaultMaxConnections = 10;
+
+    private _connectionCount = 0;
+    private _usedConnections: Set<DBConnection> = new Set();
+    private _idleConnections: IdleConnection[] = [];
+    private _idleCondition = new Condition();
+
+    constructor(protected _dbURI: DatabaseURI, protected _params: DBParamsSelector['params']) {
+        setInterval(() => this._checkIdleConnections(), _params.keepalive ?? DBConnectionPool.defaultKeepalive).unref();
     }
 
     protected abstract _createDBConnection(): DBConnection | Promise<DBConnection>;
@@ -30,15 +47,7 @@ export abstract class DBConnectionPool {
         let tls = als.getStore();
 
         if (!tls) {
-            tls = { ref: 0, conn: await this._createDBConnection() };
-
-            try {
-                await tls.conn.open();
-            }
-            catch (err: any) {
-                await tls.conn.close().catch(() => 0);
-                throw err instanceof IOError ? err : new IOError('Failed to open new database connection', err, this.dbURI);
-            }
+            tls = { ref: 0, conn: await this._obtainConnection(), failed: false };
 
             const actual = cb;
             // @ts-expect-error (@types/node is wrong)
@@ -49,13 +58,92 @@ export abstract class DBConnectionPool {
             ++tls.ref;
             return await cb(tls.conn);
         }
+        catch (err) {
+            tls.failed = true;
+            throw err;
+        }
         finally {
             if (--tls.ref === 0) {
                 const conn = tls.conn;
                 tls.conn = null!
-                await conn.close().catch(() => 0);
+                /* async */ this._releaseConnection(conn, tls.failed);
             }
         }
+    }
+
+    async close(): Promise<void> {
+        // Close all connections (including in-use connections, if any)
+
+        const connections = [...this._idleConnections.map((ic) => ic.conn), ...this._usedConnections];
+        await Promise.all(connections.map((c) => this._closeConnection(c, false)));
+    }
+
+    private async _obtainConnection(): Promise<DBConnection> {
+        const timeout = this._params.timeout ?? DBConnectionPool.defaultTimeout;
+        const expires = Date.now() + timeout
+
+        while (Date.now() <= expires) {
+            let conn = this._idleConnections.pop()?.conn;
+
+            if (!conn && this._connectionCount < (this._params.maxConnections ?? DBConnectionPool.defaultMaxConnections)) {
+                ++this._connectionCount;
+
+                try {
+                    conn = await this._createDBConnection();
+                    await conn.open();
+                }
+                catch (err: any) {
+                    --this._connectionCount;
+                    await conn?.close().catch(() => 0);
+                    throw err instanceof IOError ? err : new IOError('Failed to open new database connection', err, this._dbURI);
+                }
+            }
+
+            if (conn) {
+                this._usedConnections.add(conn);
+                return conn;
+            }
+
+            await this._idleCondition.wait(expires - Date.now())
+        }
+
+        throw new IOError(`Failed to obtain a database connection within ${timeout} ms`, undefined, this._dbURI);
+    }
+
+    private async _releaseConnection(conn: DBConnection, maybeDead: boolean): Promise<void> {
+        if (maybeDead && await this._closeConnection(conn, true)) {
+            return;
+        }
+
+        if (this._usedConnections.delete(conn)) { // Only re-add if connection is still in use
+            this._idleConnections.push({ conn, expires: Date.now() + (this._params.ttl ?? DBConnectionPool.defaultTTL) });
+            this._idleCondition.notify();
+        }
+    }
+
+    private async _closeConnection(conn: DBConnection, onlyIfDead: boolean): Promise<boolean> {
+        if (onlyIfDead) {
+            try {
+                await conn.ping(this._params.keepalive ?? DBConnectionPool.defaultKeepalive);
+                return false; // All good, connection not closed
+            }
+            catch (err) {
+                // Close it
+            }
+        }
+
+        // Remove connection from lists and close it
+        --this._connectionCount;
+        this._usedConnections.delete(conn);
+        this._idleConnections = this._idleConnections.filter((ic) => ic.conn !== conn);
+        this._idleCondition.notify();
+
+        await conn.close().catch(() => 0);
+        return true; // Connection closed
+    }
+
+    private async _checkIdleConnections() {
+        await Promise.all(this._idleConnections.map((ic) => this._closeConnection(ic.conn, ic.expires > Date.now())));
     }
 }
 

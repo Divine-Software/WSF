@@ -57,6 +57,8 @@ export interface AuthSessionSelector extends SessionSelector {
 }
 
 export function *enumerateSelectors<T extends SelectorBase>(sels: T[] | undefined, url: URL, challenge?: WWWAuthenticate): Generator<{ sel: T, score: number }> {
+    const urlWithoutHash = url.href.replace(/#.*/, '');
+
     for (const sel of sels ?? []) {
         let score = 0;
 
@@ -66,7 +68,7 @@ export function *enumerateSelectors<T extends SelectorBase>(sels: T[] | undefine
         score += selectorScore(sel, 'pathname',   url.pathname)      * 8;
         score += selectorScore(sel, 'port',       url.port)          * 16;
         score += selectorScore(sel, 'hostname',   url.hostname)      * 32;
-        score += selectorScore(sel, 'uri',        url.toString())    * 64;
+        score += selectorScore(sel, 'uri',        urlWithoutHash)    * 64;
 
         if (score >= 0) {
             yield { sel, score };

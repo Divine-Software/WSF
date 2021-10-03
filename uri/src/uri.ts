@@ -73,8 +73,8 @@ export class URI extends URL {
 
     selectors: {
         auth?:    AuthSelector[];
-        header?:  HeadersSelector[];
-        param?:   ParamsSelector[];
+        headers?:  HeadersSelector[];
+        params?:   ParamsSelector[];
         session?: SessionSelector[];
     };
 
@@ -120,12 +120,12 @@ export class URI extends URL {
         }
 
         if (isHeadersSelector(selector)) {
-            (this.selectors.header ??= []).push(selector);
+            (this.selectors.headers ??= []).push(selector);
             valid = true;
         }
 
         if (isParamsSelector(selector)) {
-            (this.selectors.param ??= []).push(selector);
+            (this.selectors.params ??= []).push(selector);
             valid = true;
         }
 
@@ -171,6 +171,10 @@ export class URI extends URL {
 
     async query<T extends object>(..._args: unknown[]): Promise<T & Metadata> {
         throw new TypeError(`URI ${this} does not support query()`);
+    }
+
+    async close(): Promise<void> {
+        // No-op by default
     }
 
     async *[Symbol.asyncIterator](): AsyncIterableIterator<Buffer> {

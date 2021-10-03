@@ -97,7 +97,7 @@ export class HTTPURI extends URI {
         headers = {
             'accept-encoding': 'gzip, deflate, br',
             'user-agent':      `Divine-URI/${pkg.version}`,
-            ...this._getBestSelector(this.selectors.header)?.headers,
+            ...this._getBestSelector(this.selectors.headers)?.headers,
             ...headers
         };
 
@@ -115,7 +115,7 @@ export class HTTPURI extends URI {
         // Bug workaround?
         headers = Object.fromEntries(Object.entries(headers).filter(([, value]) => value !== undefined));
 
-        const params  = this._getBestSelector<HTTPParamsSelector>(this.selectors.param)?.params ?? {};
+        const params  = this._getBestSelector<HTTPParamsSelector>(this.selectors.params)?.params ?? {};
         const options = { agent: params.agent, timeout: params.timeout };
         const request = async (method: string, url: string) => {
             const request =

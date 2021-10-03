@@ -1,3 +1,4 @@
+import java.io.IOException;
 import java.nio.charset.Charset;
 import java.sql.*;
 import java.time.Instant;
@@ -94,6 +95,12 @@ public class DBConnectionBridge implements AutoCloseable {
 
     public void close() throws SQLException {
         db.close();
+    }
+
+    public void ping(int timeout) throws IOException, SQLException {
+        if (!db.isValid(timeout)) {
+            throw new IOException("Connection is not valid");
+        }
     }
 
     public DBResult query(String query, Object[] params) throws SQLException {

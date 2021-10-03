@@ -7,7 +7,7 @@ import type { ExecuteQueryResult, SQLiteWorkerMessage, SQLiteWorkerResult } from
 
 export class SQLiteConnectionPool extends DBDriver.DBConnectionPool {
     protected async _createDBConnection(): Promise<DBDriver.DBConnection> {
-        return new SQLiteDatabaseConnection(this.dbURI);
+        return new SQLiteDatabaseConnection(this._dbURI);
     }
 }
 
@@ -106,6 +106,10 @@ class SQLiteDatabaseConnection implements DBDriver.DBConnection {
             await this._execute({ 'type': 'shutdown' }).catch(() => 0);
             await this._worker.terminate().catch(() => 0);
         }
+    }
+
+    async ping(_timeout: number) {
+        await this.query(q`select null`);
     }
 
     async query(...queries: DBQuery[]): Promise<DBResult[]> {

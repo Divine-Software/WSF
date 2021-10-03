@@ -1,16 +1,16 @@
-import { BasicCredentials, DatabaseURI, DBDriver, DBError, DBQuery, DBResult, DBTransactionParams, q } from '@divine/uri';
+import { BasicCredentials, DatabaseURI, DBDriver, DBError, DBParamsSelector, DBQuery, DBResult, DBTransactionParams, q } from '@divine/uri';
 import { Connection, createConnection, FieldPacket, OkPacket, ResultSetHeader, RowDataPacket } from 'mysql2/promise';
 import { MariaDBStatus as Status } from '../mysql-errors';
 
 const deadlocks = [ Status.ER_LOCK_WAIT_TIMEOUT, Status.ER_LOCK_DEADLOCK ] as string[];
 
 export class MyConnectionPool extends DBDriver.DBConnectionPool {
-    constructor(dbURI: DatabaseURI, private _getCredentials: () => Promise<BasicCredentials | undefined>) {
-        super(dbURI);
+    constructor(dbURI: DatabaseURI, params: DBParamsSelector['params'], private _getCredentials: () => Promise<BasicCredentials | undefined>) {
+        super(dbURI, params);
     }
 
     protected async _createDBConnection(): Promise<DBDriver.DBConnection> {
-        return new MyDatabaseConnection(this.dbURI, await this._getCredentials());
+        return new MyDatabaseConnection(this._dbURI, await this._getCredentials());
     }
 }
 
@@ -52,9 +52,17 @@ class MyDatabaseConnection implements DBDriver.DBConnection {
         delete this._client;
     }
 
+    async ping(_timeout: number) {
+        if (!this._client) {
+            throw new ReferenceError('DBConnection closed');
+        }
+
+        await this._client.ping();
+    }
+
     async query(...queries: DBQuery[]): Promise<DBResult[]> {
         if (!this._client) {
-            throw new ReferenceError('Driver not open');
+            throw new ReferenceError('DBConnection closed');
         }
 
         const result: DBResult[] = [];
@@ -96,7 +104,7 @@ class MyDatabaseConnection implements DBDriver.DBConnection {
 
     async transaction<T>(dtp: DBTransactionParams, cb: DBDriver.DBCallback<T>): Promise<T> {
         if (!this._client) {
-            throw new ReferenceError('Driver not open');
+            throw new ReferenceError('DBConnection closed');
         }
 
         const level = this._tlevel++;

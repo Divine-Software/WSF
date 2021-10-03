@@ -41,6 +41,7 @@ importers:
   uri:
     specifiers:
       '@divine/headers': workspace:^1.3.3
+      '@divine/synchronization': ^1.2.1
       '@iarna/toml': ^2.2.5
       '@types/dicer': ^0.2.1
       '@types/mime-types': ^2.1.1
@@ -57,6 +58,7 @@ importers:
       yaml: ^1.10.2
     dependencies:
       '@divine/headers': link:../headers
+      '@divine/synchronization': 1.2.1
       '@iarna/toml': 2.2.5
       dicer: 0.3.0
       iconv-lite: 0.6.3
@@ -764,6 +766,13 @@ packages:
       exec-sh: 0.3.6
       minimist: 1.2.5
     dev: true
+
+  /@divine/synchronization/1.2.1:
+    resolution: {integrity: sha512-ReWu1nv6qQFy6qZKUJPIacZ3vYs6c/RP/UYNi6yI+skIi8kFsYiveWyNhGTj8nJeNsik7zy6fZqvupqkOP7Mbg==}
+    dependencies:
+      denque: 1.5.1
+      tslib: 2.3.1
+    dev: false
 
   /@eslint/eslintrc/0.4.3:
     resolution: {integrity: sha512-J6KFFz5QCYUJq3pf0mjEcCJVERbzv71PUIDczuh9JkwGEzced6CO5ADLHB1rbf/+oPBtoPfMYNOpGDzCANlbXw==}

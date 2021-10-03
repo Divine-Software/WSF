@@ -1,4 +1,4 @@
-import { DatabaseURI, DBDriver, URI } from '@divine/uri';
+import { DatabaseURI, DBDriver, DBParamsSelector, URI } from '@divine/uri';
 import { SQLiteConnectionPool } from './private/sqlite-impl';
 
 export { SQLiteStatus } from './sqlite-errors';
@@ -12,8 +12,8 @@ export class SQLiteURI extends DatabaseURI {
         (this as any).href = `${this.protocol}//${file.host}${file.pathname}${this.search}${this.hash}`
     }
 
-    protected async _createDBConnectionPool(): Promise<DBDriver.DBConnectionPool> {
-        return new SQLiteConnectionPool(this);
+    protected async _createDBConnectionPool(params: DBParamsSelector['params']): Promise<DBDriver.DBConnectionPool> {
+        return new SQLiteConnectionPool(this, params);
     }
 }
 
