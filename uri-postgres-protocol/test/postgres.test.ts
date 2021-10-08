@@ -49,6 +49,7 @@ describeCommonDBTest({
     rowKey:       false,
     comments:     true,
     upsert:       'yes',
+    defaultVal:   true,
 });
 
 describeCommonDBTest({
@@ -98,4 +99,5 @@ describeCommonDBTest({
     rowKey:       false,
     comments:     false, // No column_comment in information_schema.columns
     upsert:       'with-key',
+    defaultVal:   true,
 });

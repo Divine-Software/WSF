@@ -15,6 +15,7 @@ export interface CommonDBTestParams {
     rowKey:      boolean;
     comments:    boolean;
     upsert:      'no' | 'with-key' | 'without-key' | 'yes';
+    defaultVal:  boolean;
 }
 
 export interface DataTypes {
@@ -60,15 +61,31 @@ export function describeCommonDBTest(def: CommonDBTestParams): void {
         null:      null,
     };
 
+    function defined<T>(_obj: T): T {
+        const obj: any = _obj;
+
+        for (const k of Object.keys(obj)) {
+            if (obj[k] === undefined) {
+                delete obj[k];
+            }
+        }
+
+        return obj;
+    }
+
     describe(`the ${def.name} driver`, () => {
         const db = def.uri as DatabaseURI;
+
+        jest.setTimeout(15000);
 
         // eslint-disable-next-line jest/no-hooks
         beforeAll(async () => {
             await db.query(
                 q`drop table if exists "dt"`,
                 q`drop table if exists "j"`,
+                q`drop table if exists "d"`,
                 q`create table "j" ("col" integer)`,
+                q`create table "d" ("key" integer primary key not null, "def" varchar(10) default 'Def')`,
                 ...[def.createDT].flat(),
             );
         });
@@ -81,7 +98,7 @@ export function describeCommonDBTest(def: CommonDBTestParams): void {
         it('inserts and selects all supported datatypes', async () => {
             expect.assertions(16);
 
-            const values = def.enableDT.serial ? { ...columns, serial: undefined } : columns;
+            const values = def.enableDT.serial ? defined({ ...columns, serial: undefined }) : columns;
             await db.query`insert into "dt" ${q.values(values)}`;
 
             const res = await db.query<DataTypes[]>`select * from "dt"`;
@@ -352,8 +369,8 @@ export function describeCommonDBTest(def: CommonDBTestParams): void {
 
             const a1 = await db.$`#dt`.append<DataTypes[]> ({ text: 'dbref1' });
             const a2 = await db.$`#dt`.append<DataTypes[]>([{ text: 'dbref2' }, { text: 'dbref3' }]);
-            const k1 = a1[FIELDS][0].rowKey ?? a1[0].serial;
-            const k2 = a2[FIELDS][0].rowKey ?? a2[0].serial;
+            const k1 = a1[FIELDS][0].rowKey ?? a1[0]?.serial;
+            const k2 = a2[FIELDS][0].rowKey ?? a2[0]?.serial;
 
             expect(k1).toBeDefined();
             expect(k2).toBeDefined();
@@ -422,12 +439,12 @@ export function describeCommonDBTest(def: CommonDBTestParams): void {
             const db1 = def.upsert !== 'with-key'    ? db.$`#dt` : db.$`#dt[serial]`;
             const db2 = def.upsert !== 'without-key' ? db.$`#dt[serial]` : db.$`#dt`;
 
-            const i1 = db.pathname.startsWith('h2:') ? 98 : undefined; // H2 quirk
-            const i2 = db.pathname.startsWith('h2:') ? 99 : undefined; // H2 quirk
-            const s1 = await db1.save<DataTypes[]>({ serial: i1, text: 'dbref-save 1', real: 1 });
-            const s2 = await db2.save<DataTypes[]>({ serial: i2, text: 'dbref-save 2', real: 2 });
-            const k1 = s1[FIELDS][0].rowKey ?? String(s1[0].serial);
-            const k2 = s2[FIELDS][0].rowKey ?? String(s2[0].serial);
+            const i1 = db.pathname.startsWith('h2:') ? { serial: 98 } : undefined; // H2 quirk
+            const i2 = db.pathname.startsWith('h2:') ? { serial: 99 } : undefined; // H2 quirk
+            const s1 = await db1.save<DataTypes[]>({ ...i1, text: 'dbref-save 1', real: 1 });
+            const s2 = await db2.save<DataTypes[]>({ ...i2, text: 'dbref-save 2', real: 2 });
+            const k1 = s1[FIELDS][0].rowKey ?? String(s1[0]?.serial);
+            const k2 = s2[FIELDS][0].rowKey ?? String(s2[0]?.serial);
             const u1 = await db2.save<DataTypes[]>({ serial: k1, real: 3 });
             const u2 = await db1.save<DataTypes[]>({ serial: k2, real: 4 });
 
@@ -445,6 +462,46 @@ export function describeCommonDBTest(def: CommonDBTestParams): void {
             expect(l2.text).toBe('dbref-save 2');
             expect(l1.real).toBe(3);
             expect(l2.real).toBe(4);
+        });
+
+        (def.defaultVal ? it : it.skip)('inserts defaults for undefined values', async () => {
+            expect.assertions(4);
+            const keyedUpsert = [ 'yes', 'with-key' ].includes(def.upsert);
+            const primeUpsert = [ 'yes', 'without-key' ].includes(def.upsert);
+
+            await db.query`insert into "d" ${q.values([{ key: 100 }, { key: 101, def: undefined }, { key: 102, def: null }])}`;
+            await db.$`#d`.append(                    [{ key: 110 }, { key: 111, def: undefined }, { key: 112, def: null }]);
+            keyedUpsert && await db.$`#d[key]`.save(  [{ key: 120 }, { key: 121, def: undefined }, { key: 122, def: null }]);
+            primeUpsert && await db.$`#d`.save(       [{ key: 130 }, { key: 131, def: undefined }, { key: 132, def: null }]);
+
+            const r1 = await db.query<any[]>`select * from "d" where "key" between 100 and 1000 order by "key"`;
+            const v1 = Object.fromEntries(r1.map((r) => [ r.key, String(r.def) ]));
+            expect(r1).toHaveLength(6 + (keyedUpsert ? 3 : 0) + (primeUpsert ? 3 : 0));
+            expect(v1).toMatchObject({
+                                    '100': 'Def', '101': 'Def', '102': 'null',
+                                    '110': 'Def', '111': 'Def', '112': 'null',
+                ...(keyedUpsert ? { '120': 'Def', '121': 'Def', '122': 'null' } : {}),
+                ...(primeUpsert ? { '130': 'Def', '131': 'Def', '132': 'null' } : {}),
+            });
+
+            await db.query`update "d" set ${q.assign({ def: null })} where "key" = 101`;
+            await db.query`update "d" set ${q.assign({ def: undefined })} where "key" = 102`;
+            await db.$`#d?(eq,key,111)`.modify({ def: null });
+            await db.$`#d(def)?(eq,key,112)`.modify({});
+            keyedUpsert && await db.$`#d[key]`.save([{ key: 121, def: null }, { key: 122, def: undefined }]);
+            primeUpsert && await db.$`#d`.save([{ key: 131, def: null }, { key: 132, def: undefined }]);
+
+            const Def = db.pathname.startsWith('h2:') ? 'null' : 'Def'; // h2database/h2database#3183
+
+            const r2 = await db.query<any[]>`select * from "d" where "key" between 100 and 1000 order by "key"`;
+            const v2 = Object.fromEntries(r2.map((r) => [ r.key, String(r.def) ]));
+            expect(r2).toHaveLength(6 + (keyedUpsert ? 3 : 0) + (primeUpsert ? 3 : 0));
+            expect(v2).toMatchObject({
+                                    '100': 'Def', '101': 'null', '102': 'Def',
+                                    '110': 'Def', '111': 'null', '112': 'Def',
+                ...(keyedUpsert ? { '120': 'Def', '121': 'null', '122':  Def } : {}),
+                ...(primeUpsert ? { '130': 'Def', '131': 'null', '132':  Def } : {}),
+            });
         });
     });
 }

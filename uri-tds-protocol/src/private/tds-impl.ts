@@ -307,10 +307,10 @@ ${this.getPagingClause()} \
     }
 
     getAppendQuery(value: unknown): DBQuery {
-        const [ _scope, objects ] = this.checkAppendArguments(value);
-        const columns = q.values(objects, this.columns, 'columns');
-        const values  = q.values(objects, this.columns, 'values');
+        const [ _scope, columns, objects ] = this.checkAppendArguments(value);
+        const colQuery = q.values(objects, columns, 'columns');
+        const valQuery = q.values(objects, columns, 'values');
 
-        return q`insert into ${this.getTable()} ${columns} output "inserted".* values ${values}`;
+        return q`insert into ${this.getTable()} ${colQuery} output "inserted".* values ${valQuery}`;
     }
 }

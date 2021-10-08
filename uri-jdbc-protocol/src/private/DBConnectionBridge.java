@@ -220,6 +220,7 @@ public class DBConnectionBridge implements AutoCloseable {
             case "L": return Long.valueOf((String) value[1]);
             case "D": return Instant.parse(((String) value[1]));
             case "B": return ((String) value[1]).getBytes(latin1);
+            // case "J": return ((String) value[1]);
             case "J": return ((String) value[1]).getBytes(utf8);
             case "A": {
                 Object[] values = (Object[]) value[1];

@@ -49,4 +49,5 @@ describeCommonDBTest({
     rowKey:       true,
     comments:     true,
     upsert:       'no',
+    defaultVal:   true,
 });

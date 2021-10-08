@@ -55,24 +55,20 @@ q.list = function(list: (BasicTypes | undefined)[]): DBQuery {
 q.values = function(data: Params | Params[], columns?: string[], parts: 'columns' | 'values' | 'expr' = 'expr', quote = q.quote): DBQuery {
     const params = [ data ].flat();
     const values = (param: any): DBQuery => {
-        return q.join(',', columns!.map((column) => q`${param[column]}`))
+        return q.join(',', columns!.map((column) => q`${vDefault(param[column])}`))
     }
 
-    columns ??= Object.keys(params[0]);
-    columns = columns.filter((c) => (params[0])[c] !== undefined);
+    columns ??= [...new Set(params.map(Object.keys).flat())];
 
     return q`${ parts === 'expr' || parts === 'columns' ? q`(${ q.join(',', columns.map((column) => quote(column))) })` : q``
             }${ parts === 'expr'                        ? q` values ` : q``
             }${ parts === 'expr' || parts === 'values'  ? q.join(',', params.map((param) => q`(${ values(param) })`)) : q`` }`;
-
-    // return q`(${q.join(',', columns.map((column) => quote(column)))}) values ${q.join(',', params.map((param) => q`(${values(param)})`))}`
 }
 
 q.assign = function(data: Params, columns?: string[], quote = q.quote): DBQuery {
     columns ??= Object.keys(data);
-    columns = columns.filter((c) => (data)[c] !== undefined);
 
-    return q.join(',', columns.map((column) => q`${quote(column)} = ${data[column]}`));
+    return q.join(',', columns.map((column) => q`${quote(column)} = ${vDefault(data[column])}`));
 }
 
 export interface DBParamsSelector extends ParamsSelector {
@@ -213,6 +209,9 @@ export class DBQuery {
         return this._query.reduce((query, part, index) => index === 0 ? part : `${query}${placeholder(this._params[index - 1], index - 1, this)}${part}`);
     }
 }
+
+const qDefault = q`default`;
+const vDefault = (v: unknown) => v !== undefined ? v : qDefault;
 
 interface InformationSchema extends Partial<DBColumnInfo> {
     is_visible?: boolean;

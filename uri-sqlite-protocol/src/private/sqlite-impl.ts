@@ -231,13 +231,13 @@ export class SQLiteReference extends DBDriver.DBReference {
     }
 
     getSaveQuery(value: unknown): DBQuery {
-        const [ _scope, objects, keys] = this.checkSaveArguments(value, true);
-        const columns = (this.columns ?? Object.keys(objects[0])).filter((c) => !keys?.includes(c));
+        const [ _scope, columns, objects, keys] = this.checkSaveArguments(value, true);
+        const updColumns = columns.filter((c) => !keys?.includes(c));
 
         return q`\
-insert into ${this.getTable()} as _dst_ ${q.values(objects, this.columns)} \
+insert into ${this.getTable()} as _dst_ ${q.values(objects, columns)} \
 on conflict (${this.getKeys()}) do update set ${
-    q.join(',', columns.map((column) => q`${q.quote(column)} = "excluded".${q.quote(column)}`))
+    q.join(',', updColumns.map((column) => q`${q.quote(column)} = "excluded".${q.quote(column)}`))
 } returning *`;
     }
 
