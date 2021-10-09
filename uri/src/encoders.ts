@@ -8,7 +8,7 @@ export class EncoderError extends IOError {
 
 export abstract class Encoder {
     static register(type: string, encoder: typeof Encoder): typeof Encoder {
-        Encoder.encoders.set(type, encoder);
+        Encoder._encoders.set(type, encoder);
         return Encoder;
     }
 
@@ -18,7 +18,7 @@ export abstract class Encoder {
 
         try {
             for (const type of types) {
-                stream = Encoder.create(type).encode(stream);
+                stream = Encoder._create(type).encode(stream);
             }
 
             return stream;
@@ -34,7 +34,7 @@ export abstract class Encoder {
 
         try {
             for (const type of types.reverse()) {
-                stream = Encoder.create(type).decode(stream);
+                stream = Encoder._create(type).decode(stream);
             }
 
             return stream;
@@ -44,10 +44,10 @@ export abstract class Encoder {
         }
     }
 
-    private static encoders = new Map<string, typeof Encoder>();
+    private static _encoders = new Map<string, typeof Encoder>();
 
-    private static create(type: string): Encoder {
-        const encoder = Encoder.encoders.get(type);
+    private static _create(type: string): Encoder {
+        const encoder = Encoder._encoders.get(type);
 
         if (encoder) {
             return new (encoder as any)(type);
@@ -57,7 +57,7 @@ export abstract class Encoder {
         }
     }
 
-    constructor(protected type: string) {
+    constructor(readonly type: string) {
         this.type = this.type.toLowerCase();
     }
 
@@ -66,25 +66,25 @@ export abstract class Encoder {
 }
 
 export class IdentityEncoder extends Encoder {
-    async *encode(stream: AsyncIterable<Buffer>) {
+    async *encode(stream: AsyncIterable<Buffer>): AsyncIterable<Buffer> {
         yield *stream;
     }
 
-    async *decode(stream: AsyncIterable<Buffer>) {
+    async *decode(stream: AsyncIterable<Buffer>): AsyncIterable<Buffer> {
         yield *stream;
     }
 }
 
 export class QuotedPrintableEncoder extends Encoder { // See <https://tools.ietf.org/html/rfc2045#section-6.7>
-    private static hexEncoded = [...Array(256)].map((_, i) => '=' + (0x100 + i).toString(16).substr(1).toUpperCase());
+    private static readonly _hexEncoded = [...Array(256)].map((_, i) => '=' + (0x100 + i).toString(16).substr(1).toUpperCase());
     private _lineLength = 76;
 
-    async *encode(stream: AsyncIterable<Buffer>) {
+    async *encode(stream: AsyncIterable<Buffer>): AsyncIterable<Buffer> {
         const encodeLine = (line: string, crlf: boolean) => {
             let result = '';
             let offset = 0;
 
-            line = line.replace(/([^\t !-<>-~])/g, (_, c: string) => QuotedPrintableEncoder.hexEncoded[c.charCodeAt(0)]); // Rule #1, #2
+            line = line.replace(/([^\t !-<>-~])/g, (_, c: string) => QuotedPrintableEncoder._hexEncoded[c.charCodeAt(0)]); // Rule #1, #2
 
             while (offset < line.length) {
                 let chars = Math.min(this._lineLength - 1 /* Make room for soft line break */, line.length - offset);
@@ -120,7 +120,7 @@ export class QuotedPrintableEncoder extends Encoder { // See <https://tools.ietf
         }
     }
 
-    async *decode(stream: AsyncIterable<Buffer>) {
+    async *decode(stream: AsyncIterable<Buffer>): AsyncIterable<Buffer> {
         const decodeLine = (line: string, crlf: boolean) => {
             line = line.trimEnd(); // Rule #3
             line = line.endsWith('=') ? line.substring(0, line.length - 1) : line + (crlf ? '\r\n' : ''); // Rule #5
@@ -149,7 +149,7 @@ export class Base64Encoder extends Encoder {
     private _lineLength = 64; /* Be both PEM- and MIME-compatible */
     private _lineEnding = '\r\n';
 
-    async *encode(stream: AsyncIterable<Buffer>) {
+    async *encode(stream: AsyncIterable<Buffer>): AsyncIterable<Buffer> {
         let length = 0;
 
         const splitLines = (data: string, final: boolean): Buffer => {
@@ -191,7 +191,7 @@ export class Base64Encoder extends Encoder {
         }
     }
 
-    async *decode(stream: AsyncIterable<Buffer>) {
+    async *decode(stream: AsyncIterable<Buffer>): AsyncIterable<Buffer> {
         let extra = '';
 
         for await (const chunk of stream) {
@@ -209,7 +209,7 @@ export class Base64Encoder extends Encoder {
 }
 
 export class ZlibEncoder extends Encoder {
-    encode(stream: AsyncIterable<Buffer>) {
+    encode(stream: AsyncIterable<Buffer>): AsyncIterable<Buffer> {
         switch (this.type) {
             case 'br':      return this._transform(stream, createBrotliCompress());
             case 'gzip':    return this._transform(stream, createGzip());
@@ -219,7 +219,7 @@ export class ZlibEncoder extends Encoder {
         }
     }
 
-    decode(stream: AsyncIterable<Buffer>) {
+    decode(stream: AsyncIterable<Buffer>): AsyncIterable<Buffer> {
         switch (this.type) {
             case 'br':      return this._transform(stream, createBrotliDecompress());
             case 'gzip':    return this._transform(stream, createGunzip());

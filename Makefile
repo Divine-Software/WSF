@@ -13,9 +13,12 @@ build::	prepare
 	$(MAKE) -C uri-jdbc-protocol build-deps
 	pnpm exec tsc --build --verbose
 
+lint:
+	-pnpm exec eslint '*/src/**/*{.js,.ts}'
+
 docs::	build
 
-test::	build
+test::	build lint
 	pnpm exec jest
 
 clean::
@@ -37,4 +40,4 @@ docs clean distclean::
 	$(MAKE) -C web-service $@
 	$(MAKE) -C x4e $@
 
-.PHONY:		all prepare build docs test clean distclean
+.PHONY:		all prepare build lint docs test clean distclean

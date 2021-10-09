@@ -53,7 +53,7 @@ export class WebResponse {
         return this;
     }
 
-    async close() {
+    async close(): Promise<void> {
         if (this.body instanceof Readable) {
             this.body.destroy();
         }

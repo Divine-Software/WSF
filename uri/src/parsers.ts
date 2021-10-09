@@ -23,13 +23,13 @@ export class ParserError extends IOError {
 
 export abstract class Parser {
     static register(baseType: string, parser: typeof Parser): typeof Parser {
-        Parser.parsers.set(baseType, parser);
+        Parser._parsers.set(baseType, parser);
         return Parser;
     }
 
     static async parse<T extends object>(stream: string | Buffer | AsyncIterable<Buffer>, contentType: ContentType | string): Promise<T & Finalizable> {
         try {
-            const result = await Parser.create(ContentType.create(contentType)).parse(toAsyncIterable(stream));
+            const result = await Parser._create(ContentType.create(contentType)).parse(toAsyncIterable(stream));
 
             // Never return primitive types or null/undefined
             return toObject(result);
@@ -59,7 +59,7 @@ export abstract class Parser {
                     ? toAsyncIterable(data)
                     : typeof data === 'string'
                         ? new StringParser(contentType)
-                        : Parser.create(contentType);
+                        : Parser._create(contentType);
 
             if (streamOrParser instanceof Parser) {
                 // Give Parser a chance to update content-type (for instance, MultiPartParser might add a boundary param)
@@ -80,12 +80,12 @@ export abstract class Parser {
         return [ await Parser.parse<Buffer>(stream, ContentType.bytes), ct ];
     }
 
-    private static parsers = new Map<string, typeof Parser>();
+    private static _parsers = new Map<string, typeof Parser>();
 
-    private static create(contentType: ContentType): Parser {
+    private static _create(contentType: ContentType): Parser {
         const parserClass =
-            Parser.parsers.get(contentType.type) ??
-            Parser.parsers.get(contentType.type.replace(/\/.*/, '/*'));
+            Parser._parsers.get(contentType.type) ??
+            Parser._parsers.get(contentType.type.replace(/\/.*/, '/*'));
 
         if (!parserClass) {
             throw new ParserError(`No parser availble for this type`, undefined, contentType);
@@ -94,7 +94,7 @@ export abstract class Parser {
         return new (parserClass as any)(contentType);
     }
 
-    constructor(protected contentType: ContentType) { }
+    constructor(readonly contentType: ContentType) { }
     abstract parse(stream: AsyncIterable<Buffer>): Promise<unknown>;
     abstract serialize(data: unknown): Buffer | AsyncIterable<Buffer>;
 

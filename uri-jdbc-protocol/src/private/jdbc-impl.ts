@@ -161,12 +161,12 @@ export class JDBCResult extends DBResult {
 
 export class JDBCReference extends DBDriver.DBReference {
     getSaveQuery(value: unknown): DBQuery {
-        if (this.dbURI.pathname.startsWith('h2:')) {
-            const [ _scope, columns, objects, keys ] = this.checkSaveArguments(value, false);
+        if (this._dbURI.pathname.startsWith('h2:')) {
+            const [ _scope, columns, objects, keys ] = this._checkSaveArguments(value, false);
             const colQuery = q.values(objects, columns, 'columns');
             const valQuery = q.values(objects, columns, 'values');
 
-            return q`merge into ${this.getTable()} ${colQuery} ${keys ? q`key (${this.getKeys()})` : q``} values ${valQuery}`;
+            return q`merge into ${this._getTable()} ${colQuery} ${keys ? q`key (${this._getKeys()})` : q``} values ${valQuery}`;
         }
         else {
             return super.getSaveQuery(value);

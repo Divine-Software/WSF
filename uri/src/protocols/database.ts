@@ -205,7 +205,8 @@ export class DBQuery {
         return this._params;
     }
 
-    toString(placeholder = (value: unknown, index: number, query: DBQuery) =>`«${value}»`) {
+    // eslint-disable-next-line @typescript-eslint/no-unused-vars
+    toString(placeholder = (value: unknown, index: number, query: DBQuery) =>`«${value}»`): string {
         return this._query.reduce((query, part, index) => index === 0 ? part : `${query}${placeholder(this._params[index - 1], index - 1, this)}${part}`);
     }
 }
@@ -294,7 +295,7 @@ const booleanColInfoProps: PropTypeMap<InformationSchema, boolean> = {
 }
 
 export abstract class DBResult extends Array<unknown[]> {
-    static get [Symbol.species]() {
+    static get [Symbol.species](): typeof Array {
         return Array;
     }
 

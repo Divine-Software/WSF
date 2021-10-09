@@ -268,15 +268,15 @@ export class TDSResult extends DBResult {
 }
 
 export class TDSReference extends DBDriver.DBReference {
-    protected getPagingClause(): DBQuery {
-        const [ count, offset ] = this.getCountAndOffset();
+    protected _getPagingClause(): DBQuery {
+        const [ count, offset ] = this._getCountAndOffset();
 
         return count !== undefined || offset !== undefined
             ? q`offset ${q.raw(offset ?? 0)} rows ${count !== undefined ? q`fetch next ${q.raw(count)} rows only` : q``}`
             : q``;
     }
 
-    protected getLockClause(): DBQuery {
+    protected _getLockClause(): DBQuery {
         const lock = this.params.lock;
 
         if (lock === 'write') {
@@ -289,28 +289,28 @@ export class TDSReference extends DBDriver.DBReference {
             return q``;
         }
         else {
-            throw this.makeIOError(`Invalid 'lock' param: ${lock}: must be 'read' or 'write'`);
+            throw this._makeIOError(`Invalid 'lock' param: ${lock}: must be 'read' or 'write'`);
         }
     }
 
     getLoadQuery(): DBQuery {
-        this.checkLoadArguments();
+        this._checkLoadArguments();
 
         return q`\
-select ${this.scope === 'unique' ? q`distinct` : q``} ${this.getColumns()} \
-from ${this.getTable()} \
-${this.getLockClause()} \
-${this.getWhereClause()} \
-${this.getOrderClause()} \
-${this.getPagingClause()} \
+select ${this.scope === 'unique' ? q`distinct` : q``} ${this._getColumns()} \
+from ${this._getTable()} \
+${this._getLockClause()} \
+${this._getWhereClause()} \
+${this._getOrderClause()} \
+${this._getPagingClause()} \
 `;
     }
 
     getAppendQuery(value: unknown): DBQuery {
-        const [ _scope, columns, objects ] = this.checkAppendArguments(value);
+        const [ _scope, columns, objects ] = this._checkAppendArguments(value);
         const colQuery = q.values(objects, columns, 'columns');
         const valQuery = q.values(objects, columns, 'values');
 
-        return q`insert into ${this.getTable()} ${colQuery} output "inserted".* values ${valQuery}`;
+        return q`insert into ${this._getTable()} ${colQuery} output "inserted".* values ${valQuery}`;
     }
 }

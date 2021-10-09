@@ -83,22 +83,22 @@ export abstract class AuthScheme<C extends Credentials> {
     abstract createAuthorization(challenge?: WWWAuthenticate, request?: AuthSchemeRequest, payload?: Uint8Array): Promise<Authorization | undefined>;
     abstract verifyAuthorization<T extends Authorization | undefined>(authorization: T, request?: AuthSchemeRequest, payload?: Uint8Array): Promise<T>;
     abstract verifyAuthenticationInfo<T extends AuthenticationInfo | ServerAuthorization | undefined>(_authentication: T, _request?: AuthSchemeRequest, _payload?: Uint8Array): Promise<T>;
-    protected abstract isCompatibleCredentials(credentials: Credentials): boolean;
+    protected abstract _isCompatibleCredentials(credentials: Credentials): boolean;
 
-    protected async createChallenge(authorization?: Authorization): Promise<WWWAuthenticate> {
+    protected async _createChallenge(authorization?: Authorization): Promise<WWWAuthenticate> {
         const proxyHeader = authorization?.isProxyHeader() ?? this.proxy;
 
         return new WWWAuthenticate(this.scheme, proxyHeader).setParam('realm', this.realm);
     }
 
-    protected async getCredentials(options: CredentialsProviderOptions<C>): Promise<C | undefined> {
-        this.assertCompatibleAuthHeader(options.authorization);
-        this.assertCompatibleAuthHeader(options.challenge);
+    protected async _getCredentials(options: CredentialsProviderOptions<C>): Promise<C | undefined> {
+        this._assertCompatibleAuthHeader(options.authorization);
+        this._assertCompatibleAuthHeader(options.challenge);
 
-        return this.assertCompatibleCredentials(await this._credentialsProvider?.(options));
+        return this._assertCompatibleCredentials(await this._credentialsProvider?.(options));
     }
 
-    protected safeCompare(untrusted: string | number[], trusted: string | number[]) {
+    static safeCompare(untrusted: string | number[], trusted: string | number[]): boolean {
         let sum = 0;
 
         if (typeof untrusted === 'string' && typeof trusted === 'string') {
@@ -118,7 +118,7 @@ export abstract class AuthScheme<C extends Credentials> {
         return sum === 0 && untrusted.length === trusted.length;
     }
 
-    protected assertCompatibleAuthHeader<H extends AuthHeader>(header?: H): H | undefined {
+    protected _assertCompatibleAuthHeader<H extends AuthHeader>(header?: H): H | undefined {
         if (header !== undefined && header.scheme !== this.scheme) {
             throw new TypeError(`Expected auth-scheme '${this.scheme}' in header, not '${header.scheme}'`);
         }
@@ -127,8 +127,8 @@ export abstract class AuthScheme<C extends Credentials> {
         }
     }
 
-    protected assertCompatibleCredentials<C extends Credentials>(credentials?: C): C | undefined {
-        if (credentials && !this.isCompatibleCredentials(credentials)) {
+    protected _assertCompatibleCredentials<C extends Credentials>(credentials?: C): C | undefined {
+        if (credentials && !this._isCompatibleCredentials(credentials)) {
             throw new TypeError(`Credentials ${credentials.constructor.name}(${Object.keys(credentials)}) is not compatible with ${this.constructor.name}`);
         }
         else {
@@ -154,7 +154,7 @@ export class UnknownAuthScheme extends AuthScheme<Credentials> {
         throw new AuthSchemeError(`Not supported`);
     }
 
-    isCompatibleCredentials(_credentials: Credentials): boolean {
+    _isCompatibleCredentials(_credentials: Credentials): boolean {
         return false;
     }
 }

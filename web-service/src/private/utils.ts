@@ -30,23 +30,23 @@ export function isReadableStream(obj: NodeJS.ReadableStream): obj is NodeJS.Read
     return obj instanceof EventEmitter && typeof obj.readable === 'boolean' && typeof obj.read === 'function';
 }
 
-export function escapeRegExp(str: string) {
+export function escapeRegExp(str: string): string {
     return str.replace(/[.*+?^${}()|[\]\\]/g, '\\$&'); // $& means the whole matched string
 }
 
 export class SizeLimitedReadableStream extends Transform {
-    private count = 0;
+    private _count = 0;
 
-    constructor(private maxContentLength: number, private makeError: () => Error, opts?: TransformOptions) {
+    constructor(private _maxContentLength: number, private _makeError: () => Error, opts?: TransformOptions) {
         super(opts);
     }
 
-    _transform(chunk: any, _encoding: string, callback: TransformCallback): void {
+    _transform(chunk: unknown, _encoding: string, callback: TransformCallback): void {
         if (chunk instanceof Buffer || typeof chunk === 'string') {
-            this.count += chunk.length;
+            this._count += chunk.length;
 
-            if (this.count > this.maxContentLength) {
-                callback(this.makeError());
+            if (this._count > this._maxContentLength) {
+                callback(this._makeError());
             }
             else {
                 callback(null, chunk);

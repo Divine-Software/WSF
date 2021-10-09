@@ -50,8 +50,6 @@ export interface ExecuteQueryResult {
 export type SQLiteWorkerMessage = OpenDatabaseMessage | CloseDatabaseMessage | ExecuteQueryMessage | ShutdownMessage;
 export type SQLiteWorkerResult  = OpenDatabaseResult  | CloseDatabaseResult  | ExecuteQueryResult  | ShutdownResult  | ErrorResult;
 
-// console.log('***SQLiteWorker launching');
-
 let database: Database.Database | null = null;
 
 function sendResult(result: SQLiteWorkerResult) {
@@ -59,8 +57,6 @@ function sendResult(result: SQLiteWorkerResult) {
 }
 
 parentPort?.on('message', (message: SQLiteWorkerMessage) => {
-    // console.log('***SQLiteWorker message', message);
-
     try {
         if (message.type === 'open') {
             if (database) {
@@ -116,10 +112,8 @@ parentPort?.on('message', (message: SQLiteWorkerMessage) => {
         sendResult({ type: 'error', message: err?.message ?? String(err), code: err.code });
     }
 }).on('close', () => {
-    // console.log('***SQLiteWorker close');
     database?.close();
     parentPort?.close();
-}).on('messageerror', (error) => {
-    // console.error('***SQLiteWorker messageerror', error);
+}).on('messageerror', (_error) => {
     parentPort?.close();
 });

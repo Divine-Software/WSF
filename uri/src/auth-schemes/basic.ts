@@ -24,27 +24,27 @@ export class BasicAuthScheme extends AuthScheme<BasicCredentials> {
     }
 
     async createAuthorization(challenge?: WWWAuthenticate, request?: AuthSchemeRequest, _payload?: Uint8Array): Promise<Authorization | undefined> {
-        const credentials = await this.getCredentials({ mode: 'retrieve', authScheme: this, challenge, request });
+        const credentials = await this._getCredentials({ mode: 'retrieve', authScheme: this, challenge, request });
         const proxyHeader = challenge?.isProxyHeader() ?? this.proxy;
 
         return credentials ? new Authorization(`${this.scheme} ${BasicAuthScheme.encodeCredentials(credentials)}`, proxyHeader) : undefined;
     }
 
     async verifyAuthorization<T extends Authorization | undefined>(authorization: T, request?: AuthSchemeRequest, _payload?: Uint8Array): Promise<T> {
-        const untrusted = BasicAuthScheme.decodeCredentials(this.assertCompatibleAuthHeader(authorization)?.credentials);
+        const untrusted = BasicAuthScheme.decodeCredentials(this._assertCompatibleAuthHeader(authorization)?.credentials);
 
         if (!untrusted) {
-            throw new AuthSchemeError(`No credentials provided`, await this.createChallenge(authorization));
+            throw new AuthSchemeError(`No credentials provided`, await this._createChallenge(authorization));
         }
 
-        const trusted = await this.getCredentials({ mode: 'verify', authScheme: this, identity: untrusted.identity, authorization, request});
+        const trusted = await this._getCredentials({ mode: 'verify', authScheme: this, identity: untrusted.identity, authorization, request});
 
         if (!trusted) {
-            throw new AuthSchemeError(`User ${untrusted.identity} not found`, await this.createChallenge(authorization));
+            throw new AuthSchemeError(`User ${untrusted.identity} not found`, await this._createChallenge(authorization));
         }
 
-        if (!this.safeCompare(BasicAuthScheme.encodeCredentials(untrusted), BasicAuthScheme.encodeCredentials(trusted))) {
-            throw new AuthSchemeError(`Invalid password`, await this.createChallenge(authorization));
+        if (!AuthScheme.safeCompare(BasicAuthScheme.encodeCredentials(untrusted), BasicAuthScheme.encodeCredentials(trusted))) {
+            throw new AuthSchemeError(`Invalid password`, await this._createChallenge(authorization));
         }
 
         return authorization;
@@ -54,7 +54,7 @@ export class BasicAuthScheme extends AuthScheme<BasicCredentials> {
         return authentication;
     }
 
-    protected isCompatibleCredentials(credentials: BasicCredentials): boolean {
+    protected _isCompatibleCredentials(credentials: BasicCredentials): boolean {
         return typeof credentials.identity === 'string' && typeof credentials.secret === 'string';
     }
 }

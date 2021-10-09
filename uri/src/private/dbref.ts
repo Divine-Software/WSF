@@ -3,6 +3,8 @@
 //
 // https://peggyjs.org/   https://github.com/metadevpro/ts-pegjs
 
+/* eslint-disable  */
+
 export interface IFilePosition {
   offset: number;
   line: number;

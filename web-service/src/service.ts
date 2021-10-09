@@ -263,7 +263,7 @@ export class WebService<Context> {
         }
     }
 
-    private async _handleException(err: Error, webreq: WebRequest): Promise<WebResponse> {
+    private async _handleException(err: unknown, webreq: WebRequest): Promise<WebResponse> {
         const messageProp = this.webServiceConfig.errorMessageProperty;
 
         webreq.log.warn(`Failed: ${err}`);

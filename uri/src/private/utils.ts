@@ -8,7 +8,7 @@ export type BasicTypes = boolean | number | bigint | string | object | null;
 
 export interface Params extends Record<string, BasicTypes | undefined> {}
 
-export function kvWrapper(wrapped: any): Params {
+export function kvWrapper(wrapped: unknown): Params {
     return new Proxy(wrapped, {
         has: (target: any, prop: any) => {
             console.log(`kvWrapper.has ${prop} => ${target[prop] !== undefined}`);
@@ -23,12 +23,12 @@ export function kvWrapper(wrapped: any): Params {
 }
 
 /** Percent-encode everything except 0-9, A-Z, a-z, `-`, `_`, `.`, `!` and `~`. */
-export function percentEncode(str: string) {
+export function percentEncode(str: string): string {
     return encodeURIComponent(str)
         .replace(/['()*]/g, c => "%" + c.charCodeAt(0).toString(16).toUpperCase());
 }
 
-export function es6Encoder(strings: TemplateStringsArray, values: unknown[], encoder: ValueEncoder) {
+export function es6Encoder(strings: TemplateStringsArray, values: unknown[], encoder: ValueEncoder): string {
     let result = strings[0];
 
     for (let i = 0; i < values.length; ++i) {
@@ -38,7 +38,7 @@ export function es6Encoder(strings: TemplateStringsArray, values: unknown[], enc
     return result;
 }
 
-export function esxxEncoder(template: string, params: Params, encoder: ValueEncoder) {
+export function esxxEncoder(template: string, params: Params, encoder: ValueEncoder): string {
     return template.replace(/(^|[^\\])(\\\\)*{([^{}[\]()"'`\s]+)}/g, (match) => {
         const start = match.lastIndexOf('{');
         const param = match.substring(start + 1, match.length - 1);

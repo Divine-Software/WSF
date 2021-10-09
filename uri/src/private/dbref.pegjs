@@ -1,3 +1,4 @@
+{{/* eslint-disable  */}}
 dbreference = table:table keys:('[' keys ']')? columns:('(' columns ')')? scope:(';' scope)? filter:('?' filter )? params:params?
               { return { table, keys: keys?.[1], columns: columns?.[1], scope: scope?.[1], filter: filter?.[1], params: params } }
 

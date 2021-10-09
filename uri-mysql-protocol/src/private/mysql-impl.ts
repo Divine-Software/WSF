@@ -188,8 +188,8 @@ export class MyReference extends DBDriver.DBReference {
         super(dbURI);
     }
 
-    protected getPagingClause(): DBQuery {
-        const [ count, offset ] = this.getCountAndOffset();
+    protected _getPagingClause(): DBQuery {
+        const [ count, offset ] = this._getCountAndOffset();
 
         return count !== undefined || offset !== undefined
             ? q`limit ${q.raw(count ?? BigInt('0xffffffffffffffff'))} offset ${q.raw(offset ?? 0)}`
@@ -197,7 +197,7 @@ export class MyReference extends DBDriver.DBReference {
     }
 
     getAppendQuery(value: unknown): DBQuery {
-        if (this.dbURI.protocol === 'mariadb:' && parseFloat(this._version) >= 10.5) {
+        if (this._dbURI.protocol === 'mariadb:' && parseFloat(this._version) >= 10.5) {
             return q`${super.getAppendQuery(value)} returning *`;
         }
         else {

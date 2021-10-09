@@ -61,7 +61,7 @@ export class URI extends URL {
     static readonly STATUS_TEXT = STATUS_TEXT;
 
     static register(protocol: string, uri: typeof URI): typeof URI {
-        URI.protocols.set(protocol, uri);
+        URI._protocols.set(protocol, uri);
         return URI;
     }
 
@@ -69,7 +69,7 @@ export class URI extends URL {
         return new URI(uri(strings, ...values));
     }
 
-    private static protocols = new Map<string, typeof URI>();
+    private static _protocols = new Map<string, typeof URI>();
 
     selectors: {
         auth?:    AuthSelector[];
@@ -104,7 +104,7 @@ export class URI extends URL {
             this.username = this.password = '';
         }
 
-        return new (this.protocol && URI.protocols.get(this.protocol) || UnknownURI)(this);
+        return new (this.protocol && URI._protocols.get(this.protocol) || UnknownURI)(this);
     }
 
     $(strings: TemplateStringsArray, ...values: unknown[]): URI {

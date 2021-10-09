@@ -210,20 +210,20 @@ export class PGResult extends DBResult {
 }
 
 export class PGReference extends DBDriver.DBReference {
-    constructor(dbURI: DatabaseURI, private isCRDB: boolean) {
+    constructor(dbURI: DatabaseURI, private _isCRDB: boolean) {
         super(dbURI);
     }
 
     getSaveQuery(value: unknown): DBQuery {
-        const [ _scope, columns, objects, keys ] = this.checkSaveArguments(value, !this.isCRDB);
+        const [ _scope, columns, objects, keys ] = this._checkSaveArguments(value, !this._isCRDB);
         const updColumns = columns.filter((c) => !keys?.includes(c));
 
         return keys ? q`\
-insert into ${this.getTable()} as _dst_ ${q.values(objects, columns)} \
-on conflict (${this.getKeys()}) do update set ${
+insert into ${this._getTable()} as _dst_ ${q.values(objects, columns)} \
+on conflict (${this._getKeys()}) do update set ${
     q.join(',', updColumns.map((column) => q`${q.quote(column)} = "excluded".${q.quote(column)}`))
 } returning *`
-            : q`upsert into ${this.getTable()} ${q.values(objects, columns)} returning *`;
+            : q`upsert into ${this._getTable()} ${q.values(objects, columns)} returning *`;
     }
 
     getAppendQuery(value: unknown): DBQuery {

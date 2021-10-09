@@ -217,26 +217,26 @@ export class SQLiteResult extends DBResult {
 }
 
 export class SQLiteReference extends DBDriver.DBReference {
-    protected getPagingClause(): DBQuery {
-        const [ count, offset ] = this.getCountAndOffset();
+    protected _getPagingClause(): DBQuery {
+        const [ count, offset ] = this._getCountAndOffset();
 
         return count !== undefined || offset !== undefined
             ? q`limit ${q.raw(count ?? -1)} offset ${q.raw(offset ?? 0)}`
             : q``;
     }
 
-    protected getLockClause(): DBQuery {
-        super.getLockClause(); // Check syntax
+    protected _getLockClause(): DBQuery {
+        super._getLockClause(); // Check syntax
         return q``;
     }
 
     getSaveQuery(value: unknown): DBQuery {
-        const [ _scope, columns, objects, keys] = this.checkSaveArguments(value, true);
+        const [ _scope, columns, objects, keys] = this._checkSaveArguments(value, true);
         const updColumns = columns.filter((c) => !keys?.includes(c));
 
         return q`\
-insert into ${this.getTable()} as _dst_ ${q.values(objects, columns)} \
-on conflict (${this.getKeys()}) do update set ${
+insert into ${this._getTable()} as _dst_ ${q.values(objects, columns)} \
+on conflict (${this._getKeys()}) do update set ${
     q.join(',', updColumns.map((column) => q`${q.quote(column)} = "excluded".${q.quote(column)}`))
 } returning *`;
     }
