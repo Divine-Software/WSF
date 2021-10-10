@@ -14,7 +14,7 @@ build::	prepare
 	pnpm exec tsc --build --verbose
 
 lint:
-	-pnpm exec eslint '*/src/**/*{.js,.ts}'
+	-pnpm exec eslint '*/src/**/*.ts'
 
 docs::	build
 

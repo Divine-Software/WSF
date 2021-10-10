@@ -5,7 +5,6 @@ import mvn from 'node-java-maven';
 import { resolve } from 'path';
 import { classpath } from '../src';
 
-// eslint-disable-next-line jest/no-hooks, jest/require-top-level-describe
 beforeAll(async () => {
     const options = { packageJsonPath: resolve(__dirname, '../../../package.json') };
     const results = await new Promise<any>((resolve, reject) => mvn(options, (err: any, res: any) => err ? reject(err) : resolve(res)));

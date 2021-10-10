@@ -1,5 +1,4 @@
 /* eslint-disable jest/no-standalone-expect */
-/* eslint-disable jest/no-if */
 /* eslint-disable jest/no-conditional-expect */
 /* eslint-disable jest/no-export */
 import { DatabaseURI, DBQuery, FIELDS, q, URI, VOID } from '../../src';
@@ -78,7 +77,6 @@ export function describeCommonDBTest(def: CommonDBTestParams): void {
 
         jest.setTimeout(15000);
 
-        // eslint-disable-next-line jest/no-hooks
         beforeAll(async () => {
             await db.query(
                 q`drop table if exists "dt"`,
@@ -90,7 +88,6 @@ export function describeCommonDBTest(def: CommonDBTestParams): void {
             );
         });
 
-        // eslint-disable-next-line jest/no-hooks
         afterAll(async () => {
             await db.close();
         });

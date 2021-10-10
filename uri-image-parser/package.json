@@ -29,7 +29,7 @@
   },
   "devDependencies": {
     "@divine/uri": "workspace:^0.4.0",
-    "@types/node": "^12.20.26"
+    "@types/node": "^12.20.28"
   },
   "engines": {
     "node": ">= 12.17.0"

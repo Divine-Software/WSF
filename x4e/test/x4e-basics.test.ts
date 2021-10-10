@@ -1,4 +1,3 @@
-/* eslint-disable jest/prefer-strict-equal */
 import { html, NS_XHTML, xhtml, XML, xml, XMLList } from '../src';
 
 describe('x4e', () => {
