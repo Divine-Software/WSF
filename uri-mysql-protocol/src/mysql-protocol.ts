@@ -1,6 +1,6 @@
 import { WWWAuthenticate } from '@divine/headers';
 import { BasicAuthScheme, DatabaseURI, DBDriver, DBParamsSelector, URI } from '@divine/uri';
-import { MyConnectionPool } from './private/mysql-impl';
+import { MyConnectionPool } from './mysql-impl';
 
 export { MariaDBStatus, MySQLStatus } from './mysql-errors';
 

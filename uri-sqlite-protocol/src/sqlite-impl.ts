@@ -2,7 +2,7 @@ import { DatabaseURI, DBColumnInfo, DBDriver, DBError, DBQuery, DBResult, DBTran
 import { SqliteError } from 'better-sqlite3';
 import { basename, extname } from 'path';
 import { Worker } from 'worker_threads';
-import { SQLiteStatus } from '../sqlite-errors';
+import { SQLiteStatus } from './sqlite-errors';
 import type { ExecuteQueryResult, SQLiteWorkerMessage, SQLiteWorkerResult } from './sqlite-worker';
 
 export class SQLiteConnectionPool extends DBDriver.DBConnectionPool {

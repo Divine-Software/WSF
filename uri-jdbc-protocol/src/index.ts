@@ -1,5 +1,5 @@
 export * from './jdbc-protocol';
-export { classpath } from './private/jdbc-impl';
+export { classpath } from './jdbc-impl';
 
 // Register protocol
 import './jdbc-protocol'

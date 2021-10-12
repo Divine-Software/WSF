@@ -1,6 +1,6 @@
 import { WWWAuthenticate } from '@divine/headers';
 import { BasicAuthScheme, DatabaseURI, DBDriver, DBParamsSelector, URI } from '@divine/uri';
-import { PGConnectionPool } from './private/postgres-impl';
+import { PGConnectionPool } from './postgres-impl';
 
 export { PostgresSQLState } from './postgres-errors';
 

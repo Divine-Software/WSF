@@ -1,5 +1,5 @@
 import { DatabaseURI, DBDriver, DBParamsSelector, URI } from '@divine/uri';
-import { JDBCConnectionPool } from './private/jdbc-impl';
+import { JDBCConnectionPool } from './jdbc-impl';
 
 export { H2SQLState, H2Status } from './jdbc-errors';
 

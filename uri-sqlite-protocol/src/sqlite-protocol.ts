@@ -1,5 +1,5 @@
 import { DatabaseURI, DBDriver, DBParamsSelector, URI } from '@divine/uri';
-import { SQLiteConnectionPool } from './private/sqlite-impl';
+import { SQLiteConnectionPool } from './sqlite-impl';
 
 export { SQLiteStatus } from './sqlite-errors';
 

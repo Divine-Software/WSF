@@ -1,7 +1,7 @@
 import { BasicCredentials, DatabaseURI, DBColumnInfo, DBDriver, DBError, DBParamsSelector, DBQuery, DBResult, DBTransactionParams, q } from '@divine/uri';
 import { Client, QueryArrayResult, types } from 'pg';
 import { URL } from 'url';
-import { PostgresSQLState as SQLState } from '../postgres-errors';
+import { PostgresSQLState as SQLState } from './postgres-errors';
 
 const parseBigIntArray = types.getTypeParser(1016);
 const deadlocks = [ SQLState.SERIALIZATION_FAILURE, SQLState.DEADLOCK_DETECTED ] as string[];

@@ -1,6 +1,6 @@
 import { BasicCredentials, DatabaseURI, DBColumnInfo, DBDriver, DBError, DBParamsSelector, DBQuery, DBResult, DBTransactionParams, q } from '@divine/uri';
 import { ColumnMetaData, Connection, ISOLATION_LEVEL, Request, TYPES } from 'tedious';
-import { SQLServerSQLState as SQLState } from '../tds-errors';
+import { SQLServerSQLState as SQLState } from './tds-errors';
 
 const txOptions = /^ISOLATION LEVEL (READ UNCOMMITTED|READ COMMITTED|REPEATABLE READ|SNAPSHOT|SERIALIZABLE)$/;
 

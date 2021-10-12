@@ -10,7 +10,7 @@ prepare:
 build:		prepare build-deps
 	pnpm exec tsc --build
 
-build-deps:	build/src/private/DBConnectionBridge.class
+build-deps:	build/src/DBConnectionBridge.class
 
 build/%.class:	%.java
 	mkdir -p $(dir $@) && javac -d $(dir $@) $<

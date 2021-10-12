@@ -1,6 +1,6 @@
 import { BasicCredentials, DatabaseURI, DBDriver, DBError, DBParamsSelector, DBQuery, DBResult, DBTransactionParams, q } from '@divine/uri';
 import { Connection, createConnection, FieldPacket, OkPacket, ResultSetHeader, RowDataPacket } from 'mysql2/promise';
-import { MariaDBStatus as Status } from '../mysql-errors';
+import { MariaDBStatus as Status } from './mysql-errors';
 
 const deadlocks = [ Status.ER_LOCK_WAIT_TIMEOUT, Status.ER_LOCK_DEADLOCK ] as string[];
 

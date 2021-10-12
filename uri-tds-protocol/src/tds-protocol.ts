@@ -1,6 +1,6 @@
 import { WWWAuthenticate } from '@divine/headers';
 import { BasicAuthScheme, DatabaseURI, DBDriver, DBParamsSelector, URI } from '@divine/uri';
-import { TDSConnectionPool } from './private/tds-impl';
+import { TDSConnectionPool } from './tds-impl';
 
 export { SQLServerSQLState } from './tds-errors';
 
