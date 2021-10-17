@@ -21,6 +21,7 @@
     "collectCoverage": true
   },
   "dependencies": {
+    "@divine/commons": "workspace:^0.4.0",
     "@divine/headers": "workspace:^1.3.3",
     "@divine/synchronization": "^1.2.1",
     "@iarna/toml": "^2.2.5",

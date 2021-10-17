@@ -1,6 +1,6 @@
+import { b64Decode, b64Encode } from '@divine/commons';
 import { AuthenticationInfo, Authorization, ServerAuthorization, WWWAuthenticate } from '@divine/headers';
 import { AuthScheme, AuthSchemeError, AuthSchemeRequest, Credentials } from '../auth-schemes';
-import { b64Decode, b64Encode } from '../private/utils';
 
 export class BasicCredentials extends Credentials {
     constructor(identity: string, public secret: string) {

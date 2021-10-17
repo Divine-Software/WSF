@@ -1,4 +1,4 @@
-import { KVPairs } from '@divine/headers';
+import { isReadableStream, StringParams } from '@divine/commons';
 import { AuthSchemeError } from '@divine/uri';
 import { IncomingMessage, ServerResponse } from 'http';
 import { pipeline } from 'stream';
@@ -6,7 +6,6 @@ import { WebError, WebStatus } from './error';
 import { WebRequest } from './request';
 import { WebArguments, WebErrorHandler, WebFilterCtor, WebResource, WebResourceCtor } from './resource';
 import { WebResponse, WebResponses } from './response';
-import { isReadableStream } from './private/utils';
 
 export interface WebServiceConfig {
     console?:              Console;
@@ -41,7 +40,7 @@ function getMethods(obj: any): string[] {
 }
 
 function regExpParams(match: RegExpExecArray, offset: number, count: number, prefix: string) {
-    const params: KVPairs = {};
+    const params: StringParams = {};
 
     for (let i = 1; i <= count; ++i) {
         params[i] = match[offset + i];

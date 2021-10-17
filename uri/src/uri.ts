@@ -1,9 +1,11 @@
-import { Authorization, ContentType, KVPairs, WWWAuthenticate } from '@divine/headers';
+import { BasicTypes, esxxEncoder, Params, StringParams } from '@divine/commons';
+import { Authorization, ContentType, WWWAuthenticate } from '@divine/headers';
 import url, { Url, URL } from 'url';
 import { AuthScheme, AuthSchemeRequest } from './auth-schemes';
 import { guessContentType, uri } from './file-utils';
-import { BasicTypes, esxxEncoder, kvWrapper, Params } from './private/utils';
-import { AuthSelector, AuthSessionSelector, enumerateSelectors, HeadersSelector, isAuthSelector, isHeadersSelector, isParamsSelector, isSessionSelector, ParamsSelector, SelectorBase, SessionSelector } from './selectors';
+import type { AuthSelector, AuthSessionSelector, HeadersSelector, ParamsSelector, SelectorBase, SessionSelector } from './selectors';
+import { enumerateSelectors, isAuthSelector, isHeadersSelector, isParamsSelector, isSessionSelector } from './selectors';
+
 export { AuthSelector, HeadersSelector, ParamsSelector, Selector } from './selectors';
 
 const urlObject  = (url as any).Url;
@@ -29,7 +31,7 @@ export interface WithFields<T extends BasicTypes> {
 export interface Metadata {
     [STATUS]?:      number;
     [STATUS_TEXT]?: string;
-    [HEADERS]?:     KVPairs;
+    [HEADERS]?:     StringParams;
 }
 
 export interface DirectoryEntry {
@@ -73,8 +75,8 @@ export class URI extends URL {
 
     selectors: {
         auth?:    AuthSelector[];
-        headers?:  HeadersSelector[];
-        params?:   ParamsSelector[];
+        headers?: HeadersSelector[];
+        params?:  ParamsSelector[];
         session?: SessionSelector[];
     };
 
@@ -177,8 +179,8 @@ export class URI extends URL {
         // No-op by default
     }
 
-    async *[Symbol.asyncIterator](): AsyncIterableIterator<Buffer> {
-        yield* await this.load<AsyncIterable<Buffer>>('application/vnd.esxx.octet-stream');
+    async *[Symbol.asyncIterator](): AsyncIterable<Buffer> & Metadata {
+        return yield* await this.load<AsyncIterable<Buffer>>('application/vnd.esxx.octet-stream');
     }
 
     protected async _getAuthorization(req: AuthSchemeRequest, payload?: Buffer | AsyncIterable<Buffer>, challenges?: WWWAuthenticate[]): Promise<Authorization | undefined> {
@@ -247,11 +249,6 @@ function resolveURL(url?: string | URL | Url, base?: string | URL | Url | Params
         if (params === undefined && typeof base !== 'string' && !(base instanceof URL) && !(base instanceof urlObject)) {
             params = base as Params | undefined;
             base   = undefined;
-        }
-
-        // ... and so is params
-        if (params !== undefined) {
-            params = kvWrapper(params);
         }
 
         if (typeof url === 'string' && params) {

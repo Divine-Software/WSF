@@ -1,4 +1,5 @@
-import { KVPairs, WWWAuthenticate } from '@divine/headers';
+import { Params, StringParams } from '@divine/commons';
+import { WWWAuthenticate } from '@divine/headers';
 import { URL } from 'url';
 import { AuthScheme, Credentials, CredentialsProvider } from './auth-schemes';
 
@@ -27,7 +28,7 @@ export function isAuthSelector(selector: any): selector is AuthSelector {
 }
 
 export interface HeadersSelector extends SelectorBase {
-    headers: KVPairs;
+    headers: StringParams;
 }
 
 export function isHeadersSelector(selector: any): selector is HeadersSelector {
@@ -35,7 +36,7 @@ export function isHeadersSelector(selector: any): selector is HeadersSelector {
 }
 
 export interface ParamsSelector extends SelectorBase {
-    params: { [key: string]: unknown };
+    params: Params;
 }
 
 export function isParamsSelector(selector: any): selector is ParamsSelector {

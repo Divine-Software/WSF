@@ -1,4 +1,5 @@
-import { ContentType, KVPairs } from '@divine/headers';
+import { copyStream, StringParams } from '@divine/commons';
+import { ContentType } from '@divine/headers';
 import { Agent, IncomingMessage, request as requestHTTP } from 'http';
 import { request as requestHTTPS } from 'https';
 import path from 'path';
@@ -8,7 +9,6 @@ import { URL } from 'url';
 import pkg from '../../package.json';
 import { Encoder } from '../encoders';
 import { Parser } from '../parsers';
-import { copyStream } from '../private/utils';
 import { DirectoryEntry, HEADERS, IOError, Metadata, ParamsSelector, STATUS, STATUS_TEXT, URI, VOID } from '../uri';
 
 export interface HTTPParamsSelector extends ParamsSelector {
@@ -63,7 +63,7 @@ export class HTTPURI extends URI {
         return this._requireValidStatus(await this._query('DELETE', {}, null, undefined, recvCT));
     }
 
-    async query<T extends object>(method: string, headers?: KVPairs | null, data?: unknown, sendCT?: ContentType | string, recvCT?: ContentType | string): Promise<T> {
+    async query<T extends object>(method: string, headers?: StringParams | null, data?: unknown, sendCT?: ContentType | string, recvCT?: ContentType | string): Promise<T> {
         if (typeof method !== 'string') {
             throw new TypeError(`URI ${this}: query: 'method' argument missing/invalid`);
         }
@@ -91,7 +91,7 @@ export class HTTPURI extends URI {
         }
     }
 
-    private async _query<T>(method: string, headers: KVPairs, data: unknown, sendCT?: ContentType | string, recvCT?: ContentType | string): Promise<T & Metadata> {
+    private async _query<T>(method: string, headers: StringParams, data: unknown, sendCT?: ContentType | string, recvCT?: ContentType | string): Promise<T & Metadata> {
         let body: Buffer | AsyncIterable<Buffer> | undefined;
 
         headers = {
@@ -191,8 +191,8 @@ function extractMetadata(m: Metadata) {
     return { [STATUS]: m[STATUS], [STATUS_TEXT]: m[STATUS_TEXT], [HEADERS]: m[HEADERS] };
 }
 
-function convertHeaders(response: IncomingMessage): KVPairs {
-    const result: KVPairs = {};
+function convertHeaders(response: IncomingMessage): StringParams {
+    const result: StringParams = {};
 
     for (const [name, value] of Object.entries({ ...response.headers, ...response.trailers })) {
         result[name] = Array.isArray(value) ? value.join(', ') : value;

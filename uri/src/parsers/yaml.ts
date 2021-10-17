@@ -1,7 +1,7 @@
+import { BasicTypes, setProp } from '@divine/commons';
 import YAML from 'yaml';
 import { Parser, StringParser, toObject } from '../parsers';
 import { FIELDS, WithFields } from '../uri';
-import { BasicTypes, setProp } from '../private/utils';
 
 export class YAMLParser extends Parser {
     async parse(stream: AsyncIterable<Buffer>): Promise<object & WithFields<BasicTypes>> {

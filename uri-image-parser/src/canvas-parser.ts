@@ -19,7 +19,7 @@ export class ImageParser extends Parser {
         }
     }
 
-    async *serialize(data: string[][] | object[]): AsyncIterableIterator<Buffer> {
+    async *serialize(data: string[][] | object[]): AsyncIterable<Buffer> {
         this._assertSerializebleData(Array.isArray(data), data);
         yield Buffer.from('');
     }

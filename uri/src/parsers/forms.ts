@@ -1,4 +1,5 @@
-import { ContentDisposition, ContentType, KVPairs } from '@divine/headers';
+import { copyStream, StringParams } from '@divine/commons';
+import { ContentDisposition, ContentType } from '@divine/headers';
 import { randomBytes } from 'crypto';
 import Dicer from 'dicer';
 import { PassThrough, Readable } from 'stream';
@@ -7,7 +8,6 @@ import { Encoder } from '../encoders';
 import { Parser, StringParser } from '../parsers';
 import { CacheURI } from '../protocols/cache';
 import { FIELDS, Finalizable, FINALIZE, URI, WithFields } from '../uri';
-import { copyStream } from '../private/utils';
 
 export interface FormData extends WithFields<FormField> {
     [key: string]: string | undefined;
@@ -25,18 +25,18 @@ export interface MultiPartData extends WithFields<MultiPartField>, Finalizable {
 export interface MultiPartField {
     name?:        string;
     type:         ContentType;
-    headers:      KVPairs;
+    headers:      StringParams;
     value:        string | URI | MultiPartData;
 }
 
 export interface MimeMessage extends Finalizable {
     type:    ContentType,
-    headers: KVPairs;
+    headers: StringParams;
     value:   string | URI | MimeMessage[];
 }
 
 export interface MimeMessageLike {
-    headers?: KVPairs;
+    headers?: StringParams;
     value?:   string | URI | MimeMessage[] | MultiPartData | MultiPartField[];
 }
 
@@ -153,7 +153,7 @@ export class MultiPartParser extends Parser {
                     // eslint-disable-next-line no-async-promise-executor
                     values.push(new Promise(async (resolve, reject) => {
                         try {
-                            const headers: KVPairs = Object.fromEntries(Object.entries(_headers).map(([k, v]) => [k, v?.join(', ')]));
+                            const headers: StringParams = Object.fromEntries(Object.entries(_headers).map(([k, v]) => [k, v?.join(', ')]));
                             const type             = ContentType.create(headers['content-type'], MultiPartParser.defaultContentType);
                             const disposition      = headers['content-disposition'] && new ContentDisposition(headers['content-disposition']) || undefined;
                             const name             = disposition?.param('name');

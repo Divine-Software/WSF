@@ -1,7 +1,7 @@
 {
-  "name": "@divine/web-service",
-  "version": "0.3.4",
-  "description": "The Divine Web Service Library",
+  "name": "@divine/commons",
+  "version": "0.4.0",
+  "description": "The Divine Commons collection of random utilities",
   "author": "Martin Blom <martin@blom.org>",
   "license": "Apache-2.0",
   "repository": "https://github.com/LeviticusMB/esxx-2.git",
@@ -21,20 +21,11 @@
     "collectCoverage": true
   },
   "dependencies": {
-    "@divine/commons": "workspace:^",
-    "cuid": "^2.1.8",
-    "tslib": "^2.3.1",
-    "ua-parser-js": "^0.7.28"
-  },
-  "peerDependencies": {
-    "@divine/headers": "workspace:^",
-    "@divine/uri": "workspace:^"
+    "@divine/synchronization": "^1.2.1",
+    "tslib": "^2.3.1"
   },
   "devDependencies": {
-    "@divine/headers": "workspace:^1.3.3",
-    "@divine/uri": "workspace:^0.4.0",
-    "@types/node": "^12.20.28",
-    "@types/ua-parser-js": "^0.7.36"
+    "@types/node": "^12.20.28"
   },
   "engines": {
     "node": ">= 12.17.0"

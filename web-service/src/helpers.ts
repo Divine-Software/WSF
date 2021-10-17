@@ -1,8 +1,8 @@
 /* eslint-disable @typescript-eslint/no-unused-vars */
+import { unblocked } from '@divine/commons';
 import { ContentType } from '@divine/headers';
 import { EventStreamEvent, Parser } from '@divine/uri';
 import { WebError, WebStatus } from './error';
-import { unblocked } from './private/utils';
 import { WebArguments, WebFilter, WebResource } from './resource';
 import { WebResponse, WebResponseHeaders } from './response';
 

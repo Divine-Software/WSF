@@ -1,6 +1,6 @@
+import { BasicTypes, isAsyncIterable, isDOMNode, isJSON, toAsyncIterable } from '@divine/commons';
 import { ContentType } from '@divine/headers';
 import iconv from 'iconv-lite';
-import { BasicTypes, isAsyncIterable, isDOMNode, isJSON, toAsyncIterable } from './private/utils';
 import { Finalizable, IOError, NULL, VOID } from './uri';
 
 export function toObject<T extends object>(result: unknown): T {

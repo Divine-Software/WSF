@@ -1,7 +1,7 @@
+import { es6Encoder, percentEncode } from '@divine/commons';
 import { ContentType } from '@divine/headers';
 import { extension, lookup } from 'mime-types';
 import path from 'path';
-import { es6Encoder, percentEncode } from './private/utils';
 
 export function uri(strings: TemplateStringsArray, ...values: unknown[]): string {
     return es6Encoder(strings, values, percentEncode);

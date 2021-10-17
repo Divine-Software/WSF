@@ -1,8 +1,16 @@
-import { KVPairs } from './common';
+export interface ContentHeaderParams {
+    [key: string]: string | undefined;
+}
+
+/** Legacy name of [[ContentHeaderParams]].
+ *
+ * @deprecated
+ */
+export type KVPairs = ContentHeaderParams;
 
 export class ContentHeader {
     readonly type: string;
-    readonly params: KVPairs = {};
+    readonly params: ContentHeaderParams = {};
 
     constructor(unparsed: string | ContentHeader, public readonly headerName?: string) {
         if (unparsed instanceof ContentHeader) {

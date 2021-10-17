@@ -1,5 +1,5 @@
+import { isAsyncIterable } from '@divine/commons';
 import { Parser } from '../parsers';
-import { isAsyncIterable } from '../private/utils';
 
 export interface EventStreamEvent {
     event?: string;

@@ -1,8 +1,8 @@
 /* eslint-disable @typescript-eslint/no-namespace */
+import { Params } from '@divine/commons';
 import { Condition } from '@divine/synchronization';
 import { AsyncLocalStorage } from 'async_hooks';
 import { parse as parseDBRef } from './private/dbref';
-import { Params } from './private/utils';
 import { DatabaseURI, DBParamsSelector, DBQuery, DBResult, DBTransactionParams, q } from './protocols/database';
 import { IOError } from './uri';
 

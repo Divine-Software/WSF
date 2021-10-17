@@ -1,4 +1,5 @@
 packages:
+  - commons
   - headers
   - uri-image-parser
   - uri-jdbc-protocol

@@ -1,8 +1,8 @@
+import { escapeRegExp } from '@divine/commons';
 import { once } from 'events';
 import { createServer, IncomingMessage, Server, ServerResponse } from 'http';
 import { AddressInfo } from 'net';
 import { WebService } from './service';
-import { escapeRegExp } from './private/utils';
 
 export interface StartOptions {
     stopSignals?: boolean | NodeJS.Signals[];

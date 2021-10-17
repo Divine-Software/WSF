@@ -1,6 +1,6 @@
+import type { Constructor } from '@divine/commons';
 import { AuthenticationInfo, AuthHeader, Authorization, ServerAuthorization, WWWAuthenticate } from '@divine/headers';
 import { URL } from 'url';
-import { Constructor } from './private/utils';
 
 export abstract class Credentials {
     constructor(public identity: string) {

@@ -1,6 +1,6 @@
+import { isAsyncIterable, toAsyncIterable, toReadableStream } from '@divine/commons';
 import { Transform } from 'stream';
 import { createBrotliCompress, createBrotliDecompress, createDeflate, createGunzip, createGzip, createInflate } from 'zlib';
-import { isAsyncIterable, toAsyncIterable, toReadableStream } from './private/utils';
 import { IOError } from './uri';
 
 export class EncoderError extends IOError {

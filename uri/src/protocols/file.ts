@@ -1,3 +1,4 @@
+import { AsyncIteratorAdapter, copyStream, toReadableStream } from '@divine/commons';
 import { ContentType } from '@divine/headers';
 import { R_OK } from 'constants';
 import { createReadStream, createWriteStream, promises as fs } from 'fs';
@@ -5,12 +6,11 @@ import { lookup } from 'mime-types';
 import { basename, join, normalize } from 'path';
 import { encodeFilePath } from '../file-utils';
 import { Parser } from '../parsers';
-import { copyStream, toReadableStream } from '../private/utils';
 import { DirectoryEntry, Metadata, URI, VOID } from '../uri';
 
 export class FileURI extends URI {
-    static create(path: string, base?: URI): URI {
-        return new URI(`${encodeFilePath(path)}`, base);
+    static create(path: string, base?: URI): FileURI {
+        return new URI(`${encodeFilePath(path)}`, base) as FileURI;
     }
 
     private _path: string;

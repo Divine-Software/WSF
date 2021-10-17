@@ -38,8 +38,8 @@ function v4uuid() {
 }
 
 export class CacheURI extends URI {
-    static create(type: ContentType | string): URI {
-        return new URI(`cache:${type},${v4uuid()}`);
+    static create(type: ContentType | string): CacheURI {
+        return new URI(`cache:${type},${v4uuid()}`) as CacheURI;
     }
 
     private _type: ContentType;

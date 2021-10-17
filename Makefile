@@ -28,6 +28,7 @@ distclean::
 	rm -rf node_modules
 
 docs clean distclean::
+	$(MAKE) -C commons $@
 	$(MAKE) -C headers $@
 	$(MAKE) -C uri $@
 	$(MAKE) -C uri-image-parser $@

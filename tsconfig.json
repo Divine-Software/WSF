@@ -1,6 +1,7 @@
 {
     "include": [],
     "references": [
+        { "path": "commons" },
         { "path": "headers" },
         { "path": "uri" },
         { "path": "uri-image-parser" },

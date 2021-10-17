@@ -17,8 +17,6 @@ export * from './protocols/file';
 export * from './protocols/http';
 export * from './uri';
 
-export { KVPairs } from '@divine/headers';
-
 export * as DBDriver from './database-driver';
 
 // Register all built-in auth-schemes

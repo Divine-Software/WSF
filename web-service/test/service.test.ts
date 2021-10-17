@@ -1,4 +1,4 @@
-import { KVPairs } from '@divine/uri';
+import { StringParams } from '@divine/commons';
 import { WebArguments, WebResponse, WebService, WebStatus } from '../src';
 import { fakedReq } from './test-utils';
 
@@ -154,7 +154,7 @@ describe(`a WebService's resources`, () => {
         expect(r.status).toBe(WebStatus.ACCEPTED);
         expect(r.body!.toString()).toBe('five');
         expect(r.headers.etag).toBe('V');
-        expect((r.headers as KVPairs)['custom-header']).toBe('v');
+        expect((r.headers as StringParams)['custom-header']).toBe('v');
     });
 
     it('returns 404 or 405 if no resource matches', async () => {
