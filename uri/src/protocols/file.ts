@@ -8,6 +8,13 @@ import { encodeFilePath } from '../file-utils';
 import { Parser } from '../parsers';
 import { DirectoryEntry, Metadata, URI, VOID } from '../uri';
 
+const chokidar = import('chokidar');
+
+export interface FileWatchEvent {
+    type: 'add' | 'addDir' | 'change' | 'unlink' | 'unlinkDir';
+    uri:  FileURI;
+}
+
 export class FileURI extends URI {
     static create(path: string, base?: URI): FileURI {
         return new URI(`${encodeFilePath(path)}`, base) as FileURI;
@@ -106,9 +113,6 @@ export class FileURI extends URI {
         }
     }
 
-    // async modify<T extends object>(data: unknown, sendCT?: ContentType | string, recvCT?: ContentType | string): Promise<object> {
-    // }
-
     async remove<T extends object>(recvCT?: ContentType | string): Promise<T & Metadata> {
         if (recvCT !== undefined) {
             throw new TypeError(`URI ${this}: remove: recvCT argument is not supported`);
@@ -131,6 +135,28 @@ export class FileURI extends URI {
             else {
                 throw this._makeIOError(err);
             }
+        }
+    }
+
+    async* watch(): AsyncIterable<FileWatchEvent & Metadata> {
+        const adapter = new AsyncIteratorAdapter<FileWatchEvent>();
+        const watcher = (await chokidar).watch(this._path, {
+            atomic:        false,
+            ignoreInitial: true,
+        }).on('all', (type, path) => {
+            adapter.next({ type, uri: FileURI.create(path, this) });
+        }).on('error', (err) => {
+            adapter.throw(err)
+        });
+
+        try {
+            yield* adapter;
+        }
+        catch (err) {
+            throw this._makeIOError(err);
+        }
+        finally {
+            await watcher.close();
         }
     }
 

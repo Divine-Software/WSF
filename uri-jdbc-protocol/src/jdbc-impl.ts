@@ -1,4 +1,5 @@
 import { DatabaseURI, DBColumnInfo, DBDriver, DBError, DBQuery, DBResult, DBTransactionParams, q } from '@divine/uri';
+import assert from 'assert';
 import java from 'java';
 import { promisify } from 'util';
 
@@ -54,6 +55,10 @@ class JDBCDatabaseConnection implements DBDriver.DBConnection {
     constructor(private _dbURI: DatabaseURI) {
     }
 
+    get state() {
+        return this._client ? 'open' : 'closed'
+    }
+
     async open() {
         await java.ensureJvm();
         this._client = await java.newInstance('DBConnectionBridge', this._dbURI.href, null) as any;
@@ -65,17 +70,13 @@ class JDBCDatabaseConnection implements DBDriver.DBConnection {
     }
 
     async ping(timeout: number) {
-        if (!this._client) {
-            throw new ReferenceError('DBConnection closed');
-        }
+        assert(this._client, 'Connection closed');
 
         await this._client.ping(timeout);
     }
 
     async query(...queries: DBQuery[]): Promise<DBResult[]> {
-        if (!this._client) {
-            throw new ReferenceError('DBConnection closed');
-        }
+        assert(this._client, 'Connection closed');
 
         const result: DBResult[] = [];
 
@@ -114,24 +115,22 @@ class JDBCDatabaseConnection implements DBDriver.DBConnection {
     }
 
     async transaction<T>(dtp: DBTransactionParams, cb: DBDriver.DBCallback<T>): Promise<T> {
-        if (!this._client) {
-            throw new ReferenceError('DBConnection closed');
-        }
+        assert(this._client, 'DBConnection closed');
 
         const retries = dtp.retries ?? DBDriver.DBConnectionPool.defaultRetries;
         const backoff = dtp.backoff ?? DBDriver.DBConnectionPool.defaultBackoff;
         const options = this._toIsolationLevel(dtp.options);
 
         for (let retry = 0; /* Keep going */; ++retry) {
-            const began = await this._client?.begin(options);
+            const began = await this._client.begin(options);
 
             try {
                 const result = await cb(began ? retry : null);
-                await this._client?.commit();
+                await this._client.commit();
                 return result;
             }
             catch (err) {
-                await this._client?.rollback().catch(() => { throw err });
+                await this._client.rollback().catch(() => { throw err });
 
                 if (err instanceof DBError && err.state === '40001' && began && retry < retries) {
                     // Sleep a bit, then retry

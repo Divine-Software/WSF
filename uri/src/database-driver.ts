@@ -11,11 +11,16 @@ const als = new AsyncLocalStorage<{ ref: number, conn: DBConnection, failed: boo
 export type DBCallback<T> = (retryCount: number | null) => Promise<T>;
 
 export interface DBConnection {
+    readonly state: 'open' | 'closed';
+
     open(): Promise<void>;
     close(): Promise<void>;
     ping(timeout: number): Promise<void>;
+
     query(...queries: DBQuery[]): Promise<DBResult[]>;
+    watch?(query: DBQuery): AsyncIterable<DBResult>;
     transaction<T>(dtp: DBTransactionParams, cb: DBCallback<T>): Promise<T>;
+
     reference(dbURI: DatabaseURI): DBReference | Promise<DBReference>;
 }
 
@@ -56,6 +61,11 @@ export abstract class DBConnectionPool {
 
         try {
             ++tls.ref;
+
+            if (tls.conn.state !== 'open') {
+                throw new IOError(`This database connection has been closed`);
+            }
+
             return await cb(tls.conn);
         }
         catch (err) {
@@ -111,7 +121,8 @@ export abstract class DBConnectionPool {
     }
 
     private async _releaseConnection(conn: DBConnection, maybeDead: boolean): Promise<void> {
-        if (maybeDead && await this._closeConnection(conn, true)) {
+        if (conn.state !== 'open' && this._closeConnection(conn, false) ||
+            maybeDead && await this._closeConnection(conn, true)) {
             return;
         }
 

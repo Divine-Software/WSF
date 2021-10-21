@@ -18,6 +18,8 @@ interface SQLiteMessage {
 }
 
 class SQLiteDatabaseConnection implements DBDriver.DBConnection {
+    state: 'open' | 'closed' = 'closed';
+
     private _dbPath: string;
     private _dbName: string;
     private _worker: Worker;
@@ -96,6 +98,8 @@ class SQLiteDatabaseConnection implements DBDriver.DBConnection {
             dbPath:   this._dbPath,
             params:   { },
         });
+
+        this.state = 'open';
     }
 
     async close() {
@@ -103,6 +107,7 @@ class SQLiteDatabaseConnection implements DBDriver.DBConnection {
             await this._execute({ 'type': 'close' });
         }
         finally {
+            this.state = 'closed';
             await this._execute({ 'type': 'shutdown' }).catch(() => 0);
             await this._worker.terminate().catch(() => 0);
         }

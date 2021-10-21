@@ -1,4 +1,5 @@
 import { BasicCredentials, DatabaseURI, DBColumnInfo, DBDriver, DBError, DBParamsSelector, DBQuery, DBResult, DBTransactionParams, q } from '@divine/uri';
+import assert from 'assert';
 import { ColumnMetaData, Connection, ISOLATION_LEVEL, Request, TYPES } from 'tedious';
 import { SQLServerSQLState as SQLState } from './tds-errors';
 
@@ -28,6 +29,10 @@ class TDSDatabaseConnection implements DBDriver.DBConnection {
     private _savepoint = 0;
 
     constructor(private _dbURI: DatabaseURI, private _creds?: BasicCredentials) {
+    }
+
+    get state() {
+        return this._client ? 'open' : 'closed'
     }
 
     async open() {
@@ -61,13 +66,11 @@ class TDSDatabaseConnection implements DBDriver.DBConnection {
     }
 
     async close() {
-        if (this._client) {
-            await new Promise((resolve, reject) => {
-                this._client!.once('end', resolve).once('error', reject).close();
-            });
+        await new Promise((resolve, reject) => {
+            this._client!.once('end', resolve).once('error', reject).close();
+        }).catch(() => 0);
 
-            delete this._client;
-        }
+        delete this._client;
     }
 
     async ping(_timeout: number) {
@@ -75,9 +78,7 @@ class TDSDatabaseConnection implements DBDriver.DBConnection {
     }
 
     async query(...queries: DBQuery[]): Promise<DBResult[]> {
-        if (!this._client) {
-            throw new ReferenceError('DBConnection closed');
-        }
+        assert(this._client, 'DBConnection closed');
 
         const result: DBResult[] = [];
 
@@ -154,9 +155,7 @@ class TDSDatabaseConnection implements DBDriver.DBConnection {
     }
 
     async transaction<T>(dtp: DBTransactionParams, cb: DBDriver.DBCallback<T>): Promise<T> {
-        if (!this._client) {
-            throw new ReferenceError('DBConnection closed');
-        }
+        assert(this._client, 'DBConnection closed');
 
         const level = this._tlevel++;
 
@@ -174,13 +173,13 @@ class TDSDatabaseConnection implements DBDriver.DBConnection {
                     try {
                         const result = await cb(retry);
                         // @ts-expect-error: trxName is a param
-                        await new Promise<void>((resolve, reject) => this._client!.commitTransaction((err) => err ? reject(err) : resolve(), trxName))
+                        await new Promise<void>((resolve, reject) => this._client.commitTransaction((err) => err ? reject(err) : resolve(), trxName))
                         return result;
                     }
                     catch (err) {
                         try {
                             // @ts-expect-error: trxName is a param
-                            await new Promise<void>((resolve, reject) => this._client?.rollbackTransaction((err) => err ? reject(err) : resolve()), trxName);
+                            await new Promise<void>((resolve, reject) => this._client.rollbackTransaction((err) => err ? reject(err) : resolve()), trxName);
                         }
                         catch (err: any) {
                             if (err.number !== 3903) { // "The ROLLBACK TRANSACTION request has no corresponding BEGIN TRANSACTION"
@@ -199,16 +198,12 @@ class TDSDatabaseConnection implements DBDriver.DBConnection {
                 }
             }
             else {
-                // // @ts-expect-error: trxName is a param
-                // await new Promise<void>((resolve, reject) => this._client!.saveTransaction((err) => err ? reject(err) : resolve(), trxName));
                 await this.query(q.raw(`save tran ${trxName}`));
 
                 try {
                     return await cb(null);
                 }
                 catch (err) {
-                    // // @ts-expect-error: trxName is a param
-                    // await new Promise<void>((resolve, reject) => this._client?.rollbackTransaction((err) => err ? reject(err) : resolve()), trxName).catch(() => 0);
                     await this.query(q.raw(`rollback tran ${trxName}`)).catch(() => 0);
                     throw err;
                 }

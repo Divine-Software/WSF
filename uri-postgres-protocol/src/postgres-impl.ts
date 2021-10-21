@@ -1,10 +1,17 @@
+import { as, AsyncIteratorAdapter } from '@divine/commons';
 import { BasicCredentials, DatabaseURI, DBColumnInfo, DBDriver, DBError, DBParamsSelector, DBQuery, DBResult, DBTransactionParams, q } from '@divine/uri';
-import { Client, QueryArrayResult, types } from 'pg';
+import assert from 'assert';
+import { Client, FieldDef, Query, QueryArrayConfig, types } from 'pg';
 import { URL } from 'url';
 import { PostgresSQLState as SQLState } from './postgres-errors';
 
 const parseBigIntArray = types.getTypeParser(1016);
 const deadlocks = [ SQLState.SERIALIZATION_FAILURE, SQLState.DEADLOCK_DETECTED ] as string[];
+const listenFields: FieldDef[] = [
+    { name: 'channel', tableID: 0, columnID: 0, dataTypeID: types.builtins.TEXT, dataTypeSize: -1, dataTypeModifier: -1, format: 'text' },
+    { name: 'process', tableID: 0, columnID: 0, dataTypeID: types.builtins.INT4, dataTypeSize: -1, dataTypeModifier: -1, format: 'int4' },
+    { name: 'payload', tableID: 0, columnID: 0, dataTypeID: types.builtins.TEXT, dataTypeSize: -1, dataTypeModifier: -1, format: 'text' },
+]
 
 export class PGConnectionPool extends DBDriver.DBConnectionPool {
     constructor(dbURI: DatabaseURI, params: DBParamsSelector['params'], private _getCredentials: () => Promise<BasicCredentials | undefined>) {
@@ -24,6 +31,10 @@ class PGDatabaseConnection implements DBDriver.DBConnection {
     private _savepoint = 0;
 
     constructor(private _dbURI: DatabaseURI, private _creds?: BasicCredentials) {
+    }
+
+    get state() {
+        return this._client ? 'open' : 'closed'
     }
 
     async open() {
@@ -58,19 +69,19 @@ class PGDatabaseConnection implements DBDriver.DBConnection {
     }
 
     async query(...queries: DBQuery[]): Promise<DBResult[]> {
-        if (!this._client) {
-            throw new ReferenceError('DBConnection closed');
-        }
+        assert(this._client, 'DBConnection closed');
 
         const result: DBResult[] = [];
 
         for (const query of queries) {
             try {
-                result.push(new PGResult(this._dbURI, await this._client.query({
+                const rs = await this._client.query({
                     text:    query.toString((_v, i) => `$${i + 1}`),
                     values:  query.params,
                     rowMode: 'array',
-                })));
+                });
+
+                result.push(new PGResult(this._dbURI, rs.fields, rs.rows, rs.rowCount));
             }
             catch (err: any) {
                 throw typeof err.code === 'string' ? new DBError('', err.code, 'Query failed', err, query) : err;
@@ -80,10 +91,39 @@ class PGDatabaseConnection implements DBDriver.DBConnection {
         return result;
     }
 
-    async transaction<T>(dtp: DBTransactionParams, cb: DBDriver.DBCallback<T>): Promise<T> {
-        if (!this._client) {
-            throw new ReferenceError('DBConnection closed');
+    async* watch(query: DBQuery) {
+        assert(this._client, 'DBConnection closed');
+
+        // Listen for NOTIFY notifications and stream the result set (if any)
+        const result = new AsyncIteratorAdapter<DBResult>();
+
+        this._client.on('notification', (message) => {
+            result.next(new PGResult(this._dbURI, listenFields, [[ message.channel, message.processId, message.payload ]], 1))
+        });
+
+        this._client.query(new Query(as<QueryArrayConfig>({
+            text:    query.toString((_v, i) => `$${i + 1}`),
+            values:  query.params,
+            rowMode: 'array',
+        })).on('row', (row, rs) => {
+            rs && result.next(new PGResult(this._dbURI, rs.fields, [ row ]))
+        }).on('error', (err) => {
+            result.throw(err)
+        }));
+
+        try {
+            yield* result;
         }
+        catch (err: any) {
+            throw typeof err.code === 'string' ? new DBError('', err.code, 'Watch failed', err, query) : err;
+        }
+        finally {
+            await this.close(); // Never reuse a connection that has been watched
+        }
+    }
+
+    async transaction<T>(dtp: DBTransactionParams, cb: DBDriver.DBCallback<T>): Promise<T> {
+        assert(this._client, 'DBConnection closed');
 
         const level = this._tlevel++;
 
@@ -156,18 +196,18 @@ interface KeyedInformationSchema extends Omit<DBColumnInfo, 'label'> {
 }
 
 export class PGResult extends DBResult {
-    constructor(db: DatabaseURI, private _rs: QueryArrayResult<unknown[]>) {
-        super(db, _rs.fields.map((f) => ({
+    constructor(db: DatabaseURI, private _fd: FieldDef[], rows: unknown[][], rowCount?: number) {
+        super(db, _fd.map((f) => ({
                 label:   f.name,
                 type_id: f.dataTypeID,
-            })), _rs.rows, _rs.rowCount ?? undefined);
+            })), rows, rowCount);
 
-        Object.defineProperty(this, '_rs', { enumerable: false });
+        Object.defineProperty(this, '_fd', { enumerable: false });
     }
 
     async updateColumnInfo(): Promise<DBColumnInfo[]> {
-        const tables = [...new Set(this._rs.fields.filter((f) => f.tableID !== 0 && f.columnID !== 0).map((f) => f.tableID))];
-        const dtypes = [...new Set(this._rs.fields.filter((f) => f.tableID === 0 && f.columnID === 0).map((f) => f.dataTypeID))];
+        const tables = [...new Set(this._fd.filter((f) => f.tableID !== 0 && f.columnID !== 0).map((f) => f.tableID))];
+        const dtypes = [...new Set(this._fd.filter((f) => f.tableID === 0 && f.columnID === 0).map((f) => f.dataTypeID))];
         const nfomap: { [key: string]: KeyedInformationSchema | undefined } = {};
 
         if (tables.length) {
@@ -201,7 +241,7 @@ export class PGResult extends DBResult {
             }
         }
 
-        this._rs.fields.forEach((f, i) => {
+        this._fd.forEach((f, i) => {
             Object.assign(this.columns[i], nfomap[`${f.tableID}:${f.columnID}:${f.dataTypeID}:${f.dataTypeSize}:${f.dataTypeModifier}`]);
         });
 

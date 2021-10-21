@@ -25,6 +25,7 @@
     "@divine/uri": "workspace:^"
   },
   "dependencies": {
+    "@divine/commons": "workspace:^",
     "pg": "^8.7.1",
     "tslib": "^2.3.1"
   },

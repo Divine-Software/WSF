@@ -440,8 +440,8 @@ export function describeCommonDBTest(def: CommonDBTestParams): void {
             const i2 = db.pathname.startsWith('h2:') ? { serial: 99 } : undefined; // H2 quirk
             const s1 = await db1.save<DataTypes[]>({ ...i1, text: 'dbref-save 1', real: 1 });
             const s2 = await db2.save<DataTypes[]>({ ...i2, text: 'dbref-save 2', real: 2 });
-            const k1 = s1[FIELDS][0].rowKey ?? String(s1[0]?.serial);
-            const k2 = s2[FIELDS][0].rowKey ?? String(s2[0]?.serial);
+            const k1 = String(s1[FIELDS][0].rowKey ?? s1[0]?.serial ?? i1?.serial);
+            const k2 = String(s2[FIELDS][0].rowKey ?? s2[0]?.serial ?? i2?.serial);
             const u1 = await db2.save<DataTypes[]>({ serial: k1, real: 3 });
             const u2 = await db1.save<DataTypes[]>({ serial: k2, real: 4 });
 

@@ -1,5 +1,6 @@
-import { AsyncIteratorAdapter, BasicTypes, esxxEncoder, isTemplateStringsLike, Params } from '@divine/commons';
+import { AsyncIteratorAdapter, BasicTypes, esxxEncoder, isTemplateStringsLike, mapped, Params } from '@divine/commons';
 import { ContentType } from '@divine/headers';
+import { Barrier, Signal } from '@divine/synchronization';
 import { SecureContextOptions } from 'tls';
 import { DBCallback, DBConnection, DBConnectionPool } from '../database-driver';
 import { toObject } from '../parsers';
@@ -23,7 +24,7 @@ export function q(query: TemplateStringsArray | string, ...params: unknown[]): D
         return new DBQuery(query.split(invalidCharacter), values);
     }
     else {
-        throw new TypeError()
+        throw new TypeError(`Arguments must be either a template string array, or a sting with a params object`)
     }
 }
 
@@ -376,6 +377,21 @@ export abstract class DBResult extends Array<unknown[]> {
         return ci;
     }
 
+    toObject<T extends object>(fields?: DBResult[]): T & DBMetadata {
+        const result: any = {};
+        result[FIELDS] = fields ?? [ this ];
+
+        if (this.length !== 1) {
+            throw new TypeError(`toObject: expected 1 row, but found ${this.length} rows`);
+        }
+
+        for (let s = this[0], h = 0, hl = this.columns.length; h < hl; ++h) {
+            result[this.columns[h].label || h] = s[h];
+        }
+
+        return result;
+    }
+
     toObjects<T extends object>(fields?: DBResult[]): T[] & DBMetadata {
         const result: T[] & WithFields<DBResult> = Array<T>(this.length);
         result[FIELDS] = fields ?? [ this ];
@@ -472,7 +488,7 @@ export abstract class DatabaseURI extends URI {
 
     query<T extends object = object[]>(...queries: DBQuery[]): Promise<T & DBMetadata>;
     query<T extends object = object[]>(query: TemplateStringsArray, ...params: (BasicTypes)[]): Promise<T & DBMetadata>;
-    query<T extends object = object[]>(query: string, params: Params ): Promise<T & DBMetadata>;
+    query<T extends object = object[]>(query: string, params: Params): Promise<T & DBMetadata>;
     query<T>(params: DBTransactionParams, cb: DBCallback<T>): Promise<T>;
     query<T>(cb: DBCallback<T>): Promise<T>;
     async query<T>(first: DBQuery | TemplateStringsArray | string | DBTransactionParams | DBCallback<T>, ...rest: unknown[]): Promise<unknown & Metadata & WithFields<DBResult>> {
@@ -498,29 +514,68 @@ export abstract class DatabaseURI extends URI {
         });
     }
 
-    async close(): Promise<void> {
-        const states = this._getBestSelector<DBSessionSelector>(this.selectors.session)?.states;
+    watch<T extends object>(query: DBQuery): AsyncIterable<T & DBMetadata>;
+    watch<T extends object>(query: string, params: Params): AsyncIterable<T & DBMetadata>;
+    async *watch<T extends object>(query: DBQuery | string, params?: Params): AsyncIterable<unknown & DBMetadata> {
+        const results = new Signal<AsyncIterable<DBResult>>();
+        const barrier = new Barrier(2);
+        const session = this._session(async (conn) => {
+            if (!conn.watch) {
+                throw new TypeError(`URI ${this} does not support watch()`);
+            }
 
-        if (states) {
-            const database = states.database;
-            delete states.database;
-            await database?.close();
+            results.notify(conn.watch(query instanceof DBQuery ? query : q(query, params!)));
+            await barrier.wait();
+        }).catch(async (err) => {
+            results.notify(new AsyncIteratorAdapter<DBResult>().throw(err));
+            await barrier.wait();
+        })
+
+        try {
+            return yield* mapped((results.value ?? await results.wait()), (v) => v.length === 1 ? v.toObject<T>() : v.toObjects<T>());
+        }
+        catch (err) {
+            throw err instanceof IOError ? err : this._makeIOError(err);
+        }
+        finally {
+            await barrier.wait();
+            await session;
+        }
+    }
+
+    async close(): Promise<void> {
+        try {
+            const states = this._getBestSelector<DBSessionSelector>(this.selectors.session)?.states;
+
+            if (states) {
+                const database = states.database;
+                delete states.database;
+                await database?.close();
+            }
+        }
+        catch (err) {
+            throw err instanceof IOError ? err : this._makeIOError(err);
         }
     }
 
     private async _session<T>(cb: (connection: DBConnection) => Promise<T>): Promise<T> {
-        let states = this._getBestSelector<DBSessionSelector>(this.selectors.session)?.states;
+        try {
+            let states = this._getBestSelector<DBSessionSelector>(this.selectors.session)?.states;
 
-        if (!states) {
-            states = {};
-            this.addSelector({ selector: { uri: this.href.replace(/#.*/, '') }, states });
+            if (!states) {
+                states = {};
+                this.addSelector({ selector: { uri: this.href.replace(/#.*/, '') }, states });
+            }
+
+            if (!states.database) {
+                const params = this._getBestSelector<DBParamsSelector>(this.selectors.params)?.params;
+                states.database = await this._createDBConnectionPool(params ?? {});
+            }
+
+            return await states.database!.session(cb);
         }
-
-        if (!states.database) {
-            const params = this._getBestSelector<DBParamsSelector>(this.selectors.params)?.params;
-            states.database = await this._createDBConnectionPool(params ?? {});
+        catch (err) {
+            throw err instanceof IOError ? err : this._makeIOError(err);
         }
-
-        return states.database!.session(cb);
     }
 }

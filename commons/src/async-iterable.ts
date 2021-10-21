@@ -71,21 +71,19 @@ export class AsyncIteratorAdapter<T, R = void> implements AsyncIterable<T> {
     }
 }
 
-export function mapped<T, TReturn, TNext, R>(it: AsyncGenerator<T, TReturn, TNext>, fn: (value: T, index: number, it: AsyncIterator<T, TReturn, TNext>) => R | Promise<R>): AsyncGenerator<R, TReturn, TNext>;
-export function mapped<T, TReturn, TNext, R>(it: AsyncIterator<T, TReturn, TNext> | AsyncIterable<T>, fn: (value: T, index: number, it: AsyncIterator<T, TReturn, TNext>) => R | Promise<R>): ExtAsyncIterableIterator<R, TReturn, TNext>;
-export function mapped<T, TReturn, TNext, R>(it: AsyncIterator<T, TReturn, TNext> | AsyncIterable<T>, fn: (value: T, index: number, it: AsyncIterator<T, TReturn, TNext>) => R | Promise<R>): ExtAsyncIterableIterator<R, TReturn, TNext> {
-    let index = 0;
-
+export function mapped<T, TReturn, TNext, R>(it: AsyncGenerator<T, TReturn, TNext>, fn: (value: T) => R | Promise<R>): AsyncGenerator<R, TReturn, TNext>;
+export function mapped<T, TReturn, TNext, R>(it: AsyncIterator<T, TReturn, TNext> | AsyncIterable<T>, fn: (value: T) => R | Promise<R>): ExtAsyncIterableIterator<R, TReturn, TNext>;
+export function mapped<T, TReturn, TNext, R>(it: AsyncIterator<T, TReturn, TNext> | AsyncIterable<T>, fn: (value: T) => R | Promise<R>): ExtAsyncIterableIterator<R, TReturn, TNext> {
     const g = isAsyncIterable<T>(it) ? it[Symbol.asyncIterator]() as AsyncIterator<T, TReturn, TNext> : it;
 
-    const mapIR = async (next: IteratorResult<T, TReturn>, index: number): Promise<IteratorResult<R, TReturn>> => {
-        return next.done ? next : { done: next.done, value: await fn(next.value, index, g) }
+    const mapIR = async (next: IteratorResult<T, TReturn>): Promise<IteratorResult<R, TReturn>> => {
+        return next.done ? next : { done: next.done, value: await fn(next.value) }
     }
 
     const ag: ExtAsyncIterableIterator<R, TReturn, TNext> = {
-        next:              async (...args) => mapIR(await g.next(...args), index++),
-        return: g.return ? async (value)   => mapIR(await g.return!(value), Number.POSITIVE_INFINITY) : undefined,
-        throw:  g.throw  ? async (error)   => mapIR(await g.throw!(error),  Number.POSITIVE_INFINITY) : undefined,
+        next:              async (...args) => mapIR(await g.next(...args)),
+        throw:  g.throw  ? async (...args) => mapIR(await g.throw!(...args)) : undefined,
+        return: g.return ? async (...args) => g.return!(...args) as Promise<IteratorResult<R, TReturn>>: undefined,
 
         [Symbol.asyncIterator]: () => ag,
     }

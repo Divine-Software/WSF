@@ -1,4 +1,5 @@
 import { BasicCredentials, DatabaseURI, DBDriver, DBError, DBParamsSelector, DBQuery, DBResult, DBTransactionParams, q } from '@divine/uri';
+import assert from 'assert';
 import { Connection, createConnection, FieldPacket, OkPacket, ResultSetHeader, RowDataPacket } from 'mysql2/promise';
 import { MariaDBStatus as Status } from './mysql-errors';
 
@@ -21,6 +22,10 @@ class MyDatabaseConnection implements DBDriver.DBConnection {
     private _savepoint = 0;
 
     constructor(private _dbURI: DatabaseURI, private _creds?: BasicCredentials) {
+    }
+
+    get state() {
+        return this._client ? 'open' : 'closed'
     }
 
     async open() {
@@ -53,17 +58,13 @@ class MyDatabaseConnection implements DBDriver.DBConnection {
     }
 
     async ping(_timeout: number) {
-        if (!this._client) {
-            throw new ReferenceError('DBConnection closed');
-        }
+        assert(this._client, 'DBConnection closed');
 
         await this._client.ping();
     }
 
     async query(...queries: DBQuery[]): Promise<DBResult[]> {
-        if (!this._client) {
-            throw new ReferenceError('DBConnection closed');
-        }
+        assert(this._client, 'DBConnection closed');
 
         const result: DBResult[] = [];
 
@@ -103,9 +104,7 @@ class MyDatabaseConnection implements DBDriver.DBConnection {
     }
 
     async transaction<T>(dtp: DBTransactionParams, cb: DBDriver.DBCallback<T>): Promise<T> {
-        if (!this._client) {
-            throw new ReferenceError('DBConnection closed');
-        }
+        assert(this._client, 'DBConnection closed');
 
         const level = this._tlevel++;
 

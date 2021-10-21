@@ -175,6 +175,11 @@ export class URI extends URL {
         throw new TypeError(`URI ${this} does not support query()`);
     }
 
+    // eslint-disable-next-line require-yield
+    async *watch(..._args: unknown[]): AsyncIterable<object & Metadata> {
+        throw new TypeError(`URI ${this} does not support watch()`);
+    }
+
     async close(): Promise<void> {
         // No-op by default
     }
