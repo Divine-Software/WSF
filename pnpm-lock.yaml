@@ -8,13 +8,13 @@ importers:
       '@typescript-eslint/eslint-plugin': ^4.33.0
       '@typescript-eslint/parser': ^4.33.0
       eslint: ^7.32.0
-      eslint-import-resolver-node: ^0.3.6
+      eslint-import-resolver-node: ~0.3.6
       eslint-plugin-import: ^2.25.2
       eslint-plugin-jest: ^25.2.2
       eslint-plugin-jsdoc: ^36.1.1
       jest: ^27.3.1
       jest-cli: ^27.3.1
-      node-java-maven: ^0.1.2
+      node-java-maven: ~0.1.2
       typedoc: ~0.20.37
       typescript: ~4.1.6
     devDependencies:
@@ -51,17 +51,17 @@ importers:
 
   uri:
     specifiers:
-      '@divine/commons': workspace:^0.4.0
+      '@divine/commons': workspace:~0.4.0
       '@divine/headers': workspace:^1.3.3
       '@divine/synchronization': ^1.2.1
       '@iarna/toml': ^2.2.5
-      '@types/dicer': ^0.2.1
+      '@types/dicer': ~0.2.1
       '@types/mime-types': ^2.1.1
       '@types/node': ^12.20.34
       '@types/papaparse': ^5.3.1
       chokidar: ^3.5.2
-      dicer: ^0.3.0
-      iconv-lite: ^0.6.3
+      dicer: ~0.3.0
+      iconv-lite: ~0.6.3
       mime-types: ^2.1.33
       papaparse: ^5.3.1
       peggy: ^1.2.0
@@ -92,7 +92,7 @@ importers:
 
   uri-image-parser:
     specifiers:
-      '@divine/uri': workspace:^0.4.0
+      '@divine/uri': workspace:~0.4.0
       '@types/node': ^12.20.34
       canvas: ^2.8.0
       tslib: ^2.3.1
@@ -105,10 +105,10 @@ importers:
 
   uri-jdbc-protocol:
     specifiers:
-      '@divine/uri': workspace:^0.4.0
-      '@types/java': ^0.9.2
+      '@divine/uri': workspace:~0.4.0
+      '@types/java': ~0.9.2
       '@types/node': ^12.20.34
-      java: ^0.12.2
+      java: ~0.12.2
       tslib: ^2.3.1
     dependencies:
       java: 0.12.2
@@ -121,7 +121,7 @@ importers:
   uri-mysql-protocol:
     specifiers:
       '@divine/headers': workspace:^1.3.3
-      '@divine/uri': workspace:^0.4.0
+      '@divine/uri': workspace:~0.4.0
       '@types/node': ^12.20.34
       mysql2: ^2.3.2
       tslib: ^2.3.1
@@ -135,9 +135,9 @@ importers:
 
   uri-postgres-protocol:
     specifiers:
-      '@divine/commons': workspace:^0.4.0
+      '@divine/commons': workspace:~0.4.0
       '@divine/headers': workspace:^1.3.3
-      '@divine/uri': workspace:^0.4.0
+      '@divine/uri': workspace:~0.4.0
       '@types/node': ^12.20.34
       '@types/pg': ^8.6.1
       pg: ^8.7.1
@@ -154,7 +154,7 @@ importers:
 
   uri-sqlite-protocol:
     specifiers:
-      '@divine/uri': workspace:^0.4.0
+      '@divine/uri': workspace:~0.4.0
       '@types/better-sqlite3': ^7.4.0
       '@types/node': ^12.20.34
       better-sqlite3: ^7.4.3
@@ -170,7 +170,7 @@ importers:
   uri-tds-protocol:
     specifiers:
       '@divine/headers': workspace:^1.3.3
-      '@divine/uri': workspace:^0.4.0
+      '@divine/uri': workspace:~0.4.0
       '@types/node': ^12.20.34
       '@types/tedious': ^4.0.5
       tedious: ^14.0.0
@@ -186,10 +186,10 @@ importers:
 
   uri-x4e-parser:
     specifiers:
-      '@divine/uri': workspace:^0.4.0
-      '@divine/x4e': workspace:^0.3.0
+      '@divine/uri': workspace:~0.4.0
+      '@divine/x4e': workspace:~0.3.0
       '@types/node': ^12.20.34
-      '@types/xmldom': ^0.1.31
+      '@types/xmldom': ~0.1.31
       tslib: ^2.3.1
     dependencies:
       '@divine/x4e': link:../x4e
@@ -201,14 +201,14 @@ importers:
 
   web-service:
     specifiers:
-      '@divine/commons': workspace:^0.4.0
+      '@divine/commons': workspace:~0.4.0
       '@divine/headers': workspace:^1.3.3
-      '@divine/uri': workspace:^0.4.0
+      '@divine/uri': workspace:~0.4.0
       '@types/node': ^12.20.34
-      '@types/ua-parser-js': ^0.7.36
+      '@types/ua-parser-js': ~0.7.36
       cuid: ^2.1.8
       tslib: ^2.3.1
-      ua-parser-js: ^0.7.30
+      ua-parser-js: ~0.7.30
     dependencies:
       '@divine/commons': link:../commons
       cuid: 2.1.8
@@ -224,10 +224,10 @@ importers:
     specifiers:
       '@types/node': ^12.20.34
       '@types/parse5': ^6.0.1
-      '@types/xmldom': ^0.1.31
+      '@types/xmldom': ~0.1.31
       parse5: ^6.0.1
       tslib: ^2.3.1
-      xmldom: ^0.6.0
+      xmldom: ~0.6.0
     dependencies:
       parse5: 6.0.1
       tslib: 2.3.1
@@ -1117,7 +1117,7 @@ packages:
   /@types/dicer/0.2.1:
     resolution: {integrity: sha512-nd+ADKXJBBJqOeUIwYwJlO1im9RGnIIek/IZ18WF+0xiDtqoDsrazZNYG3llMMsA1rNAu8cFwa4jBn6bLWi/pg==}
     dependencies:
-      '@types/node': 12.20.34
+      '@types/node': 16.11.4
     dev: true
 
   /@types/graceful-fs/4.1.5:

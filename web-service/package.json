@@ -21,10 +21,10 @@
     "collectCoverage": true
   },
   "dependencies": {
-    "@divine/commons": "workspace:^0.4.0",
+    "@divine/commons": "workspace:~0.4.0",
     "cuid": "^2.1.8",
     "tslib": "^2.3.1",
-    "ua-parser-js": "^0.7.30"
+    "ua-parser-js": "~0.7.30"
   },
   "peerDependencies": {
     "@divine/headers": "workspace:^",
@@ -32,9 +32,9 @@
   },
   "devDependencies": {
     "@divine/headers": "workspace:^1.3.3",
-    "@divine/uri": "workspace:^0.4.0",
+    "@divine/uri": "workspace:~0.4.0",
     "@types/node": "^12.20.34",
-    "@types/ua-parser-js": "^0.7.36"
+    "@types/ua-parser-js": "~0.7.36"
   },
   "engines": {
     "node": ">= 12.17.0"
