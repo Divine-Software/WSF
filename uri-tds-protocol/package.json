@@ -25,13 +25,13 @@
     "@divine/uri": "workspace:^"
   },
   "dependencies": {
-    "tedious": "^13.1.0",
+    "tedious": "^14.0.0",
     "tslib": "^2.3.1"
   },
   "devDependencies": {
     "@divine/headers": "workspace:^1.3.3",
     "@divine/uri": "workspace:^0.4.0",
-    "@types/node": "^12.20.28",
+    "@types/node": "^12.20.34",
     "@types/tedious": "^4.0.5"
   },
   "engines": {

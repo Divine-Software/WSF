@@ -44,8 +44,8 @@
   "devDependencies": {
     "@types/dicer": "^0.2.1",
     "@types/mime-types": "^2.1.1",
-    "@types/node": "^12.20.28",
-    "@types/papaparse": "^5.2.6",
+    "@types/node": "^12.20.34",
+    "@types/papaparse": "^5.3.1",
     "chokidar": "^3.5.2",
     "peggy": "^1.2.0",
     "ts-pegjs": "^1.2.1"

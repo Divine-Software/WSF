@@ -94,10 +94,11 @@ class TDSDatabaseConnection implements DBDriver.DBConnection {
 
                     for (const [i, _v] of query.params.entries()) {
                         const v =
+                            _v === null ? _v :
                             _v instanceof Date ? _v :
                             _v instanceof Uint8Array ? Buffer.from(_v) :
-                            _v !== null && typeof _v === 'object' && !Array.isArray(_v) ? JSON.stringify(_v) :
-                            _v;
+                            typeof _v === 'object' && !Array.isArray(_v) ? JSON.stringify(_v) :
+                            String(_v);
 
                         const t =
                             _v instanceof Buffer ? TYPES.VarBinary :

@@ -18,7 +18,7 @@ export class CSVParser extends Parser {
             Papa.parse<string[] | object>(Readable.from(stream), {
                 encoding:  charset, // TODO: Encoding
                 header:    header === 'present',
-                newline:   eol,
+                newline:   eol as '\r' | '\n' | '\r\n',
                 delimiter: separator,
                 quoteChar: quote,
 
