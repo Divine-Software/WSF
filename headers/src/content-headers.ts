@@ -1,8 +1,16 @@
-import { KVPairs } from './common';
+export interface ContentHeaderParams {
+    [key: string]: string | undefined;
+}
+
+/** Legacy name of [[ContentHeaderParams]].
+ *
+ * @deprecated
+ */
+export type KVPairs = ContentHeaderParams;
 
 export class ContentHeader {
     readonly type: string;
-    readonly params: KVPairs = {};
+    readonly params: ContentHeaderParams = {};
 
     constructor(unparsed: string | ContentHeader, public readonly headerName?: string) {
         if (unparsed instanceof ContentHeader) {
@@ -83,9 +91,9 @@ export class ContentHeader {
 }
 
 export class ContentDisposition extends ContentHeader {
-    static get attachment() { return new ContentDisposition('attachment'); }
-    static get inline()     { return new ContentDisposition('inline');     }
-    static get formData()   { return new ContentDisposition('form-data');  }
+    static get attachment() : ContentDisposition { return new ContentDisposition('attachment'); }
+    static get inline()     : ContentDisposition { return new ContentDisposition('inline');     }
+    static get formData()   : ContentDisposition { return new ContentDisposition('form-data');  }
 
     static create(cd: string | ContentDisposition | null | undefined, fallback?: string | ContentDisposition | null): ContentDisposition {
         if (typeof cd === 'string' || cd instanceof ContentDisposition) {
@@ -109,16 +117,16 @@ export class ContentDisposition extends ContentHeader {
 }
 
 export class ContentType extends ContentHeader {
-    static get bytes()      { return new ContentType('application/octet-stream');            }
-    static get csv()        { return new ContentType('text/csv');                            }
-    static get dir()        { return new ContentType('application/vnd.esxx.directory+json'); }
-    static get formData()   { return new ContentType('multipart/form-data');                 }
-    static get html()       { return new ContentType('text/html');                           }
-    static get json()       { return new ContentType('application/json');                    }
-    static get stream()     { return new ContentType('application/vnd.esxx.octet-stream');   }
-    static get text()       { return new ContentType('text/plain');                          }
-    static get urlencoded() { return new ContentType('application/x-www-form-urlencoded');   }
-    static get xml()        { return new ContentType('application/xml');                     }
+    static get bytes()      : ContentType { return new ContentType('application/octet-stream');            }
+    static get csv()        : ContentType { return new ContentType('text/csv');                            }
+    static get dir()        : ContentType { return new ContentType('application/vnd.esxx.directory+json'); }
+    static get formData()   : ContentType { return new ContentType('multipart/form-data');                 }
+    static get html()       : ContentType { return new ContentType('text/html');                           }
+    static get json()       : ContentType { return new ContentType('application/json');                    }
+    static get stream()     : ContentType { return new ContentType('application/vnd.esxx.octet-stream');   }
+    static get text()       : ContentType { return new ContentType('text/plain');                          }
+    static get urlencoded() : ContentType { return new ContentType('application/x-www-form-urlencoded');   }
+    static get xml()        : ContentType { return new ContentType('application/xml');                     }
 
     static create(ct: string | ContentType | null | undefined, fallback?: string | ContentType | null): ContentType {
         if (typeof ct === 'string' || ct instanceof ContentType) {

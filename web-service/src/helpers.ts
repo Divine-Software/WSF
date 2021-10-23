@@ -1,7 +1,8 @@
+/* eslint-disable @typescript-eslint/no-unused-vars */
+import { unblocked } from '@divine/commons';
 import { ContentType } from '@divine/headers';
 import { EventStreamEvent, Parser } from '@divine/uri';
 import { WebError, WebStatus } from './error';
-import { unblocked } from './private/utils';
 import { WebArguments, WebFilter, WebResource } from './resource';
 import { WebResponse, WebResponseHeaders } from './response';
 
@@ -16,15 +17,15 @@ export interface CORSFilterParams {
 }
 
 export abstract class CORSFilter implements WebFilter {
-    protected static excluded = new Set(['cache-control', 'content-language', 'content-type', 'expires', 'last-modified', 'pragma']);
+    protected static readonly _excluded = new Set(['cache-control', 'content-language', 'content-type', 'expires', 'last-modified', 'pragma']);
 
-    async filter(next: () => Promise<WebResponse>, args: WebArguments, resource: () => Promise<WebResource>) {
+    async filter(next: () => Promise<WebResponse>, args: WebArguments, resource: () => Promise<WebResource>): Promise<WebResponse> {
         const response = await next();
         const exposed  = Object.keys(response.headers); // Read before we add any extra
         const params   = { args, resource: await resource(), response };
         const origin   = args.string('@origin', undefined);
 
-        if (this.isOriginAllowed(origin, params)) {
+        if (this._isOriginAllowed(origin, params)) {
             const method = args.string('@access-control-request-method', undefined);
 
             if (method !== undefined && args.request.method === 'OPTIONS') { // Preflight
@@ -32,18 +33,18 @@ export abstract class CORSFilter implements WebFilter {
                 const headers = args.string('@access-control-request-headers', '').split(/\s*,\s*/);
 
                 response
-                    .setHeader('access-control-allow-methods',  [...methods].filter((h) => this.isMethodAllowed(h, params)).join(', '))
-                    .setHeader('access-control-allow-headers',  headers.filter((h) => this.isHeaderAllowed(h, params)).join(', '))
-                    .setHeader('access-control-max-age',        this.getMaxAge(params));
+                    .setHeader('access-control-allow-methods',  [...methods].filter((h) => this._isMethodAllowed(h, params)).join(', '))
+                    .setHeader('access-control-allow-headers',  headers.filter((h) => this._isHeaderAllowed(h, params)).join(', '))
+                    .setHeader('access-control-max-age',        this._getMaxAge(params));
                 }
 
-            if (this.isCredentialsSupported(params)) {
+            if (this._isCredentialsSupported(params)) {
                 response.setHeader('access-control-allow-credentials', 'true');
             }
 
             response
                 .setHeader('access-control-allow-origin',   origin)
-                .setHeader('access-control-expose-headers', exposed.filter((h) => this.isHeaderExposed(h, params)).join(', '))
+                .setHeader('access-control-expose-headers', exposed.filter((h) => this._isHeaderExposed(h, params)).join(', '))
                 .setHeader('vary',                          [...asSet(response.headers.vary).add('origin')].join(', '));
         }
 
@@ -72,27 +73,27 @@ export abstract class CORSFilter implements WebFilter {
      *
      * @returns `true` if the request is allowed, else `false`.
      */
-    protected isOriginAllowed(origin: string | undefined, params: CORSFilterParams): boolean {
+    protected _isOriginAllowed(origin: string | undefined, params: CORSFilterParams): boolean {
         return origin !== undefined;
     }
 
-    protected isMethodAllowed(method: string, params: CORSFilterParams): boolean {
+    protected _isMethodAllowed(method: string, params: CORSFilterParams): boolean {
         return true;
     }
 
-    protected isHeaderAllowed(header: string, params: CORSFilterParams): boolean {
+    protected _isHeaderAllowed(header: string, params: CORSFilterParams): boolean {
         return true;
     }
 
-    protected isHeaderExposed(header: string, params: CORSFilterParams): boolean {
-        return !CORSFilter.excluded.has(header);
+    protected _isHeaderExposed(header: string, params: CORSFilterParams): boolean {
+        return !CORSFilter._excluded.has(header);
     }
 
-    protected isCredentialsSupported(params: CORSFilterParams): boolean {
+    protected _isCredentialsSupported(params: CORSFilterParams): boolean {
         return false;
     }
 
-    protected getMaxAge(params: CORSFilterParams): number {
+    protected _getMaxAge(params: CORSFilterParams): number {
         return 600;
     }
 }
@@ -108,7 +109,7 @@ export interface EventAttributes {
 }
 
 export class EventStreamResponse<T extends object> extends WebResponse {
-    private static async *eventStream(source: AsyncIterable<object & EventAttributes | undefined | null>, dataType?: ContentType | string, keepaliveTimeout?: number): AsyncGenerator<EventStreamEvent | undefined> {
+    private static async *_eventStream(source: AsyncIterable<object & EventAttributes | undefined | null>, dataType?: ContentType | string, keepaliveTimeout?: number): AsyncGenerator<EventStreamEvent | undefined> {
         const serialize = async (event: object): Promise<string> => {
             const [serialized] = await Parser.serializeToBuffer(event, dataType);
 
@@ -144,8 +145,8 @@ export class EventStreamResponse<T extends object> extends WebResponse {
         }
     }
 
-    constructor(protected source: AsyncIterable<T & EventAttributes | undefined | null>, dataType?: ContentType | string, headers?: WebResponseHeaders, keepaliveTimeout?: number) {
-        super(WebStatus.OK, EventStreamResponse.eventStream(source, dataType, keepaliveTimeout), {
+    constructor(source: AsyncIterable<T & EventAttributes | undefined | null>, dataType?: ContentType | string, headers?: WebResponseHeaders, keepaliveTimeout?: number) {
+        super(WebStatus.OK, EventStreamResponse._eventStream(source, dataType, keepaliveTimeout), {
             'content-type':      'text/event-stream',
             'cache-control':     'no-cache',
             'transfer-encoding': 'identity',

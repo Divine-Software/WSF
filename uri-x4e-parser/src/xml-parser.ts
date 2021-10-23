@@ -7,7 +7,7 @@ export class XMLParser extends Parser {
     }
 
     serialize(data: Node | XML<Node>): Buffer {
-        this.assertSerializebleData(isDOMNode(data) || data instanceof XML, data);
+        this._assertSerializebleData(isDOMNode(data) || data instanceof XML, data);
 
         return new StringParser(this.contentType).serialize(isDOMNode(data) ? serializeXMLToString(data) : data.$toXMLString());
     }

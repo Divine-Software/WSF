@@ -87,15 +87,15 @@ export abstract class AuthHeader {
         return this.param('realm');
     }
 
-    toString() {
-        return `${this.scheme} ${this.credentials ?? this.formatParams()}`;
+    toString(): string {
+        return `${this.scheme} ${this.credentials ?? this._formatParams()}`;
     }
 
     isProxyHeader(): boolean {
         return this.headerName.startsWith('proxy-');
     }
 
-    protected formatParams() {
+    protected _formatParams(): string {
         return Object.entries(this.params)
             .map(([param, info]) => info!.quoted ?? (!/^[-!#$%&'*+.0-9=A-Z^_`a-z|~]+$/.test(info!.value) || param === 'realm' /* [sic!] */)
                 ? `${param}="${info!.value.replace(/([\\"])/g, '\\$1')}"`

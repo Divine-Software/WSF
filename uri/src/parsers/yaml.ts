@@ -1,7 +1,7 @@
+import { BasicTypes, setProp } from '@divine/commons';
 import YAML from 'yaml';
 import { Parser, StringParser, toObject } from '../parsers';
 import { FIELDS, WithFields } from '../uri';
-import { BasicTypes, setProp } from '../private/utils';
 
 export class YAMLParser extends Parser {
     async parse(stream: AsyncIterable<Buffer>): Promise<object & WithFields<BasicTypes>> {
@@ -12,8 +12,8 @@ export class YAMLParser extends Parser {
         return json.length === 1 ? data : setProp(data, FIELDS, json);
     }
 
-    serialize(data: BasicTypes | WithFields<BasicTypes>): Buffer;
-    serialize(data: WithFields<BasicTypes>): Buffer {
+    serialize(data: BasicTypes): Buffer;
+    serialize(data: BasicTypes & WithFields<BasicTypes>): Buffer {
         try {
             const entries = data?.[FIELDS] ?? [data];
             const strings = entries.map((entry) => YAML.stringify(entry));
@@ -21,9 +21,8 @@ export class YAMLParser extends Parser {
             return new StringParser(this.contentType).serialize(strings.join('---\n'));
         }
         catch (ex) {
-            this.assertSerializebleData(false, data, ex);
+            this._assertSerializebleData(false, data, ex);
         }
-
     }
 }
 

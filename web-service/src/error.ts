@@ -6,7 +6,7 @@ export class WebError extends Error {
     }
 
     toString(): string {
-        return `[${this.constructor.name}: ${this.status} ${WebStatus[this.status] || this.status} ${this.message}]`;
+        return `[${this.constructor.name}: ${this.status} ${WebStatus[this.status] || '<Unknown>'} ${this.message}]`;
     }
 
     toWebResponse(errorMessageProperty: string): WebResponse {

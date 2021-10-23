@@ -9,11 +9,11 @@ export {
 } from './xml-utils';
 
 export function parseHTMLFromString(document: string): Document {
-    return parse(document, { treeAdapter: new XMLTreeAdapter() }) as Document;
+    return parse(document, { treeAdapter: new XMLTreeAdapter() }) as unknown as Document;
 }
 
 export function parseHTMLFragmentFromString(fragment: string): DocumentFragment {
-    return parseFragment(fragment, { treeAdapter: new XMLTreeAdapter() }) as DocumentFragment;
+    return parseFragment(fragment, { treeAdapter: new XMLTreeAdapter() }) as unknown as DocumentFragment;
 }
 
 export function serializeHTMLToString(node: Node): string {
@@ -32,36 +32,36 @@ export function serializeHTMLToString(node: Node): string {
         } as unknown as Document;
     }
 
-    return serialize(node, { treeAdapter: new XMLTreeAdapter() });
+    return serialize(node as any, { treeAdapter: new XMLTreeAdapter() });
 }
 
 class XMLTreeAdapter implements AST.TreeAdapter {
-    private root: Document;
-    private created  = false;
-    private template = Symbol('template');
-    private docMode  = Symbol('docMode');
-    private location = Symbol('location');
+    private _root: Document;
+    private _created  = false;
+    private _template = Symbol('template');
+    private _docMode  = Symbol('docMode');
+    private _location = Symbol('location');
 
     constructor() {
-        this.root = new DOMImplementation().createDocument(null, null, null);
+        this._root = new DOMImplementation().createDocument(null, null, null);
     }
 
     createDocument(): Document {
-        if (this.created) {
+        if (this._created) {
             throw new Error('XMLTreeAdapter can only create one document per instance');
         }
         else {
-            this.created = true;
-            return this.root;
+            this._created = true;
+            return this._root;
         }
     }
 
     createDocumentFragment(): DocumentFragment {
-        return this.root.createDocumentFragment();
+        return this._root.createDocumentFragment();
     }
 
     createElement(tagName: string, namespaceURI: string, attrs: AST.Attribute[]): Element {
-        const element = this.root.createElementNS(namespaceURI, tagName);
+        const element = this._root.createElementNS(namespaceURI, tagName);
 
         for (const attr of attrs) {
             if (attr.namespace) {
@@ -76,7 +76,7 @@ class XMLTreeAdapter implements AST.TreeAdapter {
     }
 
     createCommentNode(data: string): Comment {
-        return this.root.createComment(data);
+        return this._root.createComment(data);
     }
 
     appendChild(parentNode: Node, newNode: Node): void {
@@ -88,11 +88,11 @@ class XMLTreeAdapter implements AST.TreeAdapter {
     }
 
     setTemplateContent(templateElement: Element, contentElement: DocumentFragment): void {
-        (templateElement as any)[this.template] = contentElement;
+        (templateElement as any)[this._template] = contentElement;
     }
 
     getTemplateContent(templateElement: Element): DocumentFragment {
-        return (templateElement as any)[this.template];
+        return (templateElement as any)[this._template];
     }
 
     setDocumentType(_document: Document, name: string, publicId: string, systemId: string): void {
@@ -100,19 +100,19 @@ class XMLTreeAdapter implements AST.TreeAdapter {
     }
 
     setDocumentMode(document: Document, mode: AST.DocumentMode): void {
-        (document as any)[this.docMode] = mode;
+        (document as any)[this._docMode] = mode;
     }
 
     getDocumentMode(document: Document): AST.DocumentMode {
-        return (document as any)[this.docMode];
+        return (document as any)[this._docMode];
     }
 
     getNodeSourceCodeLocation(node: Node): AST.Location | AST.StartTagLocation | AST.ElementLocation {
-        return (node as any)[this.location]
+        return (node as any)[this._location]
     }
 
     setNodeSourceCodeLocation(node: Node, location: AST.Location | AST.StartTagLocation | AST.ElementLocation): void {
-        (node as any)[this.location] = location;
+        (node as any)[this._location] = location;
     }
 
 
@@ -123,11 +123,11 @@ class XMLTreeAdapter implements AST.TreeAdapter {
     }
 
     insertText(parentNode: Node, text: string): void {
-        parentNode.appendChild(this.root.createTextNode(text)); // FIXME: Optimize
+        parentNode.appendChild(this._root.createTextNode(text)); // FIXME: Optimize
     }
 
     insertTextBefore(parentNode: Node, text: string, referenceNode: Node): void {
-        parentNode.insertBefore(this.root.createTextNode(text), referenceNode); // FIXME: Optimize
+        parentNode.insertBefore(this._root.createTextNode(text), referenceNode); // FIXME: Optimize
     }
 
     adoptAttributes(recipient: Element, attrs: AST.Attribute[]): void {

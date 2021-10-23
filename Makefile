@@ -9,11 +9,16 @@ $(NODE_MODULES):package.json */package.json pnpm-lock.yaml pnpm-workspace.yaml .
 	touch $(NODE_MODULES)
 
 build::	prepare
+	$(MAKE) -C uri build-deps
+	$(MAKE) -C uri-jdbc-protocol build-deps
 	pnpm exec tsc --build --verbose
+
+lint:
+	-pnpm exec eslint '*/src/**/*.ts'
 
 docs::	build
 
-test::	build
+test::	build lint
 	pnpm exec jest
 
 clean::
@@ -23,11 +28,17 @@ distclean::
 	rm -rf node_modules
 
 docs clean distclean::
+	$(MAKE) -C commons $@
 	$(MAKE) -C headers $@
 	$(MAKE) -C uri $@
 	$(MAKE) -C uri-image-parser $@
+	$(MAKE) -C uri-jdbc-protocol $@
+	$(MAKE) -C uri-mysql-protocol $@
+	$(MAKE) -C uri-postgres-protocol $@
+	$(MAKE) -C uri-sqlite-protocol $@
+	$(MAKE) -C uri-tds-protocol $@
 	$(MAKE) -C uri-x4e-parser $@
 	$(MAKE) -C web-service $@
 	$(MAKE) -C x4e $@
 
-.PHONY:		all prepare build docs test clean distclean
+.PHONY:		all prepare build lint docs test clean distclean

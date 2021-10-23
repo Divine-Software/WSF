@@ -1,13 +1,13 @@
+import { escapeRegExp, isAsyncIterable } from '@divine/commons';
 import { EventStreamResponse } from './helpers';
 import { WebArguments, WebResourceCtor } from './resource';
-import { escapeRegExp, isAsyncIterable } from './private/utils';
 
 type RPCParamsType = object;
 type RPCResultType = object | AsyncIterable<object>;
 type RPCMethods<M> = Record<keyof M, [RPCParamsType, RPCResultType]>;
 
-export type RPCParams<M extends RPCMethods<M>, K extends keyof M> = M[K] extends [infer A, infer B] ? A : never;
-export type RPCResult<M extends RPCMethods<M>, K extends keyof M> = M[K] extends [infer A, infer B] ? B : never;
+export type RPCParams<M extends RPCMethods<M>, K extends keyof M> = M[K] extends [infer A, infer _B] ? A : never;
+export type RPCResult<M extends RPCMethods<M>, K extends keyof M> = M[K] extends [infer _A, infer B] ? B : never;
 
 export type RPCClient<M extends RPCMethods<M>> = {
     [K in keyof M]: (params: RPCParams<M, K>) => Promise<RPCResult<M, K>>;
@@ -62,10 +62,10 @@ export function createRPCService<M extends RPCMethods<M>, Context = unknown>(con
         class RPCResource {
             static path = RegExp(escapeRegExp(options.path));
 
-            constructor(private ctx: Context) {}
+            constructor(private _ctx: Context) {}
 
             async POST(args: WebArguments): Promise<object> {
-                const object = typeof impl === 'function' ? new impl(this.ctx, args) : impl;
+                const object = typeof impl === 'function' ? new impl(this._ctx, args) : impl;
                 const result = await serviceProxy(method, options, args, (params) => object[method](params as any, args) as Promise<object>);
 
                 return isAsyncIterable<object>(result) ? new EventStreamResponse(result, undefined, undefined, options.keepalive ?? undefined) : result;

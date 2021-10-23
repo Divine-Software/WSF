@@ -7,8 +7,13 @@ all:		build
 prepare:
 	$(MAKE) -C .. $@
 
-build:		prepare
+build:		prepare build-deps
 	pnpm exec tsc --build
+
+build-deps:	src/private/dbref.ts
+
+src/private/dbref.ts:	src/private/dbref.pegjs
+	pnpm exec tspegjs $<
 
 docs:	build
 	rm -rf ../docs/$(BASENAME)

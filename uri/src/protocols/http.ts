@@ -1,4 +1,5 @@
-import { Authorization, ContentType, KVPairs, WWWAuthenticate } from '@divine/headers';
+import { copyStream, StringParams } from '@divine/commons';
+import { ContentType } from '@divine/headers';
 import { Agent, IncomingMessage, request as requestHTTP } from 'http';
 import { request as requestHTTPS } from 'https';
 import path from 'path';
@@ -6,11 +7,9 @@ import { Readable } from 'stream';
 import { SecureContextOptions } from 'tls';
 import { URL } from 'url';
 import pkg from '../../package.json';
-import { AuthScheme, AuthSchemeRequest } from '../auth-schemes';
 import { Encoder } from '../encoders';
 import { Parser } from '../parsers';
 import { DirectoryEntry, HEADERS, IOError, Metadata, ParamsSelector, STATUS, STATUS_TEXT, URI, VOID } from '../uri';
-import { copyStream } from '../private/utils';
 
 export interface HTTPParamsSelector extends ParamsSelector {
     params: {
@@ -34,7 +33,7 @@ export class HTTPURI extends URI {
         const type     = headers['content-type'];
         const modified = headers['last-modified'];
 
-        return this.requireValidStatus<DirectoryEntry>({
+        return this._requireValidStatus<DirectoryEntry>({
             ...extractMetadata(response),
             uri:     this,
             name:    path.posix.basename(location.pathname),
@@ -45,26 +44,26 @@ export class HTTPURI extends URI {
     }
 
     async load<T extends object>(recvCT?: ContentType | string): Promise<T> {
-        return this.requireValidStatus(await this._query('GET', {}, null, undefined, recvCT));
+        return this._requireValidStatus(await this._query('GET', {}, null, undefined, recvCT));
     }
 
     async save<T extends object>(data: unknown, sendCT?: ContentType | string, recvCT?: ContentType | string): Promise<T> {
-        return this.requireValidStatus(await this._query('PUT', {}, data, sendCT, recvCT));
+        return this._requireValidStatus(await this._query('PUT', {}, data, sendCT, recvCT));
     }
 
     async append<T extends object>(data: unknown, sendCT?: ContentType | string, recvCT?: ContentType | string): Promise<T> {
-        return this.requireValidStatus(await this._query('POST', {}, data, sendCT, recvCT));
+        return this._requireValidStatus(await this._query('POST', {}, data, sendCT, recvCT));
     }
 
     async modify<T extends object>(data: unknown, sendCT?: ContentType | string, recvCT?: ContentType | string): Promise<T> {
-        return this.requireValidStatus(await this._query('PATCH', {}, data, sendCT, recvCT));
+        return this._requireValidStatus(await this._query('PATCH', {}, data, sendCT, recvCT));
     }
 
     async remove<T extends object>(recvCT?: ContentType | string): Promise<T> {
-        return this.requireValidStatus(await this._query('DELETE', {}, null, undefined, recvCT));
+        return this._requireValidStatus(await this._query('DELETE', {}, null, undefined, recvCT));
     }
 
-    async query<T extends object>(method: string, headers?: KVPairs | null, data?: unknown, sendCT?: ContentType | string, recvCT?: ContentType | string): Promise<T> {
+    async query<T extends object>(method: string, headers?: StringParams | null, data?: unknown, sendCT?: ContentType | string, recvCT?: ContentType | string): Promise<T> {
         if (typeof method !== 'string') {
             throw new TypeError(`URI ${this}: query: 'method' argument missing/invalid`);
         }
@@ -78,10 +77,10 @@ export class HTTPURI extends URI {
             throw new TypeError(`URI ${this}: query: 'recvCT' argument invalid`);
         }
 
-        return this.requireValidStatus(await this._query(method, headers ?? {}, data, this.guessContentType(sendCT), recvCT));
+        return this._requireValidStatus(await this._query(method, headers ?? {}, data, this._guessContentType(sendCT), recvCT));
     }
 
-    protected requireValidStatus<T extends object & Metadata>(result: T): T {
+    protected _requireValidStatus<T extends object & Metadata>(result: T): T {
         const status = result[STATUS];
 
         if (status && (status < 200 || status >= 300)) {
@@ -92,46 +91,13 @@ export class HTTPURI extends URI {
         }
     }
 
-    private async _getAuthorization(req: AuthSchemeRequest, payload?: Buffer | AsyncIterable<Buffer>, challenges?: WWWAuthenticate[]): Promise<Authorization | undefined> {
-        let session = this.getBestSelector(this.selectors?.session);
-
-        if (!session?.authScheme) {
-            const { auth, challenge } = (challenges?.length ? challenges : [undefined as WWWAuthenticate | undefined])
-                .map((challenge) => ({ auth: this.getBestSelector(this.selectors?.auth, challenge), challenge }))
-                .filter((entry) => !!entry.auth)[0]
-                ?? { auth: null, challenge: null };
-
-            if (auth && (challenge || auth.preemptive)) {
-                this.selectors = this.selectors ?? {};
-                this.selectors.session = this.selectors.session ?? [];
-
-                if (!session) {
-                    this.selectors.session.push(session = { selector: {} });
-                }
-
-                if (auth.credentials instanceof AuthScheme) {
-                    session.authScheme = auth.credentials;
-                }
-                else if (challenge) {
-                    session.authScheme = AuthScheme.create(challenge).setCredentialsProvider(auth.credentials);
-                }
-                else if (auth.selector?.authScheme) {
-                    session.authScheme = AuthScheme.create(auth.selector.authScheme).setCredentialsProvider(auth.credentials);
-                }
-            }
-        }
-
-        const challenge = challenges?.find((challenge) => challenge.scheme === session?.authScheme?.scheme);
-        return session?.authScheme?.createAuthorization(challenge, req, payload instanceof Buffer ? payload : undefined);
-    }
-
-    private async _query<T>(method: string, headers: KVPairs, data: unknown, sendCT?: ContentType | string, recvCT?: ContentType | string): Promise<T & Metadata> {
+    private async _query<T>(method: string, headers: StringParams, data: unknown, sendCT?: ContentType | string, recvCT?: ContentType | string): Promise<T & Metadata> {
         let body: Buffer | AsyncIterable<Buffer> | undefined;
 
         headers = {
             'accept-encoding': 'gzip, deflate, br',
             'user-agent':      `Divine-URI/${pkg.version}`,
-            ...this.getBestSelector(this.selectors?.header)?.headers,
+            ...this._getBestSelector(this.selectors.headers)?.headers,
             ...headers
         };
 
@@ -149,7 +115,7 @@ export class HTTPURI extends URI {
         // Bug workaround?
         headers = Object.fromEntries(Object.entries(headers).filter(([, value]) => value !== undefined));
 
-        const params  = this.getBestSelector<HTTPParamsSelector>(this.selectors?.param)?.params ?? {};
+        const params  = this._getBestSelector<HTTPParamsSelector>(this.selectors.params)?.params ?? {};
         const options = { agent: params.agent, timeout: params.timeout };
         const request = async (method: string, url: string) => {
             const request =
@@ -175,10 +141,10 @@ export class HTTPURI extends URI {
                         resolve(result);
                     }
                     catch (err) {
-                        reject(this.makeIOError(err));
+                        reject(this._makeIOError(err));
                     }
                 })
-                .on('error', (err) => reject(this.makeIOError(err)));
+                .on('error', (err) => reject(this._makeIOError(err)));
             });
 
             if (body) {
@@ -225,8 +191,8 @@ function extractMetadata(m: Metadata) {
     return { [STATUS]: m[STATUS], [STATUS_TEXT]: m[STATUS_TEXT], [HEADERS]: m[HEADERS] };
 }
 
-function convertHeaders(response: IncomingMessage): KVPairs {
-    const result: KVPairs = {};
+function convertHeaders(response: IncomingMessage): StringParams {
+    const result: StringParams = {};
 
     for (const [name, value] of Object.entries({ ...response.headers, ...response.trailers })) {
         result[name] = Array.isArray(value) ? value.join(', ') : value;

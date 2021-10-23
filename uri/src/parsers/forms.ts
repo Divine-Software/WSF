@@ -1,4 +1,5 @@
-import { ContentDisposition, ContentType, KVPairs } from '@divine/headers';
+import { copyStream, StringParams } from '@divine/commons';
+import { ContentDisposition, ContentType } from '@divine/headers';
 import { randomBytes } from 'crypto';
 import Dicer from 'dicer';
 import { PassThrough, Readable } from 'stream';
@@ -7,7 +8,6 @@ import { Encoder } from '../encoders';
 import { Parser, StringParser } from '../parsers';
 import { CacheURI } from '../protocols/cache';
 import { FIELDS, Finalizable, FINALIZE, URI, WithFields } from '../uri';
-import { copyStream } from '../private/utils';
 
 export interface FormData extends WithFields<FormField> {
     [key: string]: string | undefined;
@@ -25,18 +25,18 @@ export interface MultiPartData extends WithFields<MultiPartField>, Finalizable {
 export interface MultiPartField {
     name?:        string;
     type:         ContentType;
-    headers:      KVPairs;
+    headers:      StringParams;
     value:        string | URI | MultiPartData;
 }
 
 export interface MimeMessage extends Finalizable {
     type:    ContentType,
-    headers: KVPairs;
+    headers: StringParams;
     value:   string | URI | MimeMessage[];
 }
 
 export interface MimeMessageLike {
-    headers?: KVPairs;
+    headers?: StringParams;
     value?:   string | URI | MimeMessage[] | MultiPartData | MultiPartField[];
 }
 
@@ -59,7 +59,7 @@ export class FormParser extends Parser {
     }
 
     serialize(data: FormData | FormField[]): Buffer {
-        this.assertSerializebleData(data && typeof data === 'object' || data?.[FIELDS] && Array.isArray(data?.[FIELDS]), data);
+        this._assertSerializebleData(data && typeof data === 'object' || data?.[FIELDS] && Array.isArray(data?.[FIELDS]), data);
 
         const entries = (Array.isArray(data) ? data : data[FIELDS])?.map((f) => [f.name, f.value])
             ?? Object.fromEntries(Object.entries(data)) /* Remove symbols */;
@@ -98,7 +98,7 @@ export class MessageParser extends Parser {
     }
 
     async *serialize(data: MimeMessageLike): AsyncIterable<Buffer> {
-        this.assertSerializebleData(data && typeof data === 'object' || data?.[FIELDS] && Array.isArray(data?.[FIELDS]), data);
+        this._assertSerializebleData(data && typeof data === 'object' || data?.[FIELDS] && Array.isArray(data?.[FIELDS]), data);
 
         // Serialize first, to give Parser a chance to update the content-type
         const value = (data.value as MultiPartData)?.[FIELDS] ?? data.value;
@@ -153,7 +153,7 @@ export class MultiPartParser extends Parser {
                     // eslint-disable-next-line no-async-promise-executor
                     values.push(new Promise(async (resolve, reject) => {
                         try {
-                            const headers: KVPairs = Object.fromEntries(Object.entries(_headers).map(([k, v]) => [k, v?.join(', ')]));
+                            const headers: StringParams = Object.fromEntries(Object.entries(_headers).map(([k, v]) => [k, v?.join(', ')]));
                             const type             = ContentType.create(headers['content-type'], MultiPartParser.defaultContentType);
                             const disposition      = headers['content-disposition'] && new ContentDisposition(headers['content-disposition']) || undefined;
                             const name             = disposition?.param('name');
@@ -213,7 +213,7 @@ export class MultiPartParser extends Parser {
     }
 
     private async *_serialize(data: MultiPartData | MultiPartField[]): AsyncIterable<Buffer> {
-        this.assertSerializebleData(data && typeof data === 'object' || Array.isArray(data?.[FIELDS]), data);
+        this._assertSerializebleData(data && typeof data === 'object' || Array.isArray(data?.[FIELDS]), data);
 
         const type     = MultiPartParser.defaultContentType;
         const headers  = {};

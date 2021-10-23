@@ -18,7 +18,7 @@ export class CSVParser extends Parser {
             Papa.parse<string[] | object>(Readable.from(stream), {
                 encoding:  charset, // TODO: Encoding
                 header:    header === 'present',
-                newline:   eol,
+                newline:   eol as '\r' | '\n' | '\r\n',
                 delimiter: separator,
                 quoteChar: quote,
 
@@ -38,7 +38,7 @@ export class CSVParser extends Parser {
     }
 
     async *serialize(data: string[][] | object[]): AsyncIterable<Buffer> {
-        this.assertSerializebleData(Array.isArray(data), data);
+        this._assertSerializebleData(Array.isArray(data), data);
 
         const charset   = this.contentType.param('charset',     'utf8');
         const header    = this.contentType.param('header',      'absent');
@@ -67,7 +67,7 @@ export class CSVParser extends Parser {
         }
 
         for (let row of data) {
-            this.assertSerializebleData(Array.isArray(row) || typeof row === 'object', row);
+            this._assertSerializebleData(Array.isArray(row) || typeof row === 'object', row);
 
             if (!Array.isArray(row)) {
                 if (!fields) {

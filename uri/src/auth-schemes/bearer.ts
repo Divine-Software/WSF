@@ -12,24 +12,24 @@ export class BearerAuthScheme extends AuthScheme<BearerCredentials> {
         super(scheme);
     }
 
-    async createAuthorization(challenge?: WWWAuthenticate | undefined, request?: AuthSchemeRequest | undefined, payload?: Uint8Array | undefined): Promise<Authorization | undefined> {
-        const credentials = await this.getCredentials({ mode: 'retrieve', authScheme: this, challenge, request });
+    async createAuthorization(challenge?: WWWAuthenticate | undefined, request?: AuthSchemeRequest | undefined, _payload?: Uint8Array | undefined): Promise<Authorization | undefined> {
+        const credentials = await this._getCredentials({ mode: 'retrieve', authScheme: this, challenge, request });
         const proxyHeader = challenge?.isProxyHeader() ?? this.proxy;
 
         return credentials ? new Authorization(`${this.scheme} ${credentials.identity}`, proxyHeader) : undefined;
     }
 
     async verifyAuthorization<T extends Authorization | undefined>(authorization: T, request?: AuthSchemeRequest, _payload?: Uint8Array): Promise<T> {
-        const identity = this.assertCompatibleAuthHeader(authorization)?.credentials;
+        const identity = this._assertCompatibleAuthHeader(authorization)?.credentials;
 
         if (!identity) {
-            throw new AuthSchemeError(`No credentials provided`, await this.createChallenge(authorization));
+            throw new AuthSchemeError(`No credentials provided`, await this._createChallenge(authorization));
         }
 
-        const trusted = await this.getCredentials({ mode: 'verify', authScheme: this, identity, authorization, request});
+        const trusted = await this._getCredentials({ mode: 'verify', authScheme: this, identity, authorization, request});
 
-        if (!trusted || !this.safeCompare(identity, trusted.identity)) {
-            throw new AuthSchemeError(`Token not valid`, (await this.createChallenge(authorization)).setParam('error', 'invalid_token'));
+        if (!trusted || !AuthScheme.safeCompare(identity, trusted.identity)) {
+            throw new AuthSchemeError(`Token not valid`, (await this._createChallenge(authorization)).setParam('error', 'invalid_token'));
         }
 
         return authorization;
@@ -39,7 +39,7 @@ export class BearerAuthScheme extends AuthScheme<BearerCredentials> {
         return authentication;
     }
 
-    protected isCompatibleCredentials(credentials: BearerCredentials): boolean {
+    protected _isCompatibleCredentials(credentials: BearerCredentials): boolean {
         return typeof credentials.identity === 'string';
     }
 }

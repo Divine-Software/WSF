@@ -52,9 +52,9 @@ describe('jsx', () => {
             <deeper>{x}</deeper>
         </deep>
 
-        console.log(c, y, l, f);
-        console.log(x.person.name);
-        console.log(x.person[0]?.name);
+        // console.log(c, y, l, f);
+        // console.log(x.person.name);
+        // console.log(x.person[0]?.name);
 
         expect(true).toBe(true);
     });

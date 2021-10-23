@@ -1,3 +1,4 @@
+import { SizeLimitedReadableStream } from '@divine/commons';
 import { ContentType } from '@divine/headers';
 import { AuthSchemeRequest, Finalizable, FINALIZE, Parser, ParserError } from '@divine/uri';
 import cuid from 'cuid';
@@ -6,7 +7,7 @@ import { TLSSocket } from 'tls';
 import { UAParser } from 'ua-parser-js';
 import { URL } from 'url';
 import { WebError, WebStatus } from './error';
-import { decorateConsole, SizeLimitedReadableStream } from './private/utils';
+import { decorateConsole } from './private/utils';
 import { WebServiceConfig } from './service';
 
 export interface UserAgent {

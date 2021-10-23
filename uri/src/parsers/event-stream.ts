@@ -1,5 +1,5 @@
+import { isAsyncIterable } from '@divine/commons';
 import { Parser } from '../parsers';
-import { isAsyncIterable } from '../private/utils';
 
 export interface EventStreamEvent {
     event?: string;
@@ -59,14 +59,14 @@ export class EventStreamParser extends Parser {
     }
 
     async *serialize(data: AsyncIterable<EventStreamEvent | undefined | null>): AsyncIterable<Buffer> {
-        this.assertSerializebleData(isAsyncIterable<EventStreamEvent | undefined | null>(data), data);
+        this._assertSerializebleData(isAsyncIterable<EventStreamEvent | undefined | null>(data), data);
 
         for await (const event of data) {
             if (!event) {
                 yield Buffer.from(':\n\n');
             }
             else {
-                this.assertSerializebleData(isEventStreamEvent(event), event);
+                this._assertSerializebleData(isEventStreamEvent(event), event);
 
                 yield Buffer.from(
                     (event.event !== undefined ? `event: ${event.event}\n` : '') +

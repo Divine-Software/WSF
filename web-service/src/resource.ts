@@ -1,4 +1,5 @@
-import { ContentType, KVPairs } from '@divine/headers';
+import { StringParams } from '@divine/commons';
+import { ContentType } from '@divine/headers';
 import { WebError, WebStatus } from './error';
 import { WebRequest } from './request';
 import { WebResponse, WebResponses } from './response';
@@ -39,7 +40,7 @@ export interface WebResource {
 export class WebArguments {
     public readonly params: { [key: string]: string | object | undefined };
 
-    constructor(params: KVPairs, public readonly request: WebRequest) {
+    constructor(params: StringParams, public readonly request: WebRequest) {
         const urlargs = Object.entries(params);
         const headers = Object.entries(request.incomingMessage.headers);
         const qparams = [...request.url.searchParams.entries()];

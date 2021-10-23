@@ -1,15 +1,23 @@
+import { AsyncIteratorAdapter, copyStream, toReadableStream } from '@divine/commons';
 import { ContentType } from '@divine/headers';
 import { R_OK } from 'constants';
 import { createReadStream, createWriteStream, promises as fs } from 'fs';
 import { lookup } from 'mime-types';
 import { basename, join, normalize } from 'path';
+import { encodeFilePath } from '../file-utils';
 import { Parser } from '../parsers';
-import { copyStream, toReadableStream } from '../private/utils';
-import { DirectoryEntry, encodeFilePath, Metadata, URI, VOID } from '../uri';
+import { DirectoryEntry, Metadata, URI, VOID } from '../uri';
+
+const chokidar = import('chokidar');
+
+export interface FileWatchEvent {
+    type: 'add' | 'addDir' | 'change' | 'unlink' | 'unlinkDir';
+    uri:  FileURI;
+}
 
 export class FileURI extends URI {
-    static create(path: string, base?: URI): URI {
-        return new URI(`${encodeFilePath(path)}`, base);
+    static create(path: string, base?: URI): FileURI {
+        return new URI(`${encodeFilePath(path)}`, base) as FileURI;
     }
 
     private _path: string;
@@ -17,11 +25,17 @@ export class FileURI extends URI {
     constructor(uri: URI) {
         super(uri);
 
-        if ((this.hostname !== '' && this.hostname !== 'localhost') || this.port !== '' || this.search !== '' || this.hash !== '') {
-            throw new TypeError(`URI ${this}: Host/port/query/fragment parts not allowed`);
+        if (this.hostname !== '' && decodeURIComponent(this.hostname).toLowerCase() !== 'localhost' || this.port !== '') {
+            throw new TypeError(`URI ${this}: Host parts not allowed`);
+        }
+        else if (this.search !== '') {
+            throw new TypeError(`URI ${this}: Query parts not allowed`);
+        }
+        else if (this.hash !== '') {
+            throw new TypeError(`URI ${this}: Fragment parts not allowed`);
         }
         else if (/%2F/i.test(this.pathname) /* No encoded slashes */) {
-            throw new TypeError(`URI ${this}: Path invalid`);
+            throw new TypeError(`URI ${this}: Path must not contain encoded slashes`);
         }
 
         this._path = normalize(decodeURIComponent(this.pathname));
@@ -43,7 +57,7 @@ export class FileURI extends URI {
             return entry as T;
         }
         catch (err) {
-            throw this.makeIOError(err);
+            throw this._makeIOError(err);
         }
     }
 
@@ -55,7 +69,7 @@ export class FileURI extends URI {
             return await Promise.all(children.sort().map((child) => FileURI.create(join(this._path, child), this).info<T>()));
         }
         catch (err) {
-            throw this.makeIOError(err);
+            throw this._makeIOError(err);
         }
     }
 
@@ -67,7 +81,7 @@ export class FileURI extends URI {
             return await Parser.parse<T>(stream, ContentType.create(recvCT, lookup(this._path) || undefined));
         }
         catch (err) {
-            throw this.makeIOError(err);
+            throw this._makeIOError(err);
         }
     }
 
@@ -81,7 +95,7 @@ export class FileURI extends URI {
             return Object(VOID);
         }
         catch (err) {
-            throw this.makeIOError(err);
+            throw this._makeIOError(err);
         }
     }
 
@@ -95,12 +109,9 @@ export class FileURI extends URI {
             return Object(VOID);
         }
         catch (err) {
-            throw this.makeIOError(err);
+            throw this._makeIOError(err);
         }
     }
-
-    // async modify<T extends object>(data: unknown, sendCT?: ContentType | string, recvCT?: ContentType | string): Promise<object> {
-    // }
 
     async remove<T extends object>(recvCT?: ContentType | string): Promise<T & Metadata> {
         if (recvCT !== undefined) {
@@ -122,13 +133,35 @@ export class FileURI extends URI {
                 return Object(false);
             }
             else {
-                throw this.makeIOError(err);
+                throw this._makeIOError(err);
             }
         }
     }
 
+    async* watch(): AsyncIterable<FileWatchEvent & Metadata> {
+        const adapter = new AsyncIteratorAdapter<FileWatchEvent>();
+        const watcher = (await chokidar).watch(this._path, {
+            atomic:        false,
+            ignoreInitial: true,
+        }).on('all', (type, path) => {
+            adapter.next({ type, uri: FileURI.create(path, this) });
+        }).on('error', (err) => {
+            adapter.throw(err)
+        });
+
+        try {
+            yield* adapter;
+        }
+        catch (err) {
+            throw this._makeIOError(err);
+        }
+        finally {
+            await watcher.close();
+        }
+    }
+
     private async _write(data: unknown, sendCT: ContentType | string | undefined, append: boolean): Promise<void> {
-        const [serialized] = Parser.serialize(data, this.guessContentType(sendCT));
+        const [serialized] = Parser.serialize(data, this._guessContentType(sendCT));
 
         await copyStream(toReadableStream(serialized), createWriteStream(this._path, { flags: append ? 'a' : 'w', encoding: undefined }));
     }

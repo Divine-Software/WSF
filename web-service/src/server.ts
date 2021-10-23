@@ -1,8 +1,8 @@
+import { escapeRegExp } from '@divine/commons';
 import { once } from 'events';
 import { createServer, IncomingMessage, Server, ServerResponse } from 'http';
 import { AddressInfo } from 'net';
 import { WebService } from './service';
-import { escapeRegExp } from './private/utils';
 
 export interface StartOptions {
     stopSignals?: boolean | NodeJS.Signals[];
@@ -70,7 +70,7 @@ export class WebServer {
             options.stopSignals === true  ? [ 'SIGHUP', 'SIGINT', 'SIGTERM', 'SIGBREAK' ] :
             options.stopSignals;
 
-        const handler = (signal: NodeJS.Signals) => {
+        const handler = (_signal: NodeJS.Signals) => {
             signals.forEach((s) => process.off(s, handler));
             this.stop().catch((err) => console.error(err));
         };

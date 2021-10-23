@@ -1,0 +1,33 @@
+{
+  "name": "@divine/commons",
+  "version": "0.4.0",
+  "description": "The Divine Commons collection of random utilities",
+  "author": "Martin Blom <martin@blom.org>",
+  "license": "Apache-2.0",
+  "repository": "https://github.com/LeviticusMB/esxx-2.git",
+  "bugs": "https://github.com/LeviticusMB/esxx-2/issues",
+  "main": "build/src/index.js",
+  "types": "build/src/index.d.ts",
+  "files": [
+    "build/src",
+    "build/package*",
+    "src"
+  ],
+  "jest": {
+    "testEnvironment": "node",
+    "testMatch": [
+      "<rootDir>/build/test/**/*.test.js"
+    ],
+    "collectCoverage": true
+  },
+  "dependencies": {
+    "@divine/synchronization": "^1.2.1",
+    "tslib": "^2.3.1"
+  },
+  "devDependencies": {
+    "@types/node": "^12.20.34"
+  },
+  "engines": {
+    "node": ">= 12.17.0"
+  }
+}

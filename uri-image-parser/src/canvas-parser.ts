@@ -1,11 +1,11 @@
 import { BufferParser, Parser, ParserError } from '@divine/uri';
-import Canvas from 'canvas';
+import { Canvas, Image } from 'canvas';
 
 export class ImageParser extends Parser {
     async parse(stream: AsyncIterable<Buffer>): Promise<Canvas> {
         const buffer = await new BufferParser(this.contentType).parse(stream);
 
-        const image  = new Canvas.Image();
+        const image  = new Image();
         image.src    = buffer as any;
         const canvas = new Canvas(image.height, image.width);
         const ctx    = canvas.getContext('2d');
@@ -19,8 +19,8 @@ export class ImageParser extends Parser {
         }
     }
 
-    async *serialize(data: string[][] | object[]): AsyncIterableIterator<Buffer> {
-        this.assertSerializebleData(Array.isArray(data), data);
-
+    async *serialize(data: string[][] | object[]): AsyncIterable<Buffer> {
+        this._assertSerializebleData(Array.isArray(data), data);
+        yield Buffer.from('');
     }
 }

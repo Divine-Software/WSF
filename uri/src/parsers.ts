@@ -1,6 +1,6 @@
+import { BasicTypes, isAsyncIterable, isDOMNode, isJSON, toAsyncIterable } from '@divine/commons';
 import { ContentType } from '@divine/headers';
 import iconv from 'iconv-lite';
-import { BasicTypes, isAsyncIterable, isDOMNode, isJSON, toAsyncIterable } from './private/utils';
 import { Finalizable, IOError, NULL, VOID } from './uri';
 
 export function toObject<T extends object>(result: unknown): T {
@@ -23,13 +23,13 @@ export class ParserError extends IOError {
 
 export abstract class Parser {
     static register(baseType: string, parser: typeof Parser): typeof Parser {
-        Parser.parsers.set(baseType, parser);
+        Parser._parsers.set(baseType, parser);
         return Parser;
     }
 
     static async parse<T extends object>(stream: string | Buffer | AsyncIterable<Buffer>, contentType: ContentType | string): Promise<T & Finalizable> {
         try {
-            const result = await Parser.create(ContentType.create(contentType)).parse(toAsyncIterable(stream));
+            const result = await Parser._create(ContentType.create(contentType)).parse(toAsyncIterable(stream));
 
             // Never return primitive types or null/undefined
             return toObject(result);
@@ -59,7 +59,7 @@ export abstract class Parser {
                     ? toAsyncIterable(data)
                     : typeof data === 'string'
                         ? new StringParser(contentType)
-                        : Parser.create(contentType);
+                        : Parser._create(contentType);
 
             if (streamOrParser instanceof Parser) {
                 // Give Parser a chance to update content-type (for instance, MultiPartParser might add a boundary param)
@@ -80,12 +80,12 @@ export abstract class Parser {
         return [ await Parser.parse<Buffer>(stream, ContentType.bytes), ct ];
     }
 
-    private static parsers = new Map<string, typeof Parser>();
+    private static _parsers = new Map<string, typeof Parser>();
 
-    private static create(contentType: ContentType): Parser {
+    private static _create(contentType: ContentType): Parser {
         const parserClass =
-            Parser.parsers.get(contentType.type) ??
-            Parser.parsers.get(contentType.type.replace(/\/.*/, '/*'));
+            Parser._parsers.get(contentType.type) ??
+            Parser._parsers.get(contentType.type.replace(/\/.*/, '/*'));
 
         if (!parserClass) {
             throw new ParserError(`No parser availble for this type`, undefined, contentType);
@@ -94,11 +94,11 @@ export abstract class Parser {
         return new (parserClass as any)(contentType);
     }
 
-    constructor(protected contentType: ContentType) { }
+    constructor(readonly contentType: ContentType) { }
     abstract parse(stream: AsyncIterable<Buffer>): Promise<unknown>;
     abstract serialize(data: unknown): Buffer | AsyncIterable<Buffer>;
 
-    protected assertSerializebleData(condition: boolean, data: unknown, cause?: Error): asserts condition {
+    protected _assertSerializebleData(condition: boolean, data: unknown, cause?: Error): asserts condition {
         if (!condition) {
             const type = data instanceof Object ? Object.getPrototypeOf(data).constructor.name : data === null ? 'null' : typeof data;
 
@@ -119,7 +119,7 @@ export class BufferParser extends Parser {
     }
 
     serialize(data: string | Buffer | AsyncIterable<Buffer>): Buffer | AsyncIterable<Buffer> {
-        this.assertSerializebleData(typeof data === 'string' || data instanceof Buffer || isAsyncIterable(data), data);
+        this._assertSerializebleData(typeof data === 'string' || data instanceof Buffer || isAsyncIterable(data), data);
 
         return data instanceof Buffer ? data : toAsyncIterable(data);
     }
@@ -152,7 +152,7 @@ export class StringParser extends Parser {
     serialize(data: unknown): Buffer {
         const charset = this.contentType.param('charset', 'utf8');
         const bom     = this.contentType.param('x-bom',   'absent');
-        this.assertSerializebleData(data !== null && data !== undefined, data);
+        this._assertSerializebleData(data !== null && data !== undefined, data);
 
         return iconv.encode(String(data), charset, { addBOM: bom === 'present'});
     }

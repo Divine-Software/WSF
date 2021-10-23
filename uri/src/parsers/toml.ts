@@ -7,7 +7,7 @@ export class TOMLParser extends Parser {
     }
 
     serialize(data: unknown): Buffer {
-        this.assertSerializebleData(data !== null && data !== undefined && !(data instanceof Date), data);
+        this._assertSerializebleData(data !== null && data !== undefined && !(data instanceof Date), data);
 
         try {
             if (typeof data === 'object' && !Array.isArray(data)) {
@@ -18,7 +18,7 @@ export class TOMLParser extends Parser {
             }
         }
         catch (ex) {
-            this.assertSerializebleData(false, data, ex);
+            this._assertSerializebleData(false, data, ex);
         }
 
         return new StringParser(this.contentType).serialize(data);
