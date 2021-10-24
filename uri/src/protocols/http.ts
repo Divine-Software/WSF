@@ -26,7 +26,7 @@ export interface HTTPParamsSelector extends ParamsSelector {
 
 export class HTTPURI extends URI {
     async info<T extends DirectoryEntry>(): Promise<T & Metadata> {
-        const response = await this._query<T>('HEAD', {}, null, undefined, undefined);
+        const response = await this._query<T>('HEAD', {}, undefined, undefined, undefined);
         const headers  = response[HEADERS]!;
         const location = new URI(headers['content-location'] ?? '', this);
         const length   = headers['content-length'];
@@ -44,7 +44,7 @@ export class HTTPURI extends URI {
     }
 
     async load<T extends object>(recvCT?: ContentType | string): Promise<T> {
-        return this._requireValidStatus(await this._query('GET', {}, null, undefined, recvCT));
+        return this._requireValidStatus(await this._query('GET', {}, undefined, undefined, recvCT));
     }
 
     async save<T extends object>(data: unknown, sendCT?: ContentType | string, recvCT?: ContentType | string): Promise<T> {
@@ -60,7 +60,7 @@ export class HTTPURI extends URI {
     }
 
     async remove<T extends object>(recvCT?: ContentType | string): Promise<T> {
-        return this._requireValidStatus(await this._query('DELETE', {}, null, undefined, recvCT));
+        return this._requireValidStatus(await this._query('DELETE', {}, undefined, undefined, recvCT));
     }
 
     async query<T extends object>(method: string, headers?: StringParams | null, data?: unknown, sendCT?: ContentType | string, recvCT?: ContentType | string): Promise<T> {
@@ -91,7 +91,7 @@ export class HTTPURI extends URI {
         }
     }
 
-    private async _query<T>(method: string, headers: StringParams, data: unknown, sendCT?: ContentType | string, recvCT?: ContentType | string): Promise<T & Metadata> {
+    private async _query<T>(method: string, headers: StringParams, data?: unknown, sendCT?: ContentType | string, recvCT?: ContentType | string): Promise<T & Metadata> {
         let body: Buffer | AsyncIterable<Buffer> | undefined;
 
         headers = {
@@ -101,10 +101,14 @@ export class HTTPURI extends URI {
             ...headers
         };
 
-        if (data !== null && data !== undefined) {
+        if (data !== undefined) {
             const [serialized, contentType] = Parser.serialize(data, sendCT);
 
-            headers = { 'content-type': contentType.toString(), ...headers };
+            headers = {
+                'content-type':   contentType.toString(),
+                'content-length': serialized instanceof Buffer ? serialized.length.toString() : undefined,
+                ...headers
+            };
             body = serialized;
         }
 

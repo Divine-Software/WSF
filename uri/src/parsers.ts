@@ -54,19 +54,18 @@ export abstract class Parser {
             // 2. Encode strings using 'charset' param from `contentType`
             // 3. Serialize everything else
 
-            const streamOrParser =
-                data instanceof Buffer || isAsyncIterable<Buffer>(data)
-                    ? toAsyncIterable(data)
-                    : typeof data === 'string'
-                        ? new StringParser(contentType)
-                        : Parser._create(contentType);
+            const dataOrParser =
+                data instanceof Buffer          ? data :
+                isAsyncIterable<Buffer>(data)   ? toAsyncIterable(data) :
+                typeof data === 'string'        ? new StringParser(contentType)
+                                                : Parser._create(contentType);
 
-            if (streamOrParser instanceof Parser) {
+            if (dataOrParser instanceof Parser) {
                 // Give Parser a chance to update content-type (for instance, MultiPartParser might add a boundary param)
-                return [ streamOrParser.serialize(data), streamOrParser.contentType ];
+                return [ dataOrParser.serialize(data), dataOrParser.contentType ];
             }
             else {
-                return [ streamOrParser, contentType];
+                return [ dataOrParser, contentType];
             }
         }
         catch (err) {
