@@ -44,10 +44,13 @@ export abstract class AuthScheme<C extends Credentials> {
         if (from instanceof AuthHeader) {
             return new (AuthScheme._authSchemes.get(from.scheme.toLowerCase()) ?? UnknownAuthScheme)(from.scheme).setProxyMode(proxy ?? from.isProxyHeader());
         }
+        else if (typeof from === 'string') {
+            return new (AuthScheme._authSchemes.get(from.toLowerCase()) ?? UnknownAuthScheme)(from).setProxyMode(proxy ?? false);
+        }
         else {
-            for (const [scheme, ctor] of this._authSchemes.entries()) {
-                if (from instanceof RegExp ? from.test(scheme) : from.toLowerCase() === scheme) {
-                    return new ctor(typeof from === 'string' ? from : undefined).setProxyMode(proxy ?? false);
+            for (const [scheme, ctor] of AuthScheme._authSchemes.entries()) {
+                if (from.test(scheme)) {
+                    return new ctor().setProxyMode(proxy ?? false);
                 }
             }
 

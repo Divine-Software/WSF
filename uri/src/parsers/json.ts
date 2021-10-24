@@ -20,4 +20,7 @@ export class JSONParser extends Parser {
     }
 }
 
-Parser.register('application/json', JSONParser);
+Parser
+    .register('application/json',        JSONParser)
+    .register(/^application\/.*\+json$/, JSONParser)
+;

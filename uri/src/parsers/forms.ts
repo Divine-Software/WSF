@@ -233,6 +233,6 @@ export class MultiPartParser extends Parser {
 
 Parser
     .register('application/x-www-form-urlencoded', FormParser)
-    .register('message/*',                         MessageParser)
-    .register('multipart/*',                       MultiPartParser)
+    .register(/^message\/.*/,                      MessageParser)
+    .register(/^multipart\/.*/,                    MultiPartParser)
 ;

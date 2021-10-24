@@ -22,7 +22,7 @@ export class ParserError extends IOError {
 }
 
 export abstract class Parser {
-    static register(baseType: string, parser: typeof Parser): typeof Parser {
+    static register(baseType: string | RegExp, parser: typeof Parser): typeof Parser {
         Parser._parsers.set(baseType, parser);
         return Parser;
     }
@@ -80,12 +80,18 @@ export abstract class Parser {
         return [ await Parser.parse<Buffer>(stream, ContentType.bytes), ct ];
     }
 
-    private static _parsers = new Map<string, typeof Parser>();
+    private static _parsers = new Map<string | RegExp, typeof Parser>();
 
     private static _create(contentType: ContentType): Parser {
-        const parserClass =
-            Parser._parsers.get(contentType.type) ??
-            Parser._parsers.get(contentType.type.replace(/\/.*/, '/*'));
+        let parserClass = Parser._parsers.get(contentType.type);
+
+        if (!parserClass) {
+            for (const [type, ctor] of Parser._parsers) {
+                if (type instanceof RegExp && type.test(contentType.type)) {
+                    parserClass = ctor;
+                }
+            }
+        }
 
         if (!parserClass) {
             throw new ParserError(`No parser availble for this type`, undefined, contentType);

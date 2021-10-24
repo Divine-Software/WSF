@@ -13,6 +13,7 @@ export class XMLParser extends Parser {
     }
 }
 
-Parser.register('application/xml', XMLParser)
-      .register('text/xml',        XMLParser)
+Parser.register('application/xml',        XMLParser)
+      .register('text/xml',               XMLParser)
+      .register(/^application\/.*\+xml$/, XMLParser)
 ;
