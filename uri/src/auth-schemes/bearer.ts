@@ -8,7 +8,7 @@ export class BearerCredentials extends Credentials {
 }
 
 export class BearerAuthScheme extends AuthScheme<BearerCredentials> {
-    constructor(scheme = 'bearer') {
+    constructor(scheme = 'Bearer') {
         super(scheme);
     }
 

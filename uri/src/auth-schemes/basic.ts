@@ -9,7 +9,7 @@ export class BasicCredentials extends Credentials {
 }
 
 export class BasicAuthScheme extends AuthScheme<BasicCredentials> {
-    constructor(scheme = 'basic') {
+    constructor(scheme = 'Basic') {
         super(scheme);
     }
 
