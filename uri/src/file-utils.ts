@@ -20,12 +20,12 @@ export function encodeFilePath(filepath: string, type?: 'posix' | 'windows'): st
             filepath = filepath.substr(2);
         }
 
-        return prefix + filepath.split(/\\/).map((part) => encodeURIComponent(part)).join('/');
+        return prefix + filepath.split(/\\/).map((part) => percentEncode(part)).join('/');
     }
     else if (type === 'posix') {
         filepath = path.posix.normalize(filepath);
 
-        return filepath.split('/').map((part) => encodeURIComponent(part)).join('/');
+        return filepath.split('/').map((part) => percentEncode(part)).join('/');
     }
     else {
         throw new TypeError(`Invalid filepath type: ${type}`);

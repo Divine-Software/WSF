@@ -6,11 +6,20 @@ export function percentEncode(str: string): string {
         .replace(/['()*]/g, c => "%" + c.charCodeAt(0).toString(16).toUpperCase());
 }
 
+function toString(value: unknown) {
+    if (value instanceof Date) {
+        return value.toISOString();
+    }
+    else {
+        return String(value);
+    }
+}
+
 export function es6Encoder(strings: TemplateStringsArray, values: unknown[], encoder: ValueEncoder): string {
     let result = strings[0];
 
     for (let i = 0; i < values.length; ++i) {
-        result += encoder(String(values[i]), i) + strings[i + 1];
+        result += encoder(toString(values[i]), i) + strings[i + 1];
     }
 
     return result;
@@ -22,7 +31,7 @@ export function esxxEncoder(template: string, params: Params, encoder: ValueEnco
         const param = match.substring(start + 1, match.length - 1);
         const value = params[param];
 
-        return match.substring(0, start) + encoder(String(value), param);
+        return match.substring(0, start) + encoder(toString(value), param);
     });
 }
 

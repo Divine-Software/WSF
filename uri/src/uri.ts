@@ -1,4 +1,4 @@
-import { BasicTypes, esxxEncoder, Params, StringParams } from '@divine/commons';
+import { BasicTypes, esxxEncoder, Params, percentEncode, StringParams } from '@divine/commons';
 import { Authorization, ContentType, WWWAuthenticate } from '@divine/headers';
 import url, { Url, URL } from 'url';
 import { AuthScheme, AuthSchemeRequest } from './auth-schemes';
@@ -257,14 +257,14 @@ function resolveURL(url?: string | URL | Url, base?: string | URL | Url | Params
         }
 
         if (typeof url === 'string' && params) {
-            url = esxxEncoder(url, params, encodeURIComponent);
+            url = esxxEncoder(url, params, percentEncode);
         }
         else if (url instanceof urlObject) {
             url = (url as Url).href;
         }
 
         if (typeof base === 'string' && params) {
-            base = esxxEncoder(base, params, encodeURIComponent);
+            base = esxxEncoder(base, params, percentEncode);
         }
         else if (base instanceof urlObject) {
             base = (base as Url).href;
