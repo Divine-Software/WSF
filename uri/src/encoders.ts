@@ -47,7 +47,7 @@ export abstract class Encoder {
     private static _encoders = new Map<string, typeof Encoder>();
 
     private static _create(type: string): Encoder {
-        const encoder = Encoder._encoders.get(type);
+        const encoder = Encoder._encoders.get(type.toLowerCase());
 
         if (encoder) {
             return new (encoder as any)(type);

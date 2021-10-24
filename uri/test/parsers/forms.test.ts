@@ -144,7 +144,7 @@ describe('the MessageParser class', () => {
         const cd = ContentDisposition.create(decoded.headers['content-disposition']);
 
         expect(ct.type).toBe('text/plain');
-        expect(ct.params['name']).toBe('Hallå där 😀');
+        expect(ct.param('name')).toBe('Hallå där 😀');
 
         expect(cd.type).toBe('inline');
         expect(cd.filename).toBe('Hallå där 😀');

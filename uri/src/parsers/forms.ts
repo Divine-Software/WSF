@@ -207,7 +207,7 @@ export class MultiPartParser extends Parser {
 
     serialize(data: MultiPartData | MultiPartField[]): AsyncIterable<Buffer> {
         // Ensure we always have a valid boundary once this method returns!
-        this.contentType.params.boundary ??= makeBoundary();
+        this.contentType.setParam('boundary', this.contentType.param('boundary') ?? makeBoundary());
 
         return this._serialize(data);
     }

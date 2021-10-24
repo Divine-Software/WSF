@@ -1,30 +1,24 @@
 export interface ContentHeaderParams {
-    [key: string]: string | undefined;
+    [name: string]: { name: string, value: string } | undefined;
 }
 
-/** Legacy name of [[ContentHeaderParams]].
- *
- * @deprecated
- */
-export type KVPairs = ContentHeaderParams;
-
-export class ContentHeader {
-    readonly type: string;
+export abstract class ContentHeader {
+    private _type: string;
     readonly params: ContentHeaderParams = {};
 
     constructor(unparsed: string | ContentHeader, public readonly headerName?: string) {
         if (unparsed instanceof ContentHeader) {
-            this.type   = unparsed.type;
+            this._type  = unparsed._type;
             this.params = JSON.parse(JSON.stringify(unparsed.params));
             return;
         }
 
         const [, type, params] = /\s*([^\s;]*)\s*(.*)/.exec(unparsed)!;
 
-        this.type = type;
+        this._type = type;
 
         for (let pr = /;\s*([^\s=]*)\s*=\s*(?:([^";]+)|"((?:[^"\\]|\\.)*)")[^;]*/g, param = pr.exec(params); param; param = pr.exec(params)) {
-            let name  = param[1].toLowerCase();
+            let name  = param[1];
             let value = param[2] !== undefined ? param[2] : param[3].replace(/\\(.)/g, '$1');
 
             if (name.endsWith('*')) {
@@ -43,27 +37,31 @@ export class ContentHeader {
                 }
 
                 name = name.substr(0, name.length - 1);
-                delete this.params[name];
+                delete this.params[name.toLowerCase()];
             }
 
-            if (this.params[name] === undefined) {
-                this.params[name] = value;
+            if (this.params[name.toLowerCase()] === undefined) {
+                this.params[name.toLowerCase()] = { name, value };
             }
         }
+    }
+
+    get type(): string {
+        return this._type.toLowerCase();
     }
 
     param(name: string): string | undefined;
     param(name: string, fallback: string): string;
     param(name: string, fallback?: string): string | undefined {
-        return this.params[name] ?? fallback;
+        return this.params[name.toLowerCase()]?.value ?? fallback;
     }
 
     setParam(name: string, value: string | number | undefined): this {
         if (value !== undefined) {
-            this.params[name] = String(value);
+            this.params[name.toLowerCase()] = { name, value: String(value) };
         }
         else {
-            delete this.params[name];
+            delete this.params[name.toLowerCase()];
         }
 
         return this;
@@ -72,13 +70,13 @@ export class ContentHeader {
     toString(): string {
         let params = '';
 
-        for (const [name, value] of Object.entries(this.params)) {
-            const safe = value!.replace(/[^\u0020-\u007e]/g, '_');
+        for (const param of Object.values(this.params)) {
+            const safe = param!.value.replace(/[^\u0020-\u007e]/g, '_');
 
-            params += `;${name}="${safe.replace(/\\/g, '\\\\').replace(/"/g, '\\"')}"`;
+            params += `;${param!.name}="${safe.replace(/\\/g, '\\\\').replace(/"/g, '\\"')}"`;
 
-            if (safe !== value) {
-                params += `;${name}*=utf-8''${percentEncode(value!)}`;
+            if (safe !== param!.value) {
+                params += `;${param!.name}*=utf-8''${percentEncode(param!.value!)}`;
             }
         }
 

@@ -42,12 +42,12 @@ export abstract class AuthScheme<C extends Credentials> {
 
     static create(from: AuthHeader | string | RegExp, proxy?: boolean): AuthScheme<Credentials> {
         if (from instanceof AuthHeader) {
-            return new (AuthScheme._authSchemes.get(from.scheme) ?? UnknownAuthScheme)().setProxyMode(proxy ?? from.isProxyHeader());
+            return new (AuthScheme._authSchemes.get(from.scheme.toLowerCase()) ?? UnknownAuthScheme)(from.scheme).setProxyMode(proxy ?? from.isProxyHeader());
         }
         else {
             for (const [scheme, ctor] of this._authSchemes.entries()) {
-                if (from instanceof RegExp && from.test(scheme) || from === scheme) {
-                    return new ctor().setProxyMode(proxy ?? false);
+                if (from instanceof RegExp ? from.test(scheme) : from.toLowerCase() === scheme) {
+                    return new ctor(typeof from === 'string' ? from : undefined).setProxyMode(proxy ?? false);
                 }
             }
 

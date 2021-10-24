@@ -13,9 +13,9 @@ describe('the AuthScheme class', () => {
     })
 
     it('parses imagined Params credentials', () => {
-        expect.assertions(8);
+        expect.assertions(9);
 
-        const auths = WWWAuthenticate.create('Params a=A,b="B",  c   =  " C " ,d=",D" e="\\"E\\\\\\"\\\\" ,');
+        const auths = WWWAuthenticate.create('Params a=A,b="B",  C   =  " C " ,d=",D" e="\\"E\\\\\\"\\\\" ,');
         const auth = auths[0];
 
         expect(auths).toHaveLength(1);
@@ -26,5 +26,7 @@ describe('the AuthScheme class', () => {
         expect(auth.param('c')).toBe(' C ');
         expect(auth.param('d')).toBe(',D');
         expect(auth.param('e')).toBe('"E\\"\\');
+
+        expect(auth.toString()).toBe('Params a=A, b="B", C=" C ", d=",D", e="\\"E\\\\\\"\\\\"');
     })
 });

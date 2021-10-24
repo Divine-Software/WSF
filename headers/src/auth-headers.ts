@@ -1,5 +1,5 @@
 export interface AuthHeaderParams {
-    [name: string]: { value: string, quoted?: boolean } | undefined;
+    [name: string]: { name: string, value: string, quoted?: boolean } | undefined;
 }
 
 // Like RFC 7235, but very forgiving
@@ -33,13 +33,13 @@ export abstract class AuthHeader {
         return result;
     }
 
-    readonly scheme!: string;
+    private _scheme!: string;
     readonly credentials?: string;
     readonly params: AuthHeaderParams = {};
 
     protected constructor(unparsed: string | AuthHeader, public readonly headerName: string) {
         if (unparsed instanceof AuthHeader) {
-            this.scheme      = unparsed.scheme;
+            this._scheme     = unparsed._scheme;
             this.credentials = unparsed.credentials;
             this.params      = JSON.parse(JSON.stringify(unparsed.params));
             return;
@@ -47,13 +47,13 @@ export abstract class AuthHeader {
 
         const parsed = AUTH_HEADER.exec(unparsed);
         const groups = parsed && headerGroups(parsed);
-        const scheme = groups?.scheme?.toLowerCase();
+        const scheme = groups?.scheme;
 
         if (!scheme || !groups /* make TS/ESLint happy */) {
             throw new TypeError(`Failed to parse AuthHeader '${unparsed}': Invalid format`);
         }
 
-        this.scheme      = scheme;
+        this._scheme     = scheme;
         this.credentials = groups.token68;
 
         if (groups.params) {
@@ -61,34 +61,38 @@ export abstract class AuthHeader {
                 const groups = authParamGroups(match);
                 const quoted = groups.qvalue !== undefined;
 
-                this.params[groups.param] = { value: quoted ? groups.qvalue.replace(/\\(.)/g, '$1') : groups.value, quoted };
+                this.params[groups.param.toLowerCase()] = { name: groups.param, value: quoted ? groups.qvalue.replace(/\\(.)/g, '$1') : groups.value, quoted };
             }
         }
     }
 
-    param(name: string): string | undefined;
-    param(name: string, fallback: string): string;
-    param(name: string, fallback?: string): string | undefined {
-        return this.params[name]?.value ?? fallback;
-    }
-
-    setParam(name: string, value: string | number | undefined, quoted?: boolean): this {
-        if (value !== undefined) {
-            this.params[name] = { value: String(value), quoted };
-        }
-        else {
-            delete this.params[name];
-        }
-
-        return this;
+    get scheme(): string {
+        return this._scheme.toLowerCase();
     }
 
     get realm(): string | undefined {
         return this.param('realm');
     }
 
+    param(name: string): string | undefined;
+    param(name: string, fallback: string): string;
+    param(name: string, fallback?: string): string | undefined {
+        return this.params[name.toLowerCase()]?.value ?? fallback;
+    }
+
+    setParam(name: string, value: string | number | undefined, quoted?: boolean): this {
+        if (value !== undefined) {
+            this.params[name.toLowerCase()] = { name, value: String(value), quoted };
+        }
+        else {
+            delete this.params[name.toLowerCase()];
+        }
+
+        return this;
+    }
+
     toString(): string {
-        return `${this.scheme} ${this.credentials ?? this._formatParams()}`;
+        return `${this._scheme} ${this.credentials ?? this._formatParams()}`;
     }
 
     isProxyHeader(): boolean {
@@ -98,8 +102,8 @@ export abstract class AuthHeader {
     protected _formatParams(): string {
         return Object.entries(this.params)
             .map(([param, info]) => info!.quoted ?? (!/^[-!#$%&'*+.0-9=A-Z^_`a-z|~]+$/.test(info!.value) || param === 'realm' /* [sic!] */)
-                ? `${param}="${info!.value.replace(/([\\"])/g, '\\$1')}"`
-                : `${param}=${info!.value}`)
+                ? `${info!.name}="${info!.value.replace(/([\\"])/g, '\\$1')}"`
+                : `${info!.name}=${info!.value}`)
             .join(', ');
     }
 
