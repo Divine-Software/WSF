@@ -1,4 +1,5 @@
-import { DatabaseURI, DBColumnInfo, DBDriver, DBError, DBQuery, DBResult, DBTransactionParams, q } from '@divine/uri';
+import { Params } from '@divine/commons';
+import { DatabaseURI, DBColumnInfo, DBDriver, DBError, DBQuery, DBResult, DBTransactionParams, PasswordCredentials, q } from '@divine/uri';
 import assert from 'assert';
 import java from 'java';
 import { promisify } from 'util';
@@ -45,14 +46,14 @@ const ISOLATION_LEVELS: Record<string, number | undefined>  = {
 
 export class JDBCConnectionPool extends DBDriver.DBConnectionPool {
     protected async _createDBConnection(): Promise<DBDriver.DBConnection> {
-        return new JDBCDatabaseConnection(this._dbURI);
+        return new JDBCDatabaseConnection(this._dbURI, this._params.connectOptions, await this._getCredentials());
     }
 }
 
 class JDBCDatabaseConnection implements DBDriver.DBConnection {
     private _client?: DBConnectionBridge;
 
-    constructor(private _dbURI: DatabaseURI) {
+    constructor(private _dbURI: DatabaseURI, private _options?: Params, private _creds?: PasswordCredentials) {
     }
 
     get state() {
@@ -61,7 +62,12 @@ class JDBCDatabaseConnection implements DBDriver.DBConnection {
 
     async open() {
         await java.ensureJvm();
-        this._client = await java.newInstance('DBConnectionBridge', this._dbURI.href, null) as any;
+
+        const props = Object.entries({ user: this._creds?.identity, password: this._creds?.secret, ...this._options })
+            .filter(([_key, value]) => value !== null && value !== undefined)
+            .reduce((props, [key, value]) => (props.setProperty(key, String(value)), props), java.newInstanceSync('java.util.Properties'));
+
+        this._client = await java.newInstance('DBConnectionBridge', this._dbURI.href, props) as any;
     }
 
     async close() {

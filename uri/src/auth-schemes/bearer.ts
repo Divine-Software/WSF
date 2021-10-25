@@ -1,13 +1,15 @@
 import { AuthenticationInfo, Authorization, ServerAuthorization, WWWAuthenticate } from '@divine/headers';
 import { AuthScheme, AuthSchemeError, AuthSchemeRequest, Credentials } from '../auth-schemes';
 
-export class BearerCredentials extends Credentials {
+export class BearerCredentials implements Credentials {
+    identity: string;
+
     constructor(token: string) {
-        super(token);
+        this.identity = token;
     }
 }
 
-export class BearerAuthScheme extends AuthScheme<BearerCredentials> {
+export class BearerAuthScheme extends AuthScheme<Credentials> {
     constructor(scheme = 'Bearer') {
         super(scheme);
     }
@@ -39,7 +41,7 @@ export class BearerAuthScheme extends AuthScheme<BearerCredentials> {
         return authentication;
     }
 
-    protected _isCompatibleCredentials(credentials: BearerCredentials): boolean {
+    protected _isCompatibleCredentials(credentials: Credentials): boolean {
         return typeof credentials.identity === 'string';
     }
 }

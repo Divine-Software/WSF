@@ -1,6 +1,7 @@
-import { BasicCredentials, DatabaseURI, DBColumnInfo, DBDriver, DBError, DBParamsSelector, DBQuery, DBResult, DBTransactionParams, q } from '@divine/uri';
+import { Params } from '@divine/commons';
+import { DatabaseURI, DBColumnInfo, DBDriver, DBError, DBQuery, DBResult, DBTransactionParams, PasswordCredentials, q } from '@divine/uri';
 import assert from 'assert';
-import { ColumnMetaData, Connection, ISOLATION_LEVEL, Request, TYPES } from 'tedious';
+import { ColumnMetaData, Connection, ConnectionOptions, ISOLATION_LEVEL, Request, TYPES } from 'tedious';
 import { SQLServerSQLState as SQLState } from './tds-errors';
 
 const txOptions = /^ISOLATION LEVEL (READ UNCOMMITTED|READ COMMITTED|REPEATABLE READ|SNAPSHOT|SERIALIZABLE)$/;
@@ -14,12 +15,8 @@ const ISOLATION_LEVELS: Record<string, ISOLATION_LEVEL | undefined> = {
 }
 
 export class TDSConnectionPool extends DBDriver.DBConnectionPool {
-    constructor(dbURI: DatabaseURI, params: DBParamsSelector['params'], private _getCredentials: () => Promise<BasicCredentials | undefined>) {
-        super(dbURI, params);
-    }
-
     protected async _createDBConnection(): Promise<DBDriver.DBConnection> {
-        return new TDSDatabaseConnection(this._dbURI, await this._getCredentials());
+        return new TDSDatabaseConnection(this._dbURI, this._params.connectOptions, await this._getCredentials());
     }
 }
 
@@ -28,7 +25,7 @@ class TDSDatabaseConnection implements DBDriver.DBConnection {
     private _tlevel = 0;
     private _savepoint = 0;
 
-    constructor(private _dbURI: DatabaseURI, private _creds?: BasicCredentials) {
+    constructor(private _dbURI: DatabaseURI, private _options?: Params, private _creds?: PasswordCredentials) {
     }
 
     get state() {
@@ -55,7 +52,7 @@ class TDSDatabaseConnection implements DBDriver.DBConnection {
                     instanceName: instance.join('\\') || undefined,
                     port:         Number(this._dbURI.port) || undefined,
                     useUTC:       false,
-                    // debug: { packet: true, data: true, payload: true }
+                    ...this._options as ConnectionOptions
                 }
             })
             // .on('debug',   (msg) => { console.debug(msg) })

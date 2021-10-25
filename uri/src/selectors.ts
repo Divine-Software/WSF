@@ -35,8 +35,12 @@ export function isHeadersSelector(selector: any): selector is HeadersSelector {
     return typeof selector.headers === 'object';
 }
 
+export interface URIParams extends Params {
+    logger?: Console;
+}
+
 export interface ParamsSelector extends SelectorBase {
-    params: Params;
+    params: URIParams;
 }
 
 export function isParamsSelector(selector: any): selector is ParamsSelector {
@@ -55,6 +59,16 @@ export interface AuthSessionSelector extends SessionSelector {
     states: {
         authScheme?: AuthScheme<Credentials>;
     }
+}
+
+export function getBestSelector<T extends SelectorBase>(sels: T[] | undefined, url: URL, challenge?: WWWAuthenticate): T | null {
+    return filterSelectors(sels, url, challenge)[0] ?? null;
+}
+
+export function filterSelectors<T extends SelectorBase>(sels: T[] | undefined,  url: URL, challenge?: WWWAuthenticate): T[] {
+    return [...enumerateSelectors(sels, url, challenge)]
+        .sort((a, b) => b.score - a.score /* Best first */)
+        .map((e) => e.sel);
 }
 
 export function *enumerateSelectors<T extends SelectorBase>(sels: T[] | undefined, url: URL, challenge?: WWWAuthenticate): Generator<{ sel: T, score: number }> {

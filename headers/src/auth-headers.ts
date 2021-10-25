@@ -8,7 +8,7 @@ export interface AuthHeaderParams {
 // const AUTH_TOKEN68 = /\s*(?<token68>[-._~+/a-zA-Z0-9]+=*)\s*,?/;
 // const AUTH_HEADER  = RegExp(`${AUTH_SCHEME.source}(?:(?<params>(?:${AUTH_PARAM.source})+)|${AUTH_TOKEN68.source})?`);
 
-// This library must work in old browsers, so named capture groups :(
+// This library must work in old browsers, so no named capture groups :(
 const AUTH_SCHEME  = /\s*([^,\s]+)/;
 const AUTH_PARAM   = /\s*([^=\s]+)\s*=\s*(?:"((?:\\(?:\\\\)*"|[^"])*)"|([^=,\s]+))\s*,?/;
 const AUTH_TOKEN68 = /\s*([-._~+/a-zA-Z0-9]+=*)\s*,?/;

@@ -12,7 +12,7 @@ import { Parser } from '../parsers';
 import { DirectoryEntry, HEADERS, IOError, Metadata, ParamsSelector, STATUS, STATUS_TEXT, URI, VOID } from '../uri';
 
 export interface HTTPParamsSelector extends ParamsSelector {
-    params: {
+    params: ParamsSelector['params'] & {
         agent?:        Agent;
         maxRedirects?: number;
         timeout?:      number;

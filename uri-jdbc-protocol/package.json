@@ -21,9 +21,10 @@
     "collectCoverage": true
   },
   "peerDependencies": {
-    "@divine/uri": "workspace:^"
+    "@divine/uri": "workspace:~0.4.0"
   },
   "dependencies": {
+    "@divine/commons": "workspace:~0.4.0",
     "java": "~0.12.2",
     "tslib": "^2.3.1"
   },

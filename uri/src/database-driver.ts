@@ -1,9 +1,13 @@
 /* eslint-disable @typescript-eslint/no-namespace */
 import { Params } from '@divine/commons';
+import { Authorization, WWWAuthenticate } from '@divine/headers';
 import { Condition } from '@divine/synchronization';
 import { AsyncLocalStorage } from 'async_hooks';
+import { PasswordCredentials } from './auth-schemes';
+import { BasicAuthScheme } from './auth-schemes/basic';
 import { parse as parseDBRef } from './private/dbref';
 import { DatabaseURI, DBParamsSelector, DBQuery, DBResult, DBTransactionParams, q } from './protocols/database';
+import { getBestSelector } from './selectors';
 import { IOError } from './uri';
 
 const als = new AsyncLocalStorage<{ ref: number, conn: DBConnection, failed: boolean }>();
@@ -37,13 +41,16 @@ export abstract class DBConnectionPool {
     static readonly defaultKeepalive      = 10_000;
     static readonly defaultMaxConnections = 10;
 
+    protected _params: DBParamsSelector['params'];
+
     private _connectionCount = 0;
     private _usedConnections: Set<DBConnection> = new Set();
     private _idleConnections: IdleConnection[] = [];
     private _idleCondition = new Condition();
 
-    constructor(protected _dbURI: DatabaseURI, protected _params: DBParamsSelector['params']) {
-        setInterval(() => this._checkIdleConnections(), _params.keepalive ?? DBConnectionPool.defaultKeepalive).unref();
+    constructor(protected _dbURI: DatabaseURI, params: DBParamsSelector) {
+        this._params = params.params;
+        setInterval(() => this._checkIdleConnections(), this._params.keepalive ?? DBConnectionPool.defaultKeepalive).unref();
     }
 
     protected abstract _createDBConnection(): DBConnection | Promise<DBConnection>;
@@ -86,6 +93,19 @@ export abstract class DBConnectionPool {
 
         const connections = [...this._idleConnections.map((ic) => ic.conn), ...this._usedConnections];
         await Promise.all(connections.map((c) => this._closeConnection(c, false)));
+    }
+
+    protected async _getAuthorization(challenges: WWWAuthenticate[] = WWWAuthenticate.create('basic')): Promise<Authorization | undefined> {
+        const method  = this._dbURI.protocol.slice(0, -1);
+        const headers = Object.entries(getBestSelector(this._dbURI.selectors.headers, this._dbURI)?.headers ?? {});
+
+        return await this._dbURI['_getAuthorization']({ method, url: this._dbURI, headers }, undefined, challenges);
+    }
+
+    protected async _getCredentials(): Promise<PasswordCredentials | undefined> {
+        const auth = await this._getAuthorization();
+
+        return auth?.scheme === 'basic' ? BasicAuthScheme.decodeCredentials(auth.credentials) : undefined;
     }
 
     private async _obtainConnection(): Promise<DBConnection> {

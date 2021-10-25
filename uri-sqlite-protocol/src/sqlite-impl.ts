@@ -1,3 +1,4 @@
+import { Params } from '@divine/commons';
 import { DatabaseURI, DBColumnInfo, DBDriver, DBError, DBQuery, DBResult, DBTransactionParams, q } from '@divine/uri';
 import { SqliteError } from 'better-sqlite3';
 import { basename, extname } from 'path';
@@ -7,7 +8,7 @@ import type { ExecuteQueryResult, SQLiteWorkerMessage, SQLiteWorkerResult } from
 
 export class SQLiteConnectionPool extends DBDriver.DBConnectionPool {
     protected async _createDBConnection(): Promise<DBDriver.DBConnection> {
-        return new SQLiteDatabaseConnection(this._dbURI);
+        return new SQLiteDatabaseConnection(this._dbURI, this._params.connectOptions);
     }
 }
 
@@ -30,7 +31,7 @@ class SQLiteDatabaseConnection implements DBDriver.DBConnection {
     private _tlevel = 0;
     private _savepoint = 0;
 
-    constructor(private _dbURI: DatabaseURI) {
+    constructor(private _dbURI: DatabaseURI, private _options?: Params) {
         this._dbPath = decodeURIComponent(_dbURI.pathname);
         this._dbName = basename(this._dbPath, extname(this._dbPath));
         this._worker = new Worker(require.resolve('./sqlite-worker'))
@@ -96,7 +97,7 @@ class SQLiteDatabaseConnection implements DBDriver.DBConnection {
         await this._execute({
             type:     'open',
             dbPath:   this._dbPath,
-            params:   { },
+            params:   { ...this._options },
         });
 
         this.state = 'open';

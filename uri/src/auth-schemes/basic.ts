@@ -1,26 +1,30 @@
 import { b64Decode, b64Encode } from '@divine/commons';
 import { AuthenticationInfo, Authorization, ServerAuthorization, WWWAuthenticate } from '@divine/headers';
-import { AuthScheme, AuthSchemeError, AuthSchemeRequest, Credentials } from '../auth-schemes';
+import { AuthScheme, AuthSchemeError, AuthSchemeRequest, PasswordCredentials } from '../auth-schemes';
 
-export class BasicCredentials extends Credentials {
-    constructor(identity: string, public secret: string) {
-        super(identity);
+export class BasicCredentials implements PasswordCredentials {
+    identity: string;
+    secret:   string;
+
+    constructor(username: string, password: string) {
+        this.identity = username;
+        this.secret   = password;
     }
 }
 
-export class BasicAuthScheme extends AuthScheme<BasicCredentials> {
+export class BasicAuthScheme extends AuthScheme<PasswordCredentials> {
     constructor(scheme = 'Basic') {
         super(scheme);
     }
 
-    static encodeCredentials(credentials: BasicCredentials): string {
+    static encodeCredentials(credentials: PasswordCredentials): string {
         return b64Encode(`${credentials.identity}:${credentials.secret}`);
     }
 
-    static decodeCredentials(credentials?: string): BasicCredentials | undefined {
+    static decodeCredentials(credentials?: string): PasswordCredentials | undefined {
         const [, username, password] = /([^:]*):?(.*)/.exec(b64Decode(credentials ?? '')) ?? [undefined, undefined, undefined];
 
-        return username !== undefined && password !== undefined ? new BasicCredentials(username, password) : undefined;
+        return username !== undefined && password !== undefined ? { identity: username, secret: password } : undefined;
     }
 
     async createAuthorization(challenge?: WWWAuthenticate, request?: AuthSchemeRequest, _payload?: Uint8Array): Promise<Authorization | undefined> {
@@ -54,7 +58,7 @@ export class BasicAuthScheme extends AuthScheme<BasicCredentials> {
         return authentication;
     }
 
-    protected _isCompatibleCredentials(credentials: BasicCredentials): boolean {
+    protected _isCompatibleCredentials(credentials: PasswordCredentials): boolean {
         return typeof credentials.identity === 'string' && typeof credentials.secret === 'string';
     }
 }

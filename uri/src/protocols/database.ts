@@ -73,11 +73,12 @@ q.assign = function(data: Params, columns?: string[], quote = q.quote): DBQuery 
 }
 
 export interface DBParamsSelector extends ParamsSelector {
-    params: {
+    params: ParamsSelector['params'] & {
         timeout?:        number;
         ttl?:            number;
         keepalive?:      number;
         maxConnections?: number;
+        connectOptions?: Params,
 
         tls?: SecureContextOptions & {
             rejectUnauthorized?: boolean;
@@ -425,7 +426,7 @@ function withDBMetadata<T extends object>(meta: DBMetadata, value: object): T & 
 }
 
 export abstract class DatabaseURI extends URI {
-    protected abstract _createDBConnectionPool(params: DBParamsSelector['params']): DBConnectionPool | Promise<DBConnectionPool>;
+    protected abstract _createDBConnectionPool(params: DBParamsSelector): DBConnectionPool | Promise<DBConnectionPool>;
 
     $(strings: TemplateStringsArray, ...values: unknown[]): DatabaseURI {
         const result = super.$(strings, ...values);
@@ -568,8 +569,8 @@ export abstract class DatabaseURI extends URI {
             }
 
             if (!states.database) {
-                const params = this._getBestSelector<DBParamsSelector>(this.selectors.params)?.params;
-                states.database = await this._createDBConnectionPool(params ?? {});
+                const params = this._getBestSelector<DBParamsSelector>(this.selectors.params);
+                states.database = await this._createDBConnectionPool(params ?? { params: {} });
             }
 
             return await states.database!.session(cb);

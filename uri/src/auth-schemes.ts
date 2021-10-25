@@ -2,9 +2,12 @@ import type { Constructor } from '@divine/commons';
 import { AuthenticationInfo, AuthHeader, Authorization, ServerAuthorization, WWWAuthenticate } from '@divine/headers';
 import { URL } from 'url';
 
-export abstract class Credentials {
-    constructor(public identity: string) {
-    }
+export interface Credentials {
+    identity: string;
+}
+
+export interface PasswordCredentials extends Credentials {
+    secret: string;
 }
 
 export interface AuthSchemeRequest {

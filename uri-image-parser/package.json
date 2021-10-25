@@ -21,7 +21,7 @@
     "collectCoverage": true
   },
   "peerDependencies": {
-    "@divine/uri": "workspace:^"
+    "@divine/uri": "workspace:~0.4.0"
   },
   "dependencies": {
     "canvas": "^2.8.0",

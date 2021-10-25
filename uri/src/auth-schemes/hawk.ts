@@ -1,7 +1,5 @@
-import { BasicCredentials } from './basic';
+import { PasswordCredentials } from '../auth-schemes';
 
-export class HawkCredentials extends BasicCredentials {
-    constructor(identity: string, secret: string, public algorithm: 'sha1' | 'sha256' = 'sha256') {
-        super(identity, secret);
-    }
+export interface HawkCredentials extends PasswordCredentials {
+    algorithm: 'sha1' | 'sha256';
 }

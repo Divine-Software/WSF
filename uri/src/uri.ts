@@ -3,8 +3,7 @@ import { Authorization, ContentType, WWWAuthenticate } from '@divine/headers';
 import url, { Url, URL } from 'url';
 import { AuthScheme, AuthSchemeRequest } from './auth-schemes';
 import { guessContentType, uri } from './file-utils';
-import type { AuthSelector, AuthSessionSelector, HeadersSelector, ParamsSelector, SelectorBase, SessionSelector } from './selectors';
-import { enumerateSelectors, isAuthSelector, isHeadersSelector, isParamsSelector, isSessionSelector } from './selectors';
+import { AuthSelector, AuthSessionSelector, getBestSelector, HeadersSelector, isAuthSelector, isHeadersSelector, isParamsSelector, isSessionSelector, ParamsSelector, SelectorBase, SessionSelector } from './selectors';
 
 export { AuthSelector, HeadersSelector, ParamsSelector, Selector } from './selectors';
 
@@ -212,6 +211,9 @@ export class URI extends URL {
                 else if (auth.selector?.authScheme) {
                     session.authScheme = AuthScheme.create(auth.selector.authScheme).setCredentialsProvider(auth.credentials);
                 }
+                else {
+                    throw new IOError(`Cannot send credentials preemptively without an authScheme selector`);
+                }
             }
         }
 
@@ -228,13 +230,7 @@ export class URI extends URL {
     }
 
     protected _getBestSelector<T extends SelectorBase>(sels: T[] | undefined, challenge?: WWWAuthenticate): T | null {
-        return this._filterSelectors(sels, challenge)[0] ?? null;
-    }
-
-    protected _filterSelectors<T extends SelectorBase>(sels: T[] | undefined, challenge?: WWWAuthenticate): T[] {
-        return [...enumerateSelectors(sels, this, challenge)]
-            .sort((a, b) => b.score - a.score /* Best first */)
-            .map((e) => e.sel);
+        return getBestSelector(sels, this, challenge);
     }
 }
 
