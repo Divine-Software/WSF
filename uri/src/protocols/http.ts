@@ -47,15 +47,15 @@ export class HTTPURI extends URI {
         return this._requireValidStatus(await this._query('GET', {}, undefined, undefined, recvCT));
     }
 
-    async save<T extends object>(data: unknown, sendCT?: ContentType | string, recvCT?: ContentType | string): Promise<T> {
+    async save<T extends object, D = unknown>(data: D, sendCT?: ContentType | string, recvCT?: ContentType | string): Promise<T> {
         return this._requireValidStatus(await this._query('PUT', {}, data, sendCT, recvCT));
     }
 
-    async append<T extends object>(data: unknown, sendCT?: ContentType | string, recvCT?: ContentType | string): Promise<T> {
+    async append<T extends object, D = unknown>(data: D, sendCT?: ContentType | string, recvCT?: ContentType | string): Promise<T> {
         return this._requireValidStatus(await this._query('POST', {}, data, sendCT, recvCT));
     }
 
-    async modify<T extends object>(data: unknown, sendCT?: ContentType | string, recvCT?: ContentType | string): Promise<T> {
+    async modify<T extends object, D = unknown>(data: D, sendCT?: ContentType | string, recvCT?: ContentType | string): Promise<T> {
         return this._requireValidStatus(await this._query('PATCH', {}, data, sendCT, recvCT));
     }
 

@@ -154,15 +154,15 @@ export class URI extends URL {
         throw new TypeError(`URI ${this} does not support load()`);
     }
 
-    async save<T extends object>(_data: unknown, _sendCT?: ContentType | string, _recvCT?: ContentType | string): Promise<T & Metadata> {
+    async save<T extends object, D = unknown>(_data: D, _sendCT?: ContentType | string, _recvCT?: ContentType | string): Promise<T & Metadata> {
         throw new TypeError(`URI ${this} does not support save()`);
     }
 
-    async append<T extends object>(_data: unknown, _sendCT?: ContentType | string, _recvCT?: ContentType | string): Promise<T & Metadata> {
+    async append<T extends object, D = unknown>(_data: D, _sendCT?: ContentType | string, _recvCT?: ContentType | string): Promise<T & Metadata> {
         throw new TypeError(`URI ${this} does not support append()`);
     }
 
-    async modify<T extends object>(_data: unknown, _sendCT?: ContentType | string, _recvCT?: ContentType | string): Promise<T & Metadata> {
+    async modify<T extends object, D = unknown>(_data: D, _sendCT?: ContentType | string, _recvCT?: ContentType | string): Promise<T & Metadata> {
         throw new TypeError(`URI ${this} does not support modify()`);
     }
 

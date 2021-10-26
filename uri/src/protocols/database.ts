@@ -463,19 +463,19 @@ export abstract class DatabaseURI extends URI {
         });
     }
 
-    save<T extends object>(data: unknown, _sendCT?: ContentType | string, _recvCT?: ContentType | string): Promise<T & DBMetadata> {
+    save<T extends object, D = unknown>(data: D, _sendCT?: ContentType | string, _recvCT?: ContentType | string): Promise<T & DBMetadata> {
         return this._session(async (conn) => {
             return toObjects<T>(await conn.query((await conn.reference(this)).getSaveQuery(data)));
         });
     }
 
-    append<T extends object>(data: unknown, _sendCT?: ContentType | string, _recvCT?: ContentType | string): Promise<T & DBMetadata> {
+    append<T extends object, D = unknown>(data: D, _sendCT?: ContentType | string, _recvCT?: ContentType | string): Promise<T & DBMetadata> {
         return this._session(async (conn) => {
             return toObjects<T>(await conn.query((await conn.reference(this)).getAppendQuery(data)));
         });
     }
 
-    modify<T extends object>(data: unknown, _sendCT?: ContentType | string, _recvCT?: ContentType | string): Promise<T & DBMetadata> {
+    modify<T extends object, D = unknown>(data: D, _sendCT?: ContentType | string, _recvCT?: ContentType | string): Promise<T & DBMetadata> {
         return this._session(async (conn) => {
             return toObjects<T>(await conn.query((await conn.reference(this)).getModifyQuery(data)));
         });

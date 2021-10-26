@@ -85,7 +85,7 @@ export class FileURI extends URI {
         }
     }
 
-    async save<T extends object>(data: unknown, sendCT?: ContentType | string, recvCT?: ContentType): Promise<T & Metadata> {
+    async save<T extends object, D = unknown>(data: D, sendCT?: ContentType | string, recvCT?: ContentType): Promise<T & Metadata> {
         if (recvCT !== undefined) {
             throw new TypeError(`URI ${this}: save: recvCT argument is not supported`);
         }
@@ -99,7 +99,7 @@ export class FileURI extends URI {
         }
     }
 
-    async append<T extends object>(data: unknown, sendCT?: ContentType | string, recvCT?: ContentType | string): Promise<T & Metadata> {
+    async append<T extends object, D = unknown>(data: D, sendCT?: ContentType | string, recvCT?: ContentType | string): Promise<T & Metadata> {
         if (recvCT !== undefined) {
             throw new TypeError(`URI ${this}: append: recvCT argument is not supported`);
         }
