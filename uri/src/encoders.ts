@@ -53,7 +53,7 @@ export abstract class Encoder {
             return new (encoder as any)(type);
         }
         else {
-            throw new TypeError(`Encoder '${type}' not found`);
+            throw new EncoderError(`Encoder '${type}' not found`);
         }
     }
 

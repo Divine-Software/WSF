@@ -522,7 +522,7 @@ export abstract class DatabaseURI extends URI {
         const barrier = new Barrier(2);
         const session = this._session(async (conn) => {
             if (!conn.watch) {
-                throw new TypeError(`URI ${this} does not support watch()`);
+                throw new IOError(`URI ${this} does not support watch()`);
             }
 
             results.notify(conn.watch(query instanceof DBQuery ? query : q(query, params!)));
@@ -536,7 +536,7 @@ export abstract class DatabaseURI extends URI {
             return yield* mapped((results.value ?? await results.wait()), (v) => v.length === 1 ? v.toObject<T>() : v.toObjects<T>());
         }
         catch (err) {
-            throw err instanceof IOError ? err : this._makeIOError(err);
+            throw this._makeIOError(err);
         }
         finally {
             await barrier.wait();
@@ -555,7 +555,7 @@ export abstract class DatabaseURI extends URI {
             }
         }
         catch (err) {
-            throw err instanceof IOError ? err : this._makeIOError(err);
+            throw this._makeIOError(err);
         }
     }
 
@@ -576,7 +576,7 @@ export abstract class DatabaseURI extends URI {
             return await states.database!.session(cb);
         }
         catch (err) {
-            throw err instanceof IOError ? err : this._makeIOError(err);
+            throw this._makeIOError(err);
         }
     }
 }

@@ -143,40 +143,40 @@ export class URI extends URL {
     }
 
     async info<T extends DirectoryEntry>(): Promise<T & Metadata> {
-        throw new TypeError(`URI ${this} does not support info()`);
+        throw new IOError(`URI ${this} does not support info()`);
     }
 
     async list<T extends DirectoryEntry>(): Promise<T[] & Metadata> {
-        throw new TypeError(`URI ${this} does not support list()`);
+        throw new IOError(`URI ${this} does not support list()`);
     }
 
     async load<T extends object>(_recvCT?: ContentType | string): Promise<T & Metadata> {
-        throw new TypeError(`URI ${this} does not support load()`);
+        throw new IOError(`URI ${this} does not support load()`);
     }
 
     async save<T extends object, D = unknown>(_data: D, _sendCT?: ContentType | string, _recvCT?: ContentType | string): Promise<T & Metadata> {
-        throw new TypeError(`URI ${this} does not support save()`);
+        throw new IOError(`URI ${this} does not support save()`);
     }
 
     async append<T extends object, D = unknown>(_data: D, _sendCT?: ContentType | string, _recvCT?: ContentType | string): Promise<T & Metadata> {
-        throw new TypeError(`URI ${this} does not support append()`);
+        throw new IOError(`URI ${this} does not support append()`);
     }
 
     async modify<T extends object, D = unknown>(_data: D, _sendCT?: ContentType | string, _recvCT?: ContentType | string): Promise<T & Metadata> {
-        throw new TypeError(`URI ${this} does not support modify()`);
+        throw new IOError(`URI ${this} does not support modify()`);
     }
 
     async remove<T extends object>(_recvCT?: ContentType | string): Promise<T & Metadata> {
-        throw new TypeError(`URI ${this} does not support remove()`);
+        throw new IOError(`URI ${this} does not support remove()`);
     }
 
     async query<T extends object>(..._args: unknown[]): Promise<T & Metadata> {
-        throw new TypeError(`URI ${this} does not support query()`);
+        throw new IOError(`URI ${this} does not support query()`);
     }
 
     // eslint-disable-next-line require-yield
     async *watch(..._args: unknown[]): AsyncIterable<object & Metadata> {
-        throw new TypeError(`URI ${this} does not support watch()`);
+        throw new IOError(`URI ${this} does not support watch()`);
     }
 
     async close(): Promise<void> {
@@ -225,8 +225,8 @@ export class URI extends URL {
         return guessContentType(this.pathname, knownContentType);
     }
 
-    protected _makeIOError(err: NodeJS.ErrnoException): IOError {
-        return new IOError(`URI ${this} operation failed`, err, err instanceof IOError ? undefined : metadata(err));
+    protected _makeIOError(err: NodeJS.ErrnoException | IOError): IOError {
+        return err instanceof IOError ? err : new IOError(`URI ${this} operation failed`, err, metadata(err));
     }
 
     protected _getBestSelector<T extends SelectorBase>(sels: T[] | undefined, challenge?: WWWAuthenticate): T | null {
@@ -238,7 +238,7 @@ class UnknownURI extends URI {}
 
 function metadata(err: NodeJS.ErrnoException): Metadata {
     return {
-        [STATUS]:      typeof err.errno === 'number' ? -err.errno : -1,
+        [STATUS]:      typeof err.errno === 'number' ? err.errno : -1,
         [STATUS_TEXT]: err.code ?? err.constructor?.name,
         [HEADERS]:     Object.fromEntries(Object.entries(err).filter(([name]) => !/^(errno|code|message|stack)$/.test(name))),
     };

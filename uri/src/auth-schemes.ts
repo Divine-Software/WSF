@@ -126,7 +126,7 @@ export abstract class AuthScheme<C extends Credentials> {
 
     protected _assertCompatibleAuthHeader<H extends AuthHeader>(header?: H): H | undefined {
         if (header !== undefined && header.scheme !== this.scheme) {
-            throw new TypeError(`Expected auth-scheme '${this.scheme}' in header, not '${header.scheme}'`);
+            throw new AuthSchemeError(`Expected auth-scheme '${this.scheme}' in header, not '${header.scheme}'`);
         }
         else {
             return header;
@@ -135,7 +135,7 @@ export abstract class AuthScheme<C extends Credentials> {
 
     protected _assertCompatibleCredentials<C extends Credentials>(credentials?: C): C | undefined {
         if (credentials && !this._isCompatibleCredentials(credentials)) {
-            throw new TypeError(`Credentials ${credentials.constructor.name}(${Object.keys(credentials)}) is not compatible with ${this.constructor.name}`);
+            throw new AuthSchemeError(`Credentials ${credentials.constructor.name}(${Object.keys(credentials)}) is not compatible with ${this.constructor.name}`);
         }
         else {
             return credentials;
