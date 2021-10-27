@@ -35,7 +35,7 @@ export abstract class Parser {
             return toObject(result);
         }
         catch (err) {
-            throw new ParserError(`${contentType} parser failed`, err);
+            throw err instanceof ParserError ? err : new ParserError(`${contentType} parser failed`, err);
         }
     }
 
@@ -69,7 +69,7 @@ export abstract class Parser {
             }
         }
         catch (err) {
-            throw new ParserError(`${contentType} serializer failed`, err);
+            throw err instanceof ParserError ? err : new ParserError(`${contentType} serializer failed`, err);
         }
     }
 
@@ -93,7 +93,7 @@ export abstract class Parser {
         }
 
         if (!parserClass) {
-            throw new ParserError(`No parser availble for this type`, undefined, contentType);
+            throw new ParserError(`Parser ${contentType.type} not available`, undefined, contentType);
         }
 
         return new (parserClass as any)(contentType);

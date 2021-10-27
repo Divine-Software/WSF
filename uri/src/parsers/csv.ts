@@ -27,7 +27,7 @@ export class CSVParser extends Parser {
                 },
 
                 error: (error) => {
-                    reject(new ParserError(error.message, undefined, error));
+                    reject(new ParserError(error.message, error));
                 },
 
                 complete: (result) => {

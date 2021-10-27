@@ -24,7 +24,7 @@ export abstract class Encoder {
             return stream;
         }
         catch (err) {
-            throw new EncoderError(`'${types}' encoder failed`, err);
+            throw err instanceof EncoderError ? err : new EncoderError(`'${types}' encoder failed`, err);
         }
     }
 
@@ -40,7 +40,7 @@ export abstract class Encoder {
             return stream;
         }
         catch (err) {
-            throw new EncoderError(`'${types}' encoder failed`, err);
+            throw err instanceof EncoderError ? err : new EncoderError(`'${types}' encoder failed`, err);
         }
     }
 
@@ -53,7 +53,7 @@ export abstract class Encoder {
             return new (encoder as any)(type);
         }
         else {
-            throw new EncoderError(`Encoder '${type}' not found`);
+            throw new EncoderError(`Encoder '${type}' not available`);
         }
     }
 
