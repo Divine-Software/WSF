@@ -1,6 +1,6 @@
 {
   "name": "@divine/uri-x4e-parser",
-  "version": "0.3.0",
+  "version": "0.4.0",
   "description": "Adds support for XML and HTML documents to @divine/uri",
   "author": "Martin Blom <martin@blom.org>",
   "license": "Apache-2.0",
