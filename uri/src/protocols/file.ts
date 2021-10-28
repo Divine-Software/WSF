@@ -1,4 +1,4 @@
-import { AsyncIteratorAdapter, copyStream, toReadableStream } from '@divine/commons';
+import { AsyncIteratorAdapter, copyStream, throwError, toReadableStream } from '@divine/commons';
 import { ContentType } from '@divine/headers';
 import { R_OK } from 'constants';
 import { createReadStream, createWriteStream, promises as fs } from 'fs';
@@ -6,9 +6,9 @@ import { lookup } from 'mime-types';
 import { basename, join, normalize } from 'path';
 import { encodeFilePath } from '../file-utils';
 import { Parser } from '../parsers';
-import { DirectoryEntry, Metadata, URI, VOID } from '../uri';
+import { DirectoryEntry, IOError, Metadata, URI, VOID } from '../uri';
 
-const chokidar = import('chokidar');
+const _chokidar = import('chokidar').catch(() => null);
 
 export interface FileWatchEvent {
     type: 'add' | 'addDir' | 'change' | 'unlink' | 'unlinkDir';
@@ -139,8 +139,9 @@ export class FileURI extends URI {
     }
 
     async* watch(): AsyncIterable<FileWatchEvent & Metadata> {
-        const adapter = new AsyncIteratorAdapter<FileWatchEvent>();
-        const watcher = (await chokidar).watch(this._path, {
+        const chokidar = await _chokidar ?? throwError(new IOError(`watch() requires chokidar as a peer dependency`));
+        const adapter  = new AsyncIteratorAdapter<FileWatchEvent>();
+        const watcher  = chokidar.watch(this._path, {
             atomic:        false,
             ignoreInitial: true,
         }).on('all', (type, path) => {
