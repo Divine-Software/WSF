@@ -1,6 +1,6 @@
 {
   "name": "@divine/x4e",
-  "version": "0.3.0",
+  "version": "0.4.0",
   "description": "The Divine E4X-inspired XML and HTML datatypes",
   "author": "Martin Blom <martin@blom.org>",
   "license": "Apache-2.0",

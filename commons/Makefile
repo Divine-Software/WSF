@@ -11,7 +11,7 @@ build:		prepare
 	pnpm exec tsc --build
 
 test:		build
-	pnpm exec jest
+	pnpm exec jest --passWithNoTests
 
 clean:
 	rm -rf build coverage

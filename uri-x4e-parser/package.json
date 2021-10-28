@@ -24,7 +24,7 @@
     "@divine/uri": "workspace:~0.4.0"
   },
   "dependencies": {
-    "@divine/x4e": "workspace:~0.3.0",
+    "@divine/x4e": "workspace:~0.4.0",
     "tslib": "^2.3.1"
   },
   "devDependencies": {
