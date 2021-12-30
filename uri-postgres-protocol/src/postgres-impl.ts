@@ -43,7 +43,7 @@ class PGDatabaseConnection implements DBDriver.DBConnection {
             connectionString: dbURL.href,
             types: {
                 getTypeParser: (id, format) =>
-                    id === 20   ? BigInt : // ts-ignore-error: id 1016 is unknown
+                    id === 20   ? BigInt : // @ts-expect-error: id 1016 is unknown
                     id === 1016 ? (value: string) => parseBigIntArray(value).map(BigInt) :
                     types.getTypeParser(id, format)
             },

@@ -13,7 +13,7 @@ XML.prototype = X4E.prototype;
 
 // § 13.5.1 / 13.5.2 (X4E: Explicit default namespace)
 export type XMLList<TNode extends Node> = _XMLList<TNode>;
-export const XMLList = function(this: XMLList<Node> | void, value?: ConvertableTypes | ArrayLike<Node> | null | undefined, defaultNamespace = '') {
+export const XMLList = function(this: XMLList<Node> | void, value?: ConvertableTypes | ArrayLike<Node> | null | undefined, defaultNamespace: string = '') {
     return ToXMLList(value === null || value === undefined ? '' : value, defaultNamespace, this instanceof XMLList);
 } as XMLListConstructor;
 

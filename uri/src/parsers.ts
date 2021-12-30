@@ -103,7 +103,7 @@ export abstract class Parser {
     abstract parse(stream: AsyncIterable<Buffer>): Promise<unknown>;
     abstract serialize(data: unknown): Buffer | AsyncIterable<Buffer>;
 
-    protected _assertSerializebleData(condition: boolean, data: unknown, cause?: Error): asserts condition {
+    protected _assertSerializebleData(condition: boolean, data: unknown, cause?: Error | unknown): asserts condition {
         if (!condition) {
             const type = data instanceof Object ? Object.getPrototypeOf(data).constructor.name : data === null ? 'null' : typeof data;
 

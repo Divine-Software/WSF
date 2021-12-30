@@ -107,14 +107,17 @@ class XMLTreeAdapter implements AST.TreeAdapter {
         return (document as any)[this._docMode];
     }
 
-    getNodeSourceCodeLocation(node: Node): AST.Location | AST.StartTagLocation | AST.ElementLocation {
-        return (node as any)[this._location]
+    getNodeSourceCodeLocation(node: Node): AST.Location | AST.ElementLocation {
+        return (node as any)[this._location];
     }
 
-    setNodeSourceCodeLocation(node: Node, location: AST.Location | AST.StartTagLocation | AST.ElementLocation): void {
+    setNodeSourceCodeLocation(node: Node, location: AST.Location | AST.ElementLocation): void {
         (node as any)[this._location] = location;
     }
 
+    updateNodeSourceCodeLocation(node: Node, location: AST.EndLocation): void {
+        Object.assign((node as any)[this._location], location);
+    }
 
     detachNode(node: Node): void {
         if (node.parentNode) {

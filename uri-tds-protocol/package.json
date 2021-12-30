@@ -29,9 +29,9 @@
     "tslib": "^2.3.1"
   },
   "devDependencies": {
-    "@divine/uri": "workspace:~0.4.0",
-    "@types/node": "^12.20.34",
-    "@types/tedious": "^4.0.5"
+    "@divine/uri": "workspace:~0.4.1",
+    "@types/node": "^12.20.39",
+    "@types/tedious": "^4.0.6"
   },
   "engines": {
     "node": ">= 12.17.0"

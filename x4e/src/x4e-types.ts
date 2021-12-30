@@ -14,8 +14,8 @@ interface X4EElementProxy {
     [child: string]: XMLList<Element>;
 }
 
-interface IXML<TNode extends Node> extends Omit<X4E<TNode>, keyof Function>, X4ENodeProxy<Node>, Iterable<XML<TNode>> {}
-interface IXMLList<TNode extends Node> extends Omit<X4EList<TNode>, keyof Function>, X4ENodeProxy<TNode>, Iterable<XML<TNode>> {}
+interface IXML<TNode extends Node> extends Omit<X4E<TNode>, keyof Function>, X4ENodeProxy<Node> {}
+interface IXMLList<TNode extends Node> extends Omit<X4EList<TNode>, keyof Function>, X4ENodeProxy<TNode> {}
 
 // XML
 

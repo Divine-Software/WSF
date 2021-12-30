@@ -129,7 +129,7 @@ export class FileURI extends URI {
             return Object(true);
         }
         catch (err) {
-            if (err.code === 'ENOENT') {
+            if (err instanceof Error && (err as NodeJS.ErrnoException).code === 'ENOENT') {
                 return Object(false);
             }
             else {

@@ -61,7 +61,7 @@ export class AsyncIteratorAdapter<T, R = void> implements AsyncIterable<T> {
                     throw e.error;
                 }
                 else if ('result' in e) {
-                    return e.result;
+                    return await e.result;
                 }
             }
         }

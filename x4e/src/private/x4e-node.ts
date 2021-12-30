@@ -57,7 +57,7 @@ export class X4E<TNode extends Node> implements X4EProxyTarget, Iterable<XML<TNo
     }
 
     // § 12.3 The for-each-in Statement (X4E: for-of)
-    *[Symbol.iterator](): Generator<XML<TNode>> {
+    *[Symbol.iterator](): Iterator<XML<TNode>> {
         yield this as unknown as XML<TNode>;
     }
 

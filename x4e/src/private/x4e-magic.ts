@@ -84,14 +84,14 @@ export const X4EProxyHandler: ProxyHandler<X4EProxyTarget> = {
 
     // § 12.2 The for-in Statement
     ownKeys(target) {
-        const x4eKeys = typeof target === 'function' ? Reflect.ownKeys(Reflect.getPrototypeOf(target)) : [];
+        const x4eKeys = typeof target === 'function' ? Reflect.ownKeys(Reflect.getPrototypeOf(target) ?? {}) : [];
 
         return [ ...Reflect.ownKeys(target), ...x4eKeys, ...target[OwnPropertyKeys]() ];
     },
 
     // § 12.2 The for-in Statement
     getOwnPropertyDescriptor(target, p) {
-        const x4eProp = typeof target === 'function' ? Reflect.getOwnPropertyDescriptor(Reflect.getPrototypeOf(target), p) : undefined;
+        const x4eProp = typeof target === 'function' ? Reflect.getOwnPropertyDescriptor(Reflect.getPrototypeOf(target) ?? {}, p) : undefined;
 
         return Reflect.getOwnPropertyDescriptor(target, p) ?? x4eProp ?? (typeof p === 'string' && p[0] !== '$' ? target[GetOwnProperty](p) : undefined);
     },

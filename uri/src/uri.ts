@@ -43,8 +43,11 @@ export interface DirectoryEntry {
 }
 
 export class IOError extends URIError {
-    constructor(message: string, public cause?: Error, public data?: object & Metadata) {
-        super(cause ? `${message}: ${cause.message}` : message);
+    public cause?: Error;
+
+    constructor(message: string, cause?: unknown, public data?: object & Metadata) {
+        super(cause instanceof Error ? `${message}: ${cause.message}` : message);
+        this.cause = cause instanceof Error ? cause : cause !== undefined ? new Error(String(cause)) : undefined;
     }
 
     toString(): string {
@@ -225,7 +228,7 @@ export class URI extends URL {
         return guessContentType(this.pathname, knownContentType);
     }
 
-    protected _makeIOError(err: NodeJS.ErrnoException | IOError): IOError {
+    protected _makeIOError(err: NodeJS.ErrnoException | IOError | unknown): IOError {
         return err instanceof IOError ? err : new IOError(`URI ${this} operation failed`, err, metadata(err));
     }
 
@@ -236,7 +239,9 @@ export class URI extends URL {
 
 class UnknownURI extends URI {}
 
-function metadata(err: NodeJS.ErrnoException): Metadata {
+function metadata(_err: NodeJS.ErrnoException | unknown): Metadata {
+    const err: NodeJS.ErrnoException = _err instanceof Error ? _err : new Error(String(_err));
+
     return {
         [STATUS]:      typeof err.errno === 'number' ? err.errno : -1,
         [STATUS_TEXT]: err.code ?? err.constructor?.name,

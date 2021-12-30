@@ -193,7 +193,7 @@ class SQLiteDatabaseConnection implements DBDriver.DBConnection {
 }
 
 // This is silly but since all other driver provide type_id ...
-const TypeIDs: Record<string, number> = { integer: 1, real: 2, text: 3, blob: 4, null: 5 };
+const TypeIDs: Record<string, number> = { INTEGER: 1, REAL: 2, TEXT: 3, BLOB: 4, NULL: 5 };
 
 export class SQLiteResult extends DBResult {
     constructor(db: DatabaseURI, dbPath: string, rs: ExecuteQueryResult) {
@@ -211,7 +211,7 @@ export class SQLiteResult extends DBResult {
         for (let c = 0; c < this.columns.length; ++c) {
             const { data_type } = this.columns[c];
 
-            if (data_type === 'blob') {
+            if (data_type === 'BLOB') {
                 this.forEach((row) => row[c] = row[c] === null ? null : Buffer.from(row[c] as any));
             }
         }

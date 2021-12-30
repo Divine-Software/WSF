@@ -139,8 +139,8 @@ export class EventStreamResponse<T extends object> extends WebResponse {
                 }
             }
             catch (err2) {
-                console.error(`Unexpected EventStream serialization error`, err);
-                yield { event: 'error', data: err2.message }; // Inform client of error serialization errors ... as text/plain
+                console.error(`Unexpected EventStream serialization error`, err2, err);
+                yield { event: 'error', data: String(err2) }; // Inform client of error serialization errors ... as text/plain
             }
         }
     }

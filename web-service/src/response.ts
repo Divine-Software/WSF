@@ -38,7 +38,7 @@ export class WebResponse {
                 this.body = serializied instanceof Buffer ? serializied : Readable.from(serializied);
             }
             catch (err) {
-                throw new WebError(WebStatus.INTERNAL_SERVER_ERROR, err.message);
+                throw new WebError(WebStatus.INTERNAL_SERVER_ERROR, String(err));
             }
         }
 

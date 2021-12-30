@@ -251,7 +251,8 @@ export class WebService<Context> {
         }
     }
 
-    private async _handleError(err: Error, errorHandler?: WebErrorHandler<Context> | ((err: Error, context: Context) => void)) {
+    private async _handleError(_err: Error | unknown, errorHandler?: WebErrorHandler<Context> | ((err: Error, context: Context) => void)) {
+        const err = _err instanceof Error ? _err : new Error(String(_err));
         const handled = await errorHandler?.(err, this.context);
 
         if (handled) {
