@@ -156,7 +156,7 @@ importers:
     specifiers:
       '@divine/commons': workspace:~0.4.0
       '@divine/uri': workspace:~0.4.1
-      '@types/better-sqlite3': ^7.4.0
+      '@types/better-sqlite3': ^7.4.2
       '@types/node': ^12.20.39
       better-sqlite3: ^7.4.6
       tslib: ^2.3.1
@@ -189,7 +189,7 @@ importers:
   uri-x4e-parser:
     specifiers:
       '@divine/uri': workspace:~0.4.1
-      '@divine/x4e': workspace:~0.4.0
+      '@divine/x4e': workspace:~0.4.1
       '@types/node': ^12.20.39
       '@types/xmldom': ~0.1.31
       tslib: ^2.3.1
@@ -1091,7 +1091,7 @@ packages:
   /@types/better-sqlite3/7.4.2:
     resolution: {integrity: sha512-HUXWMOmRgOrXJ0SKt6kxqUaZtGkr0HCuaEt/76LojT6bkTu0lb0uhr3K1su9T09mskDKyQwNMvT7WithFN10PQ==}
     dependencies:
-      '@types/node': 17.0.5
+      '@types/node': 12.20.39
     dev: true
 
   /@types/dicer/0.2.2:

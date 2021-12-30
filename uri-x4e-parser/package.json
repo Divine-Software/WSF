@@ -1,6 +1,6 @@
 {
   "name": "@divine/uri-x4e-parser",
-  "version": "0.4.0",
+  "version": "0.4.1",
   "description": "Adds support for XML and HTML documents to @divine/uri",
   "author": "Martin Blom <martin@blom.org>",
   "license": "Apache-2.0",
@@ -24,7 +24,7 @@
     "@divine/uri": "workspace:~0.4.0"
   },
   "dependencies": {
-    "@divine/x4e": "workspace:~0.4.0",
+    "@divine/x4e": "workspace:~0.4.1",
     "tslib": "^2.3.1"
   },
   "devDependencies": {

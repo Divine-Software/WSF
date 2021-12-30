@@ -45,7 +45,7 @@ export interface DirectoryEntry {
 export class IOError extends URIError {
     public cause?: Error;
 
-    constructor(message: string, cause?: unknown, public data?: object & Metadata) {
+    constructor(message: string, cause?: Error | unknown, public data?: object & Metadata) {
         super(cause instanceof Error ? `${message}: ${cause.message}` : message);
         this.cause = cause instanceof Error ? cause : cause !== undefined ? new Error(String(cause)) : undefined;
     }
