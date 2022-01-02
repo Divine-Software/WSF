@@ -288,7 +288,7 @@ export class X4E<TNode extends Node> implements X4EProxyTarget, Iterable<XML<TNo
     // A.1.3 xpath (not yet implemented)
 }
 
-// Custom NodeJS inspector value
+// Custom Node.js inspector value
 (X4E.prototype as any)[inspect.custom] = function(this: X4E<Node>) {
     return this[Value][0].toString();
 }

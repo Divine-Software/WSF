@@ -147,7 +147,7 @@ export class X4EList<TNode extends Node> extends X4E<TNode> {
     // A.2.3 xpath (not yet implemented)
 }
 
-// Custom NodeJS inspector value
+// Custom Node.js inspector value
 (X4EList.prototype as any)[inspect.custom] = function(this: X4EList<Node>) {
     return this[Value].map((node) => node.toString());
 }
