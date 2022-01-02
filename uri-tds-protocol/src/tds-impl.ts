@@ -255,13 +255,13 @@ export class TDSResult extends DBResult {
         Object.defineProperty(this, '_ci', { enumerable: false });
     }
 
-    async updateColumnInfo(): Promise<DBColumnInfo[]> {
+    override async updateColumnInfo(): Promise<DBColumnInfo[]> {
         return this.columns;
     }
 }
 
 export class TDSReference extends DBDriver.DBReference {
-    protected _getPagingClause(): DBQuery {
+    protected override _getPagingClause(): DBQuery {
         const [ count, offset ] = this._getCountAndOffset();
 
         return count !== undefined || offset !== undefined
@@ -269,7 +269,7 @@ export class TDSReference extends DBDriver.DBReference {
             : q``;
     }
 
-    protected _getLockClause(): DBQuery {
+    protected override _getLockClause(): DBQuery {
         const lock = this.params.lock;
 
         if (lock === 'write') {
@@ -286,7 +286,7 @@ export class TDSReference extends DBDriver.DBReference {
         }
     }
 
-    getLoadQuery(): DBQuery {
+    override getLoadQuery(): DBQuery {
         this._checkLoadArguments();
 
         return q`\
@@ -299,7 +299,7 @@ ${this._getPagingClause()} \
 `;
     }
 
-    getAppendQuery(value: unknown): DBQuery {
+    override getAppendQuery(value: unknown): DBQuery {
         const [ _scope, columns, objects ] = this._checkAppendArguments(value);
         const colQuery = q.values(objects, columns, 'columns');
         const valQuery = q.values(objects, columns, 'values');

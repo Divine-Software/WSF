@@ -37,13 +37,13 @@ export class X4EList<TNode extends Node> extends X4E<TNode> {
     }
 
     // § 11.2.4 XML Filtering Predicate Operator (X4E: as method)
-    $filter(predicate: (node: XML<TNode>, index: number, parent: XMLList<TNode>) => boolean): XMLList<TNode> {
+    override $filter(predicate: (node: XML<TNode>, index: number, parent: XMLList<TNode>) => boolean): XMLList<TNode> {
         return super.$filter(predicate as any);
     }
 
     // § 9.2.1.9 [[Equals]] (X4E: $isEqual() for Abstract Node Equality and $isSame() for Strict Node Equality)
     // § 11.5.1 The Abstract Equality Comparison Algorithm
-    $isEqual(that: unknown): boolean {
+    override $isEqual(that: unknown): boolean {
         const l1 = this[Value];
 
         if (l1.length === 0 && that == /* [sic!] */ undefined) {
@@ -60,7 +60,7 @@ export class X4EList<TNode extends Node> extends X4E<TNode> {
         }
     }
 
-    $isSame(that: XMLList<Node>): boolean {
+    override $isSame(that: XMLList<Node>): boolean {
         return that instanceof X4EList && listsAreSame(this[Value], that[Value]);
     }
 
@@ -79,12 +79,12 @@ export class X4EList<TNode extends Node> extends X4E<TNode> {
     // § 13.5.4.7 constructor
 
     // § 13.5.4.8
-    $contains(value: unknown): boolean {
+    override $contains(value: unknown): boolean {
         return this[Value].some((node) => new X4E(node).$isEqual(value));
     }
 
     // § 13.5.4.9
-    $copy(): this {
+    override $copy(): this {
         return asXMLList(this[Value].map((node) => node.cloneNode(true))) as any;
     }
 
@@ -95,7 +95,7 @@ export class X4EList<TNode extends Node> extends X4E<TNode> {
     // § 13.5.4.12 hasOwnProperty
 
     // § 13.5.4.13
-    $hasComplexContent(): boolean {
+    override $hasComplexContent(): boolean {
         if (this[Value].length === 0) {
             return false;
         }
@@ -108,7 +108,7 @@ export class X4EList<TNode extends Node> extends X4E<TNode> {
     }
 
     // 13.5.4.14
-    $hasSimpleContent(): boolean {
+    override $hasSimpleContent(): boolean {
         return listHasSimpleContent(this[Value]);
     }
 
@@ -125,16 +125,16 @@ export class X4EList<TNode extends Node> extends X4E<TNode> {
     // § 13.5.4.20 $text(): XMLList<Text>
 
     // § 13.5.4.21
-    $toString(): string {
+    override $toString(): string {
         return listToString(this[Value]);
     }
 
-    toString(): string {
+    override toString(): string {
         return listToString(this[Value]);
     }
 
     // § 13.5.4.22
-    $toXMLString(): string {
+    override $toXMLString(): string {
         return listToXMLString(this[Value]);
     }
 

@@ -50,7 +50,7 @@ export class IOError extends URIError {
         this.cause = cause instanceof Error ? cause : cause !== undefined ? new Error(String(cause)) : undefined;
     }
 
-    toString(): string {
+    override toString(): string {
         return `${this.constructor.name}: ${this.message}`
     }
 }
@@ -82,9 +82,9 @@ export class URI extends URL {
         session?: SessionSelector[];
     };
 
-    readonly href!: string;
-    readonly origin!: string;
-    readonly protocol!: string;
+    override readonly href!: string;
+    override readonly origin!: string;
+    override readonly protocol!: string;
 
     constructor(url?: string | URL | Url, params?: Params);
     constructor(url?: string | URL | Url, base?: string | URL | Url, params?: Params);

@@ -5,7 +5,7 @@ export class WebError extends Error {
         super(message);
     }
 
-    toString(): string {
+    override toString(): string {
         return `[${this.constructor.name}: ${this.status} ${WebStatus[this.status] || '<Unknown>'} ${this.message}]`;
     }
 

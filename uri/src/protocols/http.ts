@@ -25,7 +25,7 @@ export interface HTTPParamsSelector extends ParamsSelector {
 }
 
 export class HTTPURI extends URI {
-    async info<T extends DirectoryEntry>(): Promise<T & Metadata> {
+    override async info<T extends DirectoryEntry>(): Promise<T & Metadata> {
         const response = await this._query<T>('HEAD', {}, undefined, undefined, undefined);
         const headers  = response[HEADERS]!;
         const location = new URI(headers['content-location'] ?? '', this);
@@ -43,27 +43,27 @@ export class HTTPURI extends URI {
         }) as T & Metadata;
     }
 
-    async load<T extends object>(recvCT?: ContentType | string): Promise<T> {
+    override async load<T extends object>(recvCT?: ContentType | string): Promise<T> {
         return this._requireValidStatus(await this._query('GET', {}, undefined, undefined, recvCT));
     }
 
-    async save<T extends object, D = unknown>(data: D, sendCT?: ContentType | string, recvCT?: ContentType | string): Promise<T> {
+    override async save<T extends object, D = unknown>(data: D, sendCT?: ContentType | string, recvCT?: ContentType | string): Promise<T> {
         return this._requireValidStatus(await this._query('PUT', {}, data, sendCT, recvCT));
     }
 
-    async append<T extends object, D = unknown>(data: D, sendCT?: ContentType | string, recvCT?: ContentType | string): Promise<T> {
+    override async append<T extends object, D = unknown>(data: D, sendCT?: ContentType | string, recvCT?: ContentType | string): Promise<T> {
         return this._requireValidStatus(await this._query('POST', {}, data, sendCT, recvCT));
     }
 
-    async modify<T extends object, D = unknown>(data: D, sendCT?: ContentType | string, recvCT?: ContentType | string): Promise<T> {
+    override async modify<T extends object, D = unknown>(data: D, sendCT?: ContentType | string, recvCT?: ContentType | string): Promise<T> {
         return this._requireValidStatus(await this._query('PATCH', {}, data, sendCT, recvCT));
     }
 
-    async remove<T extends object>(recvCT?: ContentType | string): Promise<T> {
+    override async remove<T extends object>(recvCT?: ContentType | string): Promise<T> {
         return this._requireValidStatus(await this._query('DELETE', {}, undefined, undefined, recvCT));
     }
 
-    async query<T extends object>(method: string, headers?: StringParams | null, data?: unknown, sendCT?: ContentType | string, recvCT?: ContentType | string): Promise<T> {
+    override async query<T extends object>(method: string, headers?: StringParams | null, data?: unknown, sendCT?: ContentType | string, recvCT?: ContentType | string): Promise<T> {
         if (typeof method !== 'string') {
             throw new TypeError(`URI ${this}: query: 'method' argument missing/invalid`);
         }

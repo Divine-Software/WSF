@@ -41,7 +41,7 @@ export class FileURI extends URI {
         this._path = normalize(decodeURIComponent(this.pathname));
     }
 
-    async info<T extends DirectoryEntry>(): Promise<T & Metadata> {
+    override async info<T extends DirectoryEntry>(): Promise<T & Metadata> {
         try {
             const stats = await fs.stat(this._path);
             const ctype = stats.isDirectory() ? ContentType.dir : ContentType.create(lookup(this._path) || undefined);
@@ -61,7 +61,7 @@ export class FileURI extends URI {
         }
     }
 
-    async list<T extends DirectoryEntry>(): Promise<T[] & Metadata> {
+    override async list<T extends DirectoryEntry>(): Promise<T[] & Metadata> {
         try {
             const children = await fs.readdir(this._path);
 
@@ -73,7 +73,7 @@ export class FileURI extends URI {
         }
     }
 
-    async load<T extends object>(recvCT?: ContentType | string): Promise<T & Metadata> {
+    override async load<T extends object>(recvCT?: ContentType | string): Promise<T & Metadata> {
         try {
             await fs.access(this._path, R_OK); // Throws immediately, unlike createReadStream()
             const stream = createReadStream(this._path, { flags: 'r', encoding: undefined });
@@ -85,7 +85,7 @@ export class FileURI extends URI {
         }
     }
 
-    async save<T extends object, D = unknown>(data: D, sendCT?: ContentType | string, recvCT?: ContentType): Promise<T & Metadata> {
+    override async save<T extends object, D = unknown>(data: D, sendCT?: ContentType | string, recvCT?: ContentType): Promise<T & Metadata> {
         if (recvCT !== undefined) {
             throw new TypeError(`URI ${this}: save: recvCT argument is not supported`);
         }
@@ -99,7 +99,7 @@ export class FileURI extends URI {
         }
     }
 
-    async append<T extends object, D = unknown>(data: D, sendCT?: ContentType | string, recvCT?: ContentType | string): Promise<T & Metadata> {
+    override async append<T extends object, D = unknown>(data: D, sendCT?: ContentType | string, recvCT?: ContentType | string): Promise<T & Metadata> {
         if (recvCT !== undefined) {
             throw new TypeError(`URI ${this}: append: recvCT argument is not supported`);
         }
@@ -113,7 +113,7 @@ export class FileURI extends URI {
         }
     }
 
-    async remove<T extends object>(recvCT?: ContentType | string): Promise<T & Metadata> {
+    override async remove<T extends object>(recvCT?: ContentType | string): Promise<T & Metadata> {
         if (recvCT !== undefined) {
             throw new TypeError(`URI ${this}: remove: recvCT argument is not supported`);
         }
@@ -138,7 +138,7 @@ export class FileURI extends URI {
         }
     }
 
-    async* watch(): AsyncIterable<FileWatchEvent & Metadata> {
+    override async* watch(): AsyncIterable<FileWatchEvent & Metadata> {
         const chokidar = await _chokidar ?? throwError(new IOError(`watch() requires chokidar as a peer dependency`));
         const adapter  = new AsyncIteratorAdapter<FileWatchEvent>();
         const watcher  = chokidar.watch(this._path, {

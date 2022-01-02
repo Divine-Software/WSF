@@ -3,7 +3,10 @@
 //
 // https://peggyjs.org/   https://github.com/metadevpro/ts-pegjs
 
-/* eslint-disable  */
+
+    /* eslint-disable */
+    // @ts-nocheck
+
 
 export interface IFilePosition {
   offset: number;

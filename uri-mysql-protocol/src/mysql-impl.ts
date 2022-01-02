@@ -185,7 +185,7 @@ export class MyReference extends DBDriver.DBReference {
         super(dbURI);
     }
 
-    protected _getPagingClause(): DBQuery {
+    protected override _getPagingClause(): DBQuery {
         const [ count, offset ] = this._getCountAndOffset();
 
         return count !== undefined || offset !== undefined
@@ -193,7 +193,7 @@ export class MyReference extends DBDriver.DBReference {
             : q``;
     }
 
-    getAppendQuery(value: unknown): DBQuery {
+    override getAppendQuery(value: unknown): DBQuery {
         if (this._dbURI.protocol === 'mariadb:' && parseFloat(this._version) >= 10.5) {
             return q`${super.getAppendQuery(value)} returning *`;
         }

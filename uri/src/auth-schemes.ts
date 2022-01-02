@@ -21,7 +21,7 @@ export class AuthSchemeError extends Error {
         super(message);
     }
 
-    toString(): string {
+    override toString(): string {
         return `${this.constructor.name}: ${this.message}`;
     }
 }

@@ -202,7 +202,7 @@ export class PGResult extends DBResult {
         Object.defineProperty(this, '_fd', { enumerable: false });
     }
 
-    async updateColumnInfo(): Promise<DBColumnInfo[]> {
+    override async updateColumnInfo(): Promise<DBColumnInfo[]> {
         const tables = [...new Set(this._fd.filter((f) => f.tableID !== 0 && f.columnID !== 0).map((f) => f.tableID))];
         const dtypes = [...new Set(this._fd.filter((f) => f.tableID === 0 && f.columnID === 0).map((f) => f.dataTypeID))];
         const nfomap: { [key: string]: KeyedInformationSchema | undefined } = {};
@@ -251,7 +251,7 @@ export class PGReference extends DBDriver.DBReference {
         super(dbURI);
     }
 
-    getSaveQuery(value: unknown): DBQuery {
+    override getSaveQuery(value: unknown): DBQuery {
         const [ _scope, columns, objects, keys ] = this._checkSaveArguments(value, !this._isCRDB);
         const updColumns = columns.filter((c) => !keys?.includes(c));
 
@@ -263,7 +263,7 @@ on conflict (${this._getKeys()}) do update set ${
             : q`upsert into ${this._getTable()} ${q.values(objects, columns)} returning *`;
     }
 
-    getAppendQuery(value: unknown): DBQuery {
+    override getAppendQuery(value: unknown): DBQuery {
         return q`${super.getAppendQuery(value)} returning *`;
     }
 }

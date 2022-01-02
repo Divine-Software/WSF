@@ -217,13 +217,13 @@ export class SQLiteResult extends DBResult {
         }
     }
 
-    async updateColumnInfo(): Promise<DBColumnInfo[]> {
+    override async updateColumnInfo(): Promise<DBColumnInfo[]> {
         return this.columns;
     }
 }
 
 export class SQLiteReference extends DBDriver.DBReference {
-    protected _getPagingClause(): DBQuery {
+    protected override _getPagingClause(): DBQuery {
         const [ count, offset ] = this._getCountAndOffset();
 
         return count !== undefined || offset !== undefined
@@ -231,12 +231,12 @@ export class SQLiteReference extends DBDriver.DBReference {
             : q``;
     }
 
-    protected _getLockClause(): DBQuery {
+    protected override _getLockClause(): DBQuery {
         super._getLockClause(); // Check syntax
         return q``;
     }
 
-    getSaveQuery(value: unknown): DBQuery {
+    override getSaveQuery(value: unknown): DBQuery {
         const [ _scope, columns, objects, keys] = this._checkSaveArguments(value, true);
         const updColumns = columns.filter((c) => !keys?.includes(c));
 
@@ -247,7 +247,7 @@ on conflict (${this._getKeys()}) do update set ${
 } returning *`;
     }
 
-    getAppendQuery(value: unknown): DBQuery {
+    override getAppendQuery(value: unknown): DBQuery {
         return q`${super.getAppendQuery(value)} returning *`;
     }
 }

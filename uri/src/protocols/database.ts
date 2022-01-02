@@ -159,7 +159,7 @@ export class DBError extends IOError {
         super(message, cause, data);
     }
 
-    toString(): string {
+    override toString(): string {
         return `[${this.constructor.name}: ${this.status}/${this.state} ${this.message}]`;
     }
 }
@@ -428,7 +428,7 @@ function withDBMetadata<T extends object>(meta: DBMetadata, value: object): T & 
 export abstract class DatabaseURI extends URI {
     protected abstract _createDBConnectionPool(params: DBParamsSelector): DBConnectionPool | Promise<DBConnectionPool>;
 
-    $(strings: TemplateStringsArray, ...values: unknown[]): DatabaseURI {
+    override $(strings: TemplateStringsArray, ...values: unknown[]): DatabaseURI {
         const result = super.$(strings, ...values);
 
         if (result instanceof DatabaseURI) {
@@ -439,7 +439,7 @@ export abstract class DatabaseURI extends URI {
         }
     }
 
-    load<T extends object>(_recvCT?: ContentType | string): Promise<T & DBMetadata> {
+    override load<T extends object>(_recvCT?: ContentType | string): Promise<T & DBMetadata> {
         return this._session(async (conn) => {
             const dbRef  = await conn.reference(this);
             const result = toObjects(await conn.query(dbRef.getLoadQuery()));
@@ -463,36 +463,36 @@ export abstract class DatabaseURI extends URI {
         });
     }
 
-    save<T extends object, D = unknown>(data: D, _sendCT?: ContentType | string, _recvCT?: ContentType | string): Promise<T & DBMetadata> {
+    override save<T extends object, D = unknown>(data: D, _sendCT?: ContentType | string, _recvCT?: ContentType | string): Promise<T & DBMetadata> {
         return this._session(async (conn) => {
             return toObjects<T>(await conn.query((await conn.reference(this)).getSaveQuery(data)));
         });
     }
 
-    append<T extends object, D = unknown>(data: D, _sendCT?: ContentType | string, _recvCT?: ContentType | string): Promise<T & DBMetadata> {
+    override append<T extends object, D = unknown>(data: D, _sendCT?: ContentType | string, _recvCT?: ContentType | string): Promise<T & DBMetadata> {
         return this._session(async (conn) => {
             return toObjects<T>(await conn.query((await conn.reference(this)).getAppendQuery(data)));
         });
     }
 
-    modify<T extends object, D = unknown>(data: D, _sendCT?: ContentType | string, _recvCT?: ContentType | string): Promise<T & DBMetadata> {
+    override modify<T extends object, D = unknown>(data: D, _sendCT?: ContentType | string, _recvCT?: ContentType | string): Promise<T & DBMetadata> {
         return this._session(async (conn) => {
             return toObjects<T>(await conn.query((await conn.reference(this)).getModifyQuery(data)));
         });
     }
 
-    remove<T extends object>(_recvCT?: ContentType | string): Promise<T & DBMetadata> {
+    override remove<T extends object>(_recvCT?: ContentType | string): Promise<T & DBMetadata> {
         return this._session(async (conn) => {
             return toObjects<T>(await conn.query((await conn.reference(this)).getRemoveQuery()));
         });
     }
 
-    query<T extends object = object[]>(...queries: DBQuery[]): Promise<T & DBMetadata>;
-    query<T extends object = object[]>(query: TemplateStringsArray, ...params: (BasicTypes)[]): Promise<T & DBMetadata>;
-    query<T extends object = object[]>(query: string, params: Params): Promise<T & DBMetadata>;
-    query<T>(params: DBTransactionParams, cb: DBCallback<T>): Promise<T>;
-    query<T>(cb: DBCallback<T>): Promise<T>;
-    async query<T>(first: DBQuery | TemplateStringsArray | string | DBTransactionParams | DBCallback<T>, ...rest: unknown[]): Promise<unknown & Metadata & WithFields<DBResult>> {
+    override query<T extends object = object[]>(...queries: DBQuery[]): Promise<T & DBMetadata>;
+    override query<T extends object = object[]>(query: TemplateStringsArray, ...params: (BasicTypes)[]): Promise<T & DBMetadata>;
+    override query<T extends object = object[]>(query: string, params: Params): Promise<T & DBMetadata>;
+    override query<T>(params: DBTransactionParams, cb: DBCallback<T>): Promise<T>;
+    override query<T>(cb: DBCallback<T>): Promise<T>;
+    override async query<T>(first: DBQuery | TemplateStringsArray | string | DBTransactionParams | DBCallback<T>, ...rest: unknown[]): Promise<unknown & Metadata & WithFields<DBResult>> {
         return this._session(async (conn) => {
             if (first instanceof DBQuery && rest.every((r) => r instanceof DBQuery)) {
                 return toObjects(await conn.query(first, ...rest as DBQuery[]));
@@ -515,9 +515,9 @@ export abstract class DatabaseURI extends URI {
         });
     }
 
-    watch<T extends object>(query: DBQuery): AsyncIterable<T & DBMetadata>;
-    watch<T extends object>(query: string, params: Params): AsyncIterable<T & DBMetadata>;
-    async *watch<T extends object>(query: DBQuery | string, params?: Params): AsyncIterable<unknown & DBMetadata> {
+    override watch<T extends object>(query: DBQuery): AsyncIterable<T & DBMetadata>;
+    override watch<T extends object>(query: string, params: Params): AsyncIterable<T & DBMetadata>;
+    override async *watch<T extends object>(query: DBQuery | string, params?: Params): AsyncIterable<unknown & DBMetadata> {
         const results = new Signal<AsyncIterable<DBResult>>();
         const barrier = new Barrier(2);
         const session = this._session(async (conn) => {
@@ -544,7 +544,7 @@ export abstract class DatabaseURI extends URI {
         }
     }
 
-    async close(): Promise<void> {
+    override async close(): Promise<void> {
         try {
             const states = this._getBestSelector<DBSessionSelector>(this.selectors.session)?.states;
 

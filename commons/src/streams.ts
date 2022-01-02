@@ -29,7 +29,7 @@ export class SizeLimitedReadableStream extends Transform {
         super(opts);
     }
 
-    _transform(chunk: unknown, _encoding: string, callback: TransformCallback): void {
+    override _transform(chunk: unknown, _encoding: string, callback: TransformCallback): void {
         if (chunk instanceof Buffer || typeof chunk === 'string') {
             this._count += chunk.length;
 
@@ -45,7 +45,7 @@ export class SizeLimitedReadableStream extends Transform {
         }
     }
 
-    _flush(callback: TransformCallback): void {
+    override _flush(callback: TransformCallback): void {
         callback();
     }
 }

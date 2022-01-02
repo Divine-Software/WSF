@@ -64,23 +64,23 @@ export class CacheURI extends URI {
         this._file = FileURI.create(this._path);
     }
 
-    async info<T extends DirectoryEntry>(): Promise<T & Metadata> {
+    override async info<T extends DirectoryEntry>(): Promise<T & Metadata> {
         return { ...await this._delegate('info') as T, type: new ContentType(this._type) };
     }
 
-    load<T extends object>(recvCT?: ContentType | string): Promise<T & Metadata> {
+    override load<T extends object>(recvCT?: ContentType | string): Promise<T & Metadata> {
         return this._delegate('load', recvCT ?? this._type);
     }
 
-    async save(...args: any[]): Promise<any> {
+    override async save(...args: any[]): Promise<any> {
         return this._delegate('save', ...args);
     }
 
-    async modify(...args: any[]): Promise<any> {
+    override async modify(...args: any[]): Promise<any> {
         return this._delegate('modify', ...args);
     }
 
-    async append(...args: any[]): Promise<any> {
+    override async append(...args: any[]): Promise<any> {
         return this._delegate('append', ...args);
     }
 
