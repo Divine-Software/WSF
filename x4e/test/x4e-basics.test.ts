@@ -10,9 +10,9 @@ describe('x4e', () => {
             </people>`;
 
         expect(x instanceof XML).toBe(true);
-        expect(x.person[0]?.name.$toString()).toBe('sam');
-        expect(x.person[1]?.name.$toString()).toBe('elizabeth');
-        expect(x.person[2]?.name.$toString()).toBeUndefined()
+        expect(x['person'][0]?.['name'].$toString()).toBe('sam');
+        expect(x['person'][1]?.['name'].$toString()).toBe('elizabeth');
+        expect(x['person'][2]?.['name'].$toString()).toBeUndefined()
     });
 
     it('can compare objects', () => {

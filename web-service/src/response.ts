@@ -76,7 +76,7 @@ export class WebResponse {
         }
 
         if (response.status === WebStatus.OK && /^(HEAD|GET)$/.test(webreq.method) &&
-            response.headers.etag && response.headers.etag === webreq.header('if-none-match', '')) {
+            response.headers['etag'] && response.headers['etag'] === webreq.header('if-none-match', '')) {
             response.status = WebStatus.NOT_MODIFIED;
             response.body   = null;
         }

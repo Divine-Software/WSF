@@ -112,8 +112,8 @@ export class HTTPURI extends URI {
             body = serialized;
         }
 
-        if (!headers.authorization) {
-            headers.authorization = (await this._getAuthorization({ method, url: this, headers: Object.entries(headers)}, body))?.toString();
+        if (!headers['authorization']) {
+            headers['authorization'] = (await this._getAuthorization({ method, url: this, headers: Object.entries(headers)}, body))?.toString();
         }
 
         // Bug workaround?
@@ -179,7 +179,7 @@ export class HTTPURI extends URI {
             }
 
             if ([301, 302, 303, 307, 308].includes(s)) {
-                url = new URL(res[HEADERS]?.location ?? '', url).toString();
+                url = new URL(res[HEADERS]?.['location'] ?? '', url).toString();
                 res = await request(method, url);
             }
             else {
