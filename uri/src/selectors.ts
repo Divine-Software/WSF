@@ -3,22 +3,43 @@ import { WWWAuthenticate } from '@divine/headers';
 import { URL } from 'url';
 import { AuthScheme, Credentials, CredentialsProvider } from './auth-schemes';
 
+/**
+ * A set of rules that must all match a given URL or authentication parameters for it to be valid or active.
+ */
 export interface Selector {
+    /** A filter for the required authentication realm. The matching score is 1. */
     authRealm?:  string | RegExp;
+
+    /** A filter for the required authentication scheme. The matching score is 2. */
     authScheme?: string | RegExp;
+
+    /** A filter for the required URL protocol. The matching score is 4. */
     protocol?:   string | RegExp;
+
+    /** A filter for the required URL path. The matching score is 8. */
     pathname?:   string | RegExp;
+
+    /** A filter for the required URL port. The matching score is 16. */
     port?:       string | RegExp | number;
+
+    /** A filter for the required URL host. The matching score is 32. */
     hostname?:   string | RegExp;
+
+    /** A filter for the required URL (all-in-one filter). The matching score is 64. */
     uri?:        string | RegExp;
 }
 
 export interface SelectorBase {
+    /** The selector that must match for this configuration to apply. */
     selector?: Selector;
 }
 
+/** Provides authentication for [[URI]] and its subclasses.. */
 export interface AuthSelector extends SelectorBase {
+    /** The credentials or credential provider to use for authentication. */
     credentials: CredentialsProvider<Credentials> | Credentials | AuthScheme<Credentials>;
+
+    /** Set to `true` to send credentials even before requested by the server. */
     preemptive?: boolean;
 }
 
@@ -27,7 +48,9 @@ export function isAuthSelector(selector: any): selector is AuthSelector {
         (selector.preemptive === undefined || typeof selector.preemptive === 'boolean');
 }
 
+/** Provides request headers for [[URI]] and its subclasses, most notably [[HTTPURI]]. */
 export interface HeadersSelector extends SelectorBase {
+    /** The headers to send. */
     headers: StringParams;
 }
 
@@ -35,11 +58,15 @@ export function isHeadersSelector(selector: any): selector is HeadersSelector {
     return typeof selector.headers === 'object';
 }
 
+/** General URI configuration parameters.  */
 export interface URIParams extends Params {
-    logger?: Console;
+    /** A Console to use for debug logging. */
+    console?: Console;
 }
 
+/** Provides configuration parameters for [[URI]] and its subclasses. */
 export interface ParamsSelector extends SelectorBase {
+    /** The parameters to apply. */
     params: URIParams;
 }
 

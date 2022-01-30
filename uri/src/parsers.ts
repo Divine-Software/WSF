@@ -3,13 +3,31 @@ import { ContentType } from '@divine/headers';
 import iconv from 'iconv-lite';
 import { Finalizable, IOError, NULL, VOID } from './uri';
 
-export function toObject<T extends object>(result: unknown): T {
-    return result === undefined       ? Object(VOID) :
-           result === null            ? Object(NULL) :
-           typeof result !== 'object' ? Object(result) :
-           result;
+/**
+ * Converts a primitive value to an object and returns objects as-is.
+ *
+ * `undefined` will be converted to Object([[VOID]]) and `null` to Object([[NULL]]). Any other non-object value will be
+ * converted via Object(value), which means that a `string` value will become a String object, a `number` will become a
+ * Number instance, et cetera.
+ *
+ * [[toPrimitive]] can be used to reverse this operation.
+ *
+ * @param value The value to convert to an object.
+ * @returns     The value converted to an object.
+ */
+export function toObject<T extends object>(value: unknown): T {
+    return value === undefined       ? Object(VOID) :
+           value === null            ? Object(NULL) :
+           typeof value !== 'object' ? Object(value) :
+           value;
 }
 
+/**
+ * Converts an object created by [[toObject]] back into the original value.
+ *
+ * @param value  The object that should be converted back to its original value.
+ * @returns      The original value.
+ */
 export function toPrimitive(value: any): BasicTypes | symbol | undefined {
     if (value !== null && value !== undefined) {
         value = value.valueOf();
@@ -18,15 +36,72 @@ export function toPrimitive(value: any): BasicTypes | symbol | undefined {
     return value === NULL ? null : value === VOID ? undefined : value;
 }
 
+/** An IOError subclass thrown by the [[Parser]] class. */
 export class ParserError extends IOError {
 }
 
+/**
+ * The base class for all parser subclasses. Parsers can be constructed manually, but usually aren't. Instead, this
+ * class provides the static methods [[Parser.parse]] and [[Parser.serialize]] (or [[Parser.serializeToBuffer]]) for
+ * serialization/deserialization.
+ *
+ * Below is a list of all known parsers:
+ *
+ * Media type                          | Parser class
+ * ------------------------------------|----------------------
+ * `application/*+json`                | [[JSONParser]]
+ * `application/*+xml`                 | [[XMLParser]]
+ * `application/json`                  | [[JSONParser]]
+ * `application/octet-stream`          | [[BufferParser]]
+ * `application/toml`                  | [[TOMLParser]]
+ * `application/vnd.esxx.octet-stream` | [[PassThroughParser]]
+ * `application/x-www-form-urlencoded` | [[FormParser]]
+ * `application/x-yaml`                | [[YAMLParser]]
+ * `application/xml`                   | [[XMLParser]]
+ * `application/yaml`                  | [[YAMLParser]]
+ * `message/*`                         | [[MessageParser]]
+ * `multipart/*`                       | [[MultiPartParser]]
+ * `text/csv`                          | [[CSVParser]]
+ * `text/event-stream`                 | [[EventStreamParser]]
+ * `text/html`                         | [[HTMLParser]]
+ * `text/plain`                        | [[StringParser]]
+ * `text/tab-separated-values`         | [[CSVParser]]
+ * `text/tsv`                          | [[CSVParser]]
+ * `text/vnd.yaml`                     | [[YAMLParser]]
+ * `text/x-yaml`                       | [[YAMLParser]]
+ * `text/xml`                          | [[XMLParser]]
+ * `text/yaml`                         | [[YAMLParser]]
+ *
+ */
 export abstract class Parser {
-    static register(baseType: string | RegExp, parser: typeof Parser): typeof Parser {
-        Parser._parsers.set(baseType, parser);
+    /**
+     * Registers a new parser/serializer. All subclasses must register their MIME media type support with this method.
+     *
+     * @param type    The content/media type the parser can handle.
+     * @param parser  The Parser subclass to register.
+     * @returns       The Parser base class (for method chaining).
+     */
+    static register(type: string | RegExp, parser: typeof Parser): typeof Parser {
+        Parser._parsers.set(type, parser);
         return Parser;
     }
 
+    /**
+     * Parses a given string, Buffer or byte stream using a parser registered for a specific media type.
+     *
+     * NOTE: This method *always returns an object*. Primitives are never returned. This means that text, for instance
+     * will be returned as a String object, `null` as Object([[NULL]]) and `undefined` as Object([[VOID]]). You may use
+     * [[toPrimitive]] to return the original value, or use `.valueOf()` and test the result against the [[NULL]] and
+     * [[VOID]] symbols.
+     *
+     * @template T            The type of the returned object.
+     * @param    stream       The source that should be parsed.
+     * @param    contentType  The media type that specifies what parser to use.
+     * @throws   ParserError  On parser errors or if the media type is not recognized.
+     * @returns               An *object* (always an object) that represents the original source after parsing. It's
+     *                        possible that the Parser subclass allocated temporary resources as part of the process.
+     *                        These resources may be cleaned up by calling [[FINALIZE]].
+     */
     static async parse<T extends object>(stream: string | Buffer | AsyncIterable<Buffer>, contentType: ContentType | string): Promise<T & Finalizable> {
         try {
             const result = await Parser._create(ContentType.create(contentType)).parse(toAsyncIterable(stream));
@@ -39,6 +114,17 @@ export abstract class Parser {
         }
     }
 
+    /**
+     * Converts a parsed (or manually constructed) object back into a byte stream representation.
+     *
+     * @template T            The type of the object that is to be serialized.
+     * @param    data         The object that is to be serialized.
+     * @param    contentType  The media type that specifies what parser to use.
+     * @throws   ParserError  On serialization errors or if the media type is not recognized.
+     * @returns               A tuple containing the Buffer/byte stream and the actual media type. Note that the parser
+     *                        may return a slightly different media type than was given (for instance,
+     *                        [[MultiPartParser]] might add a boundary param if none was given).
+     */
     static serialize<T = unknown>(data: T, contentType?: ContentType | string): [Buffer | AsyncIterable<Buffer>, ContentType] {
         try {
             data = toPrimitive(data) as unknown as T; // Unpack values wrapped by toObject()
@@ -73,6 +159,18 @@ export abstract class Parser {
         }
     }
 
+    /**
+     * Converts a parsed (or manually constructed) object into a Buffer.
+     *
+     * This is a convenience method that just invokes [[parse]] and then converts the byte stream into a single Buffer.
+     *
+     * @param    data         The object that is to be serialized.
+     * @param    contentType  The media type that specifies what parser to use.
+     * @throws   ParserError  On serialization errors or if the media type is not recognized.
+     * @returns               A tuple containing the Buffer and the actual media type. Note that the parser may return a
+     *                        slightly different media type than was given (for instance, [[MultiPartParser]] might add
+     *                        a boundary param if none was given).
+     */
     static async serializeToBuffer<T = unknown>(data: T, contentType?: ContentType | string): Promise<[Buffer, ContentType]> {
         const [ stream, ct ] = Parser.serialize(data, contentType);
 
@@ -99,10 +197,43 @@ export abstract class Parser {
         return new (parserClass as any)(contentType);
     }
 
-    constructor(readonly contentType: ContentType) { }
+    /**
+     * Constructs a new Parser instance.
+     *
+     * @param contentType The media type this parser object was instanciated for.
+     */
+    protected constructor(readonly contentType: ContentType) { }
+
+    /**
+     * Parses a stream and returns the result as a parser-specific representation.
+     *
+     * This method must be implemented by the actual subclass.
+     *
+     * @param  stream       The stream to parse.
+     * @throws ParserError  On parser errors.
+     * @returns             The parsed stream.
+     */
     abstract parse(stream: AsyncIterable<Buffer>): Promise<unknown>;
+
+    /**
+     * Serializes a parsed or manually constructed object back into a Buffer or byte stream.
+     *
+     * This method must be implemented by the actual subclass.
+     *
+     * @param  data         A parser-specific representation that is to be serialized.
+     * @throws ParserError  On serialization errors.
+     * @returns             A Buffer or a byte stream.
+     */
     abstract serialize(data: unknown): Buffer | AsyncIterable<Buffer>;
 
+    /**
+     * A helper method used by parser subclasses to report invalid input.
+     *
+     * @param condition  Must be `true`, or else a [[ParserError]] will be raised.
+     * @param data       Some kind of extra information that will be provided in [[ParserError.data]].
+     * @param cause      If this error was caused by some other kind of failure, the original error will be available as
+     *                   [[ParserError.cause]].
+     */
     protected _assertSerializebleData(condition: boolean, data: unknown, cause?: Error | unknown): asserts condition {
         if (!condition) {
             const type = data instanceof Object ? Object.getPrototypeOf(data).constructor.name : data === null ? 'null' : typeof data;
@@ -112,6 +243,9 @@ export abstract class Parser {
     }
 }
 
+/**
+ * The `application/octet-stream` parser just concatenates all bytes in the byte stream into a single Buffer.
+ */
 export class BufferParser extends Parser {
     async parse(stream: AsyncIterable<Buffer>): Promise<Buffer> {
         const chunks = [];
@@ -130,6 +264,11 @@ export class BufferParser extends Parser {
     }
 }
 
+/**
+ * The `application/vnd.esxx.octet-stream` parser is a no-op parser that provides access to the original byte stream.
+ * Unlike [[BufferParser]] it will not concatenate the byte stream into a single Buffer but will pass the bytes along as
+ * they arrive.
+ */
 export class PassThroughParser extends Parser {
     async parse(stream: AsyncIterable<Buffer>): Promise<AsyncIterable<Buffer>> {
         return stream;
@@ -140,6 +279,17 @@ export class PassThroughParser extends Parser {
     }
 }
 
+/**
+ * The `text/plain` parser converts between text and bytes. It is also used by many other string-based parsers to
+ * convert between strings and byte streams.
+ *
+ * The following media type parameters are used:
+ *
+ * Name          | Description
+ * --------------|----------------------------------------------------------------------------------------------------
+ * `charset`     | The character set to use. Default is `utf8`.
+ * `x-bom`       | Whether to add a byte-order-mark (if `present`) or not (if `absent`, the default) when serializing.
+ */
 export class StringParser extends Parser {
     async parse(stream: AsyncIterable<Buffer>): Promise<string> {
         const charset = this.contentType.param('charset', 'utf8');

@@ -9,34 +9,60 @@ import { Parser, StringParser } from '../parsers';
 import { CacheURI } from '../protocols/cache';
 import { FIELDS, Finalizable, FINALIZE, URI, WithFields } from '../uri';
 
+/** A basic string key-value record. */
 export interface FormData extends WithFields<FormField> {
+    /** Both keys and values are strings. */
     [key: string]: string | undefined;
 }
 
+/** A basic string key-value field. */
 export interface FormField {
+    /** The name of the field. */
     name:        string;
+
+    /** The value of the field. */
     value:       string;
 }
 
+/** A multi-part key-value record. */
 export interface MultiPartData extends WithFields<MultiPartField>, Finalizable {
+    /** Like [[FormData]], keys are strings but the value may be files and [[MultiPartData]] as well. */
     [key: string]: string | URI | MultiPartData;
 }
 
+/** A multi-part key-value field. */
 export interface MultiPartField {
+    /** The name of the field. Note that the name is actually optional. */
     name?:        string;
+
+    /** The media type of the value. */
     type:         ContentType;
+
+    /** Multi-part keys may contain additional headers, available in this record. */
     headers:      StringParams;
+
+    /** The value of the filed. */
     value:        string | URI | MultiPartData;
 }
 
+/** A MIME message. */
 export interface MimeMessage extends Finalizable {
+    /** The media type of the value. */
     type:    ContentType,
+
+    /** MIME messages may contain additional headers, available in this record. */
     headers: StringParams;
+
+    /** The message body. */
     value:   string | URI | MimeMessage[];
 }
 
+/** A common interface compatible with [[FormField]], [[MultiPartField]] and [[MimeMessage]]. */
 export interface MimeMessageLike {
+    /** MIME messages may contain additional headers, available in this record. */
     headers?: StringParams;
+
+    /** The field value or message body. */
     value?:   string | URI | MimeMessage[] | MultiPartData | MultiPartField[];
 }
 
@@ -44,6 +70,11 @@ function makeBoundary() {
     return '---=__' + randomBytes(48).toString('base64');
 }
 
+/**
+ * The `application/x-www-form-urlencoded` parser uses URLSearchParams and [[StringParser]] to handle URL HTML forms.
+ *
+ * The parsed data is a [[FormData]] object, with the key-value pairs available via [[FIELDS]].
+ */
 export class FormParser extends Parser {
     async parse(stream: AsyncIterable<Buffer>): Promise<FormData> {
         const params = new URLSearchParams(await new StringParser(this.contentType).parse(stream));
@@ -68,6 +99,11 @@ export class FormParser extends Parser {
     }
 }
 
+/**
+ * The `message/*` parser handles all kinds of messages, including `message/rfc822`.
+ *
+ * The parsed data is a [[MimeMessage]], but the serializer cna handle any [[MimeMessageLike]] object.
+ */
 export class MessageParser extends Parser {
     async parse(stream: AsyncIterable<Buffer>): Promise<MimeMessage> {
         async function *wrappedStream(boundary: string): AsyncIterable<Buffer> {
@@ -124,6 +160,15 @@ interface DicerHeaders {
     [key: string]: string[] | undefined;
 }
 
+/**
+ * The `multipart/*` parser handles MIME multipart messages and `multipart/form-data` HTML forms.
+ *
+ * The parsed data is an [[MultiPartData]] object, but and array of [[MultiPartField]] objects may also be serialized by
+ * this parser.
+ *
+ * Files will be copied and wrapped as [[CacheURI]] objects. These temporary files can be removed by calling the
+ * [[FINALIZE]] function.
+ */
 export class MultiPartParser extends Parser {
     static defaultContentType = ContentType.text;
 

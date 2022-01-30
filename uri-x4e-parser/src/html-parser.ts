@@ -1,6 +1,10 @@
 import { Parser, StringParser } from '@divine/uri';
 import { isDOMNode, parseHTMLFromString, serializeHTMLToString, XML } from '@divine/x4e';
 
+/**
+ * The `text/html` parser uses [parse5](https://github.com/inikulin/parse5) to convert HTML documents to and from
+ * X4E [[XML]] objects.
+ */
 export class HTMLParser extends Parser {
     async parse(stream: AsyncIterable<Buffer>): Promise<XML<Element>> {
         return XML(parseHTMLFromString(await new StringParser(this.contentType).parse(stream)).documentElement);

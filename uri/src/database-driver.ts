@@ -6,7 +6,7 @@ import { AsyncLocalStorage } from 'async_hooks';
 import { PasswordCredentials } from './auth-schemes';
 import { BasicAuthScheme } from './auth-schemes/basic';
 import { parse as parseDBRef } from './private/dbref';
-import { DatabaseURI, DBParamsSelector, DBQuery, DBResult, DBTransactionParams, q } from './protocols/database';
+import { DatabaseURI, DBParams, DBParamsSelector, DBQuery, DBResult, DBTransactionParams, q } from './protocols/database';
 import { getBestSelector } from './selectors';
 import { IOError } from './uri';
 
@@ -41,7 +41,7 @@ export abstract class DBConnectionPool {
     static readonly defaultKeepalive      = 10_000;
     static readonly defaultMaxConnections = 10;
 
-    protected _params: DBParamsSelector['params'];
+    protected _params: DBParams;
 
     private _connectionCount = 0;
     private _usedConnections: Set<DBConnection> = new Set();

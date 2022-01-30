@@ -1,6 +1,10 @@
 import TOML from '@iarna/toml';
 import { Parser, StringParser } from '../parsers';
 
+/**
+ * The `application/toml` parser handles [TOML](https://toml.io) using
+ * [@iarna/toml](https://www.npmjs.com/package/@iarna/toml) and [[StringParser]].
+ */
 export class TOMLParser extends Parser {
     async parse(stream: AsyncIterable<Buffer>): Promise<TOML.JsonMap> {
         return TOML.parse(await new StringParser(this.contentType).parse(stream));

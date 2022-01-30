@@ -5,7 +5,7 @@ import { resolve } from 'path';
 import xdg from 'xdg-portable';
 import pkg from '../../package.json';
 import { DirectoryEntry, Metadata, URI } from '../uri';
-import { FileURI } from './file';
+import { FileURI, FileWatchEvent } from './file';
 
 const cacheDir = resolve(xdg.cache(), pkg.name, 'CacheURI', 'v1');
 const cacheAge = 3600_000 /* 1 hour */;
@@ -37,14 +37,27 @@ function v4uuid() {
     return [...buf].map((b, i) => ([4, 6, 8, 10].includes(i) ? '-' : '') + (b + 0x100).toString(16).substr(1)).join('');
 }
 
+/**
+ * The `cache:` protocol handler can be used to store (large and small) temporary files on disk.
+ *
+ * A cached file will be automatically pruned after 1 hour, if [[remove]] has not been called manually.
+ */
 export class CacheURI extends URI {
+    /**
+     * Creates a new cached file resource.
+     *
+     * Then use [[save]] to store data and [[load]] to retrieve it back.
+     *
+     * @param   type  The cache file's media type.
+     * @returns       A new CacheURI instance.
+     */
     static create(type: ContentType | string): CacheURI {
         return new URI(`cache:${type},${v4uuid()}`) as CacheURI;
     }
 
     private _type: ContentType;
     private _path: string;
-    private _file: URI;
+    private _file: FileURI;
 
     constructor(uri: URI) {
         super(uri);
@@ -64,24 +77,36 @@ export class CacheURI extends URI {
         this._file = FileURI.create(this._path);
     }
 
+    /** See [[FileURI.info]]. */
     override async info<T extends DirectoryEntry>(): Promise<T & Metadata> {
         return { ...await this._delegate('info') as T, type: new ContentType(this._type) };
     }
 
-    override load<T extends object>(recvCT?: ContentType | string): Promise<T & Metadata> {
+    /** See [[FileURI.load]]. */
+    override async load<T extends object>(recvCT?: ContentType | string): Promise<T & Metadata> {
         return this._delegate('load', recvCT ?? this._type);
     }
 
-    override async save(...args: any[]): Promise<any> {
-        return this._delegate('save', ...args);
+    /** See [[FileURI.save]]. */
+    override async save<T extends object, D = unknown>(data: D, sendCT?: ContentType | string, recvCT?: undefined): Promise<T & Metadata> {
+        return this._delegate('save', data, sendCT, recvCT);
     }
 
-    override async modify(...args: any[]): Promise<any> {
-        return this._delegate('modify', ...args);
+    /** See [[FileURI.append]]. */
+    override async append<T extends object, D = unknown>(data: D, sendCT?: ContentType | string, recvCT?: undefined): Promise<T & Metadata> {
+        return this._delegate('append', data, sendCT, recvCT);
     }
 
-    override async append(...args: any[]): Promise<any> {
-        return this._delegate('append', ...args);
+    /** See [[FileURI.remove]]. */
+    override async remove<T extends object>(recvCT?: undefined): Promise<T & Metadata> {
+        return this._delegate('remove', recvCT);
+    }
+
+    /** See [[FileURI.watch]]. */
+    override async* watch(): AsyncIterable<FileWatchEvent & Metadata> {
+        await createCacheDir();
+
+        yield* this._file.watch();
     }
 
     private async _delegate(method: keyof CacheURI, ...args: any[]): Promise<any> {

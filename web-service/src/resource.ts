@@ -63,7 +63,7 @@ export interface WebFilter {
  *
  * @template Context The type of the WebService context.
  */
- export abstract class WebFilterBase<Context> implements WebFilter {
+export abstract class WebFilterBase<Context> implements WebFilter {
     /**
      * Constructs a resource or filter instance.
      *

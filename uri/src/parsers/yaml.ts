@@ -3,6 +3,14 @@ import YAML from 'yaml';
 import { Parser, StringParser, toObject } from '../parsers';
 import { FIELDS, WithFields } from '../uri';
 
+/**
+ * The `application/yaml`, `application/x-yaml`, `text/vnd.yaml`, `text/x-yaml` and `text/yaml` parser handles
+ * [YAML](https://yaml.org/) using [yaml](https://eemeli.org/yaml/) and [[StringParser]].
+ *
+ * Only the first document in a multi-document YAML file is returned when parsing. To access all documents, use the
+ * [[FIELDS]] property.
+ *
+ */
 export class YAMLParser extends Parser {
     async parse(stream: AsyncIterable<Buffer>): Promise<object & WithFields<BasicTypes>> {
         const yaml = YAML.parseAllDocuments(await new StringParser(this.contentType).parse(stream));

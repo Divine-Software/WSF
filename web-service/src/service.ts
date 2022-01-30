@@ -94,13 +94,15 @@ function regExpParams(match: RegExpExecArray, offset: number, count: number, pre
  * A WebService is a collection of registered [[WebResource | resources]], [[WebFilter | filters]] and an optional
  * [[WebErrorHandler | error handler]] that forms the web application.
  *
- * ## Context
+ * ## Concepts
+ *
+ * ### Context
  *
  * When a WebService is created, it can be associated with a custom object called the WebService *context*. This context
  * is passed to the resources and filters as they are constructed and can provide configuration and/or services to the
  * web application.
  *
- * ## Resources
+ * ### Resources
  *
  * A [[WebResource]] is responsible for handling a specific location. It responds to one or more HTTP verbs and produces
  * a [[WebResponse]] once finished. A new instance of the resource class is constructed for each incoming request,
@@ -108,7 +110,7 @@ function regExpParams(match: RegExpExecArray, offset: number, count: number, pre
  *
  * Only a single resource will ever match an incoming request.
  *
- * ## Filters
+ * ### Filters
  *
  * Filters are used to modify the behavior of a set of resources. They can be used to handle CORS requests,
  * authentication and authorization, throttling etc. Just like resources, a new instance of the filter will always be
@@ -117,7 +119,7 @@ function regExpParams(match: RegExpExecArray, offset: number, count: number, pre
  * Multiple filters may match an incoming request. They will be processed in the same order as they were added via
  * [[addFilter]] or [[addFilters]].
  *
- * ## Error handler
+ * ### Error handler
  *
  * The error handler acts like a global `catch` block and can be used to produce non-generic error responses in case
  * something is not right.

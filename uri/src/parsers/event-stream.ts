@@ -1,13 +1,27 @@
 import { isAsyncIterable } from '@divine/commons';
 import { Parser } from '../parsers';
 
+/** Represents a `text/event-stream` (SSE/server-sent events) event. */
 export interface EventStreamEvent {
+    /** The event name. */
     event?: string;
+
+    /** The event data, as a string. */
     data:   string;
+
+    /** The event ID, to update the client's *last event ID* value. */
     id?:    string;
+
+    /** The client reconnection time, in milliseconds. */
     retry?: number;
 }
 
+/**
+ * Checks whether the passed argument is an [[EventStreamEvent]].
+ *
+ * @param event The object to check
+ * @returns     `true` if `event` is an EventStreamEvent.
+ */
 export function isEventStreamEvent(event: any): event is EventStreamEvent {
     return typeof event === 'object' && typeof event.data  === 'string' &&
         (event.event === undefined || typeof event.event === 'string') &&
@@ -15,6 +29,11 @@ export function isEventStreamEvent(event: any): event is EventStreamEvent {
         (event.retry === undefined || typeof event.retry === 'number');
 }
 
+/**
+ * The `text/event-stream` parser reads and writes [SSE/server-sent
+ * events](https://developer.mozilla.org/en-US/docs/Web/API/Server-sent_events/) streams, translating between
+ * `AsyncIterable<Buffer>` and `AsyncIterable<`[[`EventStreamEvent`]]`>`.
+ */
 export class EventStreamParser extends Parser {
     // See <https://html.spec.whatwg.org/multipage/server-sent-events.html#event-stream-interpretation>
     static async *parser(stream: AsyncIterable<Buffer>): AsyncIterable<EventStreamEvent> {
