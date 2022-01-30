@@ -15,18 +15,29 @@
     "typecheck": "tsc"
   },
   "dependencies": {
+    "@divine/uri": "link:../uri",
     "@docusaurus/core": "2.0.0-beta.15",
     "@docusaurus/preset-classic": "2.0.0-beta.15",
-    "@mdx-js/react": "^1.6.21",
+    "@mdx-js/react": "^1.6.22",
     "clsx": "^1.1.1",
+    "docusaurus-plugin-typedoc": "~0.16.7",
     "prism-react-renderer": "^1.2.1",
-    "react": "^17.0.1",
-    "react-dom": "^17.0.1"
+    "react": "^17.0.2",
+    "react-dom": "^17.0.2",
+    "typedoc": "~0.22.11",
+    "typedoc-plugin-markdown": "^3.11.12",
+    "yaml": "^1.10.2"
   },
   "devDependencies": {
     "@docusaurus/module-type-aliases": "2.0.0-beta.15",
     "@tsconfig/docusaurus": "^1.0.4",
-    "typescript": "^4.5.2"
+    "typescript": "^4.5.5"
+  },
+  "pnpm": {
+    "overrides": {
+      "@docusaurus/utils": "canary",
+      "mdast-util-to-hast": "Divine-Software/mdast-util-to-hast#0e709bd254f07bad424d74a1d98e727d1d7926e4"
+    }
   },
   "browserslist": {
     "production": [

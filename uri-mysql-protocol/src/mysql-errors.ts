@@ -1,4 +1,5 @@
 // From mysqld_error.h/mysqlx_error.h in the MySQL 8.0.26 server package
+/** @ignore */
 export const enum MySQLStatus {
     ER_NO                                                             = '1002',
     ER_YES                                                            = '1003',
@@ -5020,6 +5021,7 @@ export const enum MySQLStatus {
 }
 
 // From mysqld_error.h in the MariaDB 10.6.4 server package
+/** @ignore */
 export const enum MariaDBStatus {
     ER_HASHCHK                                                        = '1000',
     ER_NISAMCHK                                                       = '1001',

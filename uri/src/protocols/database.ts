@@ -926,7 +926,8 @@ export abstract class DatabaseURI extends URI {
     }
 
     /**
-     * Uses the *DB reference* in this URI's fragment to retrieve one or multiple rows or a single cell from a table.
+     * Uses the *DB reference* in this URI's fragment to retrieve one or multiple rows or a single cell from a table
+     * with `SELECT`.
      *
      * @template  T        The actual type returned.
      * @param     _recvCT  Must not be used.
@@ -959,7 +960,8 @@ export abstract class DatabaseURI extends URI {
     }
 
     /**
-     * Uses the *DB reference* in this URI's fragment to store one or multiple rows in a table using *upsert* semantics.
+     * Uses the *DB reference* in this URI's fragment to store one or multiple rows in a table using *upsert* semantics
+     * (using `INSERT ... ON CONFLICT UPDATE ...` or `UPSERT`, for instance, but this depends on the database).
      *
      * @template  T        The actual type returned.
      * @template  D        The type of data to store.
@@ -977,7 +979,7 @@ export abstract class DatabaseURI extends URI {
     }
 
     /**
-     * Uses the *DB reference* in this URI's fragment to add one or multiple rows in a table.
+     * Uses the *DB reference* in this URI's fragment to add one or multiple rows in a table using `INSERT`.
      *
      * @template  T        The actual type returned.
      * @template  D        The type of data to store.
@@ -995,7 +997,7 @@ export abstract class DatabaseURI extends URI {
     }
 
     /**
-     * Uses the *DB reference* in this URI's fragment to modify one or multiple rows in a table.
+     * Uses the *DB reference* in this URI's fragment to modify one or multiple rows in a table using `UPDATE`.
      *
      * @template  T        Object.
      * @template  D        The type of the update data.
@@ -1013,7 +1015,7 @@ export abstract class DatabaseURI extends URI {
     }
 
     /**
-     * Uses the *DB reference* in this URI's fragment to remove one or multiple rows from a table.
+     * Uses the *DB reference* in this URI's fragment to remove one or multiple rows from a table using `DELETE`.
      *
      * @template  T        Object.
      * @param     _recvCT  Must not be used.

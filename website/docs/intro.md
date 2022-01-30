@@ -1,47 +1,50 @@
 ---
+sidebar_label: Introduction
 sidebar_position: 1
 ---
 
-# Tutorial Intro
+# The Divine Web Service Framework
 
-Let's discover **Docusaurus in less than 5 minutes**.
+*Eons* ago, before *Node.js* even existed, the author of this framework desired a powerful, secure and easy to use
+platform for building web services. Out of that desire came *ESXX*, a Java-based web application server that
+incorporated *Rhino* to run multithreaded web services written in JavaScript, provided safe and easy to use interfaces
+to SQL databases, used JSON or *E4X* for view models and the *Saxon XSLT processor* to transform the documents/models
+into HTML for the clients.
 
-## Getting Started
+The *Divine Web Service Framework* is the spiritual successor of that project, taking everything that was good about it
+and reimagining it for the modern era.
 
-Get started by **creating a new site**.
+Gone is the server-side templating support—we write client side web applications now—and E4X is since long dead[^1], but
+the focus on web standards and correctness, developer friendly and secure, injection-safe [interfaces][DatabaseURI] to
+SQL databases, aversion to callbacks—thanks God for `async` and `await`— and the ubiquitous [URI] class are some of the
+good things that remain.
 
-Or **try Docusaurus immediately** with **[docusaurus.new](https://docusaurus.new)**.
+## Overview
 
-### What you'll need
+In one sense, the WSF is just a collection of Node.js modules that happens to have something to do with the web. But
+each module serves a purpose, and together they form a powerful framework for writing TypeScript web services.
 
-- [Node.js](https://nodejs.org/en/download/) version 14 or above:
-  - When installing Node.js, you are recommended to check all checkboxes related to dependencies.
+There are two main modules in WSF:
 
-## Generate a new site
+* [@divine/uri], call it the "client" API if you wish, handles everything I/O: accessing local and remote resources of
+  all kinds, parsing and serialializing data, encoding and decoding byte streams, handling authentication.
+* [@divine/web-service], the "server" API, is all about building world-class REST web APIs and RPC microservices, with
+  advanced features such as streaming, ETag and precondition handling, and content negotiation. *Caveat emptor: the
+  module does* **not yet** *have all those advanced features. But it will one day.*
 
-Generate a new Docusaurus site using the **classic template**.
+The main documentation of WSF is provided in the form of API documentation, so please go ahead and click those links
+above. In the following sections, we will instead focus on a few use cases and recepies for how to handle them.
 
-The classic template will automatically be added to your project after you run the command:
+[^1]: [E4X] might be dead, but the [@divine/x4e] module is worth checking out if you need to work with HTML or XML. It
+      it heavily inspired by E4X, but redesigned for modern TypeScript/JavaScript and [TSX]/[JSX].
 
-```bash
-npm init docusaurus@latest my-website classic
-```
+[DatabaseURI]:         api/classes/divine_uri.DatabaseURI.md
+[URI]:                 api/classes/divine_uri.URI.md
 
-You can type this command into Command Prompt, Powershell, Terminal, or any other integrated terminal of your code editor.
+[@divine/uri]:         api/modules/divine_uri.md
+[@divine/web-service]: api/modules/divine_web_service.md
+[@divine/x4e]:         api/modules/divine_x4e.md
 
-The command also installs all necessary dependencies you need to run Docusaurus.
-
-## Start your site
-
-Run the development server:
-
-```bash
-cd my-website
-npm run start
-```
-
-The `cd` command changes the directory you're working with. In order to work with your newly created Docusaurus site, you'll need to navigate the terminal there.
-
-The `npm run start` command builds your website locally and serves it through a development server, ready for you to view at http://localhost:3000/.
-
-Open `docs/intro.md` (this page) and edit some lines: the site **reloads automatically** and displays your changes.
+[E4X]:                 https://en.wikipedia.org/wiki/ECMAScript_for_XML
+[JSX]:                 https://reactjs.org/docs/introducing-jsx.html
+[TSX]:                 https://www.typescriptlang.org/docs/handbook/jsx.html

@@ -15,10 +15,6 @@ build-deps:	src/private/dbref.ts
 src/private/dbref.ts:	src/private/dbref.pegjs
 	pnpm exec tspegjs $<
 
-docs:	build
-	rm -rf ../docs/$(BASENAME)
-	pnpm exec typedoc --out ../docs/$(BASENAME) src/index.ts
-
 test:		build
 	pnpm exec jest
 
@@ -33,4 +29,4 @@ publish:	distclean build test
 	git tag -s $(BASENAME)-v$(VERSION) -m "$(NAME) v$(VERSION)"
 	pnpm publish --access public
 
-.PHONY:		all prepare build docs test clean distclean publish
+.PHONY:		all prepare build test clean distclean publish

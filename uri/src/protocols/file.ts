@@ -10,10 +10,22 @@ import { DirectoryEntry, IOError, Metadata, URI, VOID } from '../uri';
 
 const _chokidar = import('chokidar').catch(() => null);
 
+/** The event produced by [[FileURI.watch]]. */
 export interface FileWatchEvent {
-    type: 'add' | 'addDir' | 'change' | 'unlink' | 'unlinkDir';
+    /** The type of event. */
+    type: 'create' | 'update' | 'delete';
+
+    /** The file resource that changed */
     uri:  FileURI;
 }
+
+const fileWatchEventType = {
+    'add':       'create',
+    'addDir':    'create',
+    'change':    'update',
+    'unlink':    'delete',
+    'unlinkDir': 'delete',
+} as const;
 
 /**
  * The `file:` protocol handler is used to access files and directories on the local computer.
@@ -223,6 +235,14 @@ export class FileURI extends URI {
      * Each modification to the file or the filesystem below the directory will emit a [[FileWatchEvent]]. Use `for
      * await (...)` to read the events, propagate errors and to ensure the stream is closed correctly when you are done.
      *
+     * Example usage:
+     *
+     * ```ts
+     * for await (const event of FileURI.create('./src').watch()) {
+     *     console.log(event.type, await event.uri.info());
+     * }
+     * ```
+     *
      * @throws  IOError  On I/O errors.
      * @returns          A stream of change events.
      */
@@ -233,7 +253,7 @@ export class FileURI extends URI {
             atomic:        false,
             ignoreInitial: true,
         }).on('all', (type, path) => {
-            adapter.next({ type, uri: FileURI.create(path, this) });
+            adapter.next({ type: fileWatchEventType[type], uri: FileURI.create(path, this) });
         }).on('error', (err) => {
             adapter.throw(err)
         });

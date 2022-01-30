@@ -2,49 +2,106 @@ import useBaseUrl from '@docusaurus/useBaseUrl';
 import React from 'react';
 import clsx from 'clsx';
 import styles from './HomepageFeatures.module.css';
+import Link from '@docusaurus/Link';
 
 type FeatureItem = {
   title: string;
-  image: string;
+  image?: string;
+  href?: string;
   description: JSX.Element;
 };
 
 const FeatureList: FeatureItem[] = [
   {
-    title: 'Easy to Use',
-    image: '/img/undraw_docusaurus_mountain.svg',
+    title: 'Connect',
+    href: 'docs/connect/',
     description: (
       <>
-        Docusaurus was designed from the ground up to be easily installed and
-        used to get your website up and running quickly.
+        Out of the box, local files and web resources are supported, plus several database protocols.
+        Use the built-in <var>username/password</var> and <var>bearer token</var>&nbsp; authentication schemes,
+        or provide your own.
       </>
     ),
   },
   {
-    title: 'Focus on What Matters',
-    image: '/img/undraw_docusaurus_tree.svg',
+    title: 'Parse',
+    href: 'docs/parse/',
     description: (
       <>
-        Docusaurus lets you focus on your docs, and we&apos;ll do the chores. Go
-        ahead and move your docs into the <code>docs</code> directory.
+        Effortlessly read and write any common formats, including CSV, JSON, TOML, YAML, XML
+        and MIME multi-part messages.
       </>
     ),
   },
   {
-    title: 'Powered by React',
-    image: '/img/undraw_docusaurus_react.svg',
+    title: 'Query',
+    href: 'docs/query/',
     description: (
       <>
-        Extend or customize your website layout by reusing React. Docusaurus can
-        be extended while reusing the same header and footer.
+        With database drivers for H2/JDBC, MySQL/MariaDB, PostgreSQL/CockroachDB, SQLite and SQL Server,
+        persistence should not be a problem. Injection-safe queries, transactiton deadlock handling and
+        CRUD row operations for less pain and more gain.
+      </>
+    ),
+  },
+  {
+    title: 'Serve',
+    href: 'docs/serve/',
+    description: (
+      <>
+        Build advanced REST and streaming Web APIs with automatic content negotiation, ETag/precondition handling
+        (coming soon).
       </>
     ),
   },
 ];
 
-function Feature({title, image, description}: FeatureItem) {
+const ModuleList: FeatureItem[] = [
+  {
+    title: '@divine/headers',
+    href: 'docs/api/modules/divine_headers',
+    description: (
+      <>
+        Parse and generate common HTTP headers, such as authorization and content headers. This module also works in
+        the browser!
+      </>
+    ),
+  },
+  {
+    title: '@divine/uri',
+    href: 'docs/api/modules/divine_uri',
+    description: (
+      <>
+        Read, write, modify, query or watch anything that can be referenced by an URL or URI, including local files,
+        Web Services and SQL databases.
+      </>
+    ),
+  },
+  {
+    title: '@divine/web-service',
+    href: 'docs/api/modules/divine_web_service',
+    description: (
+      <>
+        A framework for building REST and RPC Web Services, with support for event streams.
+      </>
+    ),
+  },
+  {
+    title: '@divine/x4e',
+    href: 'docs/api/modules/divine_x4e',
+    description: (
+      <>
+        A powerful, E4X-like approach to HTML and XML documents, using JSX/TSX or tagged template literals.
+      </>
+    ),
+  },
+];
+
+function Feature({title, image, href, description}: FeatureItem) {
   return (
-    <div className={clsx('col col--4')}>
+    <div className={clsx('col col--3', 'position--relative')}>
+      { !!href && <Link href={href} className="div-link"></Link> }
+      { !!image &&
       <div className="text--center">
         <img
           className={styles.featureSvg}
@@ -52,6 +109,7 @@ function Feature({title, image, description}: FeatureItem) {
           src={useBaseUrl(image)}
         />
       </div>
+      }
       <div className="text--center padding-horiz--md">
         <h3>{title}</h3>
         <p>{description}</p>
@@ -66,6 +124,12 @@ export default function HomepageFeatures(): JSX.Element {
       <div className="container">
         <div className="row">
           {FeatureList.map((props, idx) => (
+            <Feature key={idx} {...props} />
+          ))}
+        </div>
+        <hr></hr>
+        <div className="row">
+          {ModuleList.map((props, idx) => (
             <Feature key={idx} {...props} />
           ))}
         </div>

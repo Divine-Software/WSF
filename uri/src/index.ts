@@ -1,3 +1,9 @@
+/**
+ * The [[URI]] module includes [[DBDriver]] and [[Parser]].
+ *
+ * @module
+ */
+
 export * from './auth-schemes';
 export * from './auth-schemes/basic';
 export * from './auth-schemes/bearer';

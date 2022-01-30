@@ -234,11 +234,9 @@ export class DBReference {
         return q.join(',', this.keys?.map((c) => this._quote(c)) ?? [])
     }
 
-    protected _getColumns(defaultColumns?: string[]): DBQuery {
-        const columns = this.columns ?? defaultColumns;
-
-        return columns
-            ? q.join(',', columns.map((c) => this._quote(c)))
+    protected _getColumns(): DBQuery {
+        return this.columns
+            ? q.join(',', this.columns.map((c) => this._quote(c)))
             : q`*`;
     }
 
@@ -371,10 +369,11 @@ ${this._getLockClause()} \
     }
 
     private _checkSaveAndAppendArguments(value: unknown): [ scope: DBReference.Scope, columns: string[], objects: Params[] ] {
-        const scope = this.scope ?? (Array.isArray(value) ? 'all' : 'one');
         let objects: object[];
 
-        if (scope === 'scalar') {
+        this.scope ??= (Array.isArray(value) ? 'all' : 'one');
+
+        if (this.scope === 'scalar') {
             if (this.columns?.length !== 1) {
                 throw this._makeIOError(`One and only one column must be specified when scope 'scalar' is used`);
             }
@@ -382,7 +381,7 @@ ${this._getLockClause()} \
                 objects = [{ [this.columns[0]]: value }];
             }
         }
-        else if (scope === 'one') {
+        else if (this.scope === 'one') {
             if (Array.isArray(value) || typeof value !== 'object' || value === null) {
                 throw this._makeIOError(`Argument must be a object when scope is 'one'`);
             }
@@ -390,7 +389,7 @@ ${this._getLockClause()} \
                 objects = [ value ];
             }
         }
-        else if (scope === 'all') {
+        else if (this.scope === 'all') {
             if (!Array.isArray(value)) {
                 throw this._makeIOError(`Argument must be an array when scope is 'all'`);
             }
@@ -399,7 +398,7 @@ ${this._getLockClause()} \
             }
         }
         else {
-            throw this._makeIOError(`Unsupported scope '${scope}`);
+            throw this._makeIOError(`Unsupported scope '${this.scope}`);
         }
 
         if (objects.length === 0) {
@@ -409,9 +408,9 @@ ${this._getLockClause()} \
             throw this._makeIOError(`No filter may be specified for this query`);
         }
 
-        const columns = this.columns ?? [...new Set(objects.map(Object.keys).flat())];
+        this.columns ??= [...new Set(objects.map(Object.keys).flat())];
 
-        return [ scope, columns, objects as Params[] ];
+        return [ this.scope, this.columns, objects as Params[] ];
     }
 
     getAppendQuery(value: unknown): DBQuery {
@@ -421,10 +420,11 @@ ${this._getLockClause()} \
     }
 
     protected _checkModifyArguments(value: unknown): [ scope: DBReference.Scope, columns: string[], object: Params ] {
-        const scope = this.scope ?? 'one';
         let object: object;
 
-        if (scope === 'scalar') {
+        this.scope ??= 'one';
+
+        if (this.scope === 'scalar') {
             if (this.columns?.length !== 1) {
                 throw this._makeIOError(`One and only one column must be specified when scope 'scalar' is used`);
             }
@@ -432,7 +432,7 @@ ${this._getLockClause()} \
                 object = { [this.columns[0]]: value };
             }
         }
-        else if (scope === 'one') {
+        else if (this.scope === 'one') {
             if (Array.isArray(value) || typeof value !== 'object' || value === null) {
                 throw this._makeIOError(`Argument must be a object when scope is 'one'`);
             }
@@ -441,7 +441,7 @@ ${this._getLockClause()} \
             }
         }
         else {
-            throw this._makeIOError(`Unsupported scope '${scope}`);
+            throw this._makeIOError(`Unsupported scope '${this.scope}`);
         }
 
         if (this.keys) {
@@ -454,9 +454,9 @@ ${this._getLockClause()} \
             throw this._makeIOError('A filter is required to this query');
         }
 
-        const columns = this.columns ?? Object.keys(object);
+        this.columns ??= Object.keys(object);
 
-        return [ scope, columns, object as Params ];
+        return [ this.scope, this.columns, object as Params ];
     }
 
     getModifyQuery(value: unknown): DBQuery {
@@ -467,13 +467,13 @@ ${this._getLockClause()} \
 
     checkRemoveArguments(): void {
         if (this.keys) {
-            throw this._makeIOError(`No primary keys may me be specified for this query`);
+            throw this._makeIOError(`No primary keys may be specified for this query`);
         }
         else if (this.columns) {
             throw this._makeIOError(`No columns may be specified for this query`);
         }
-        else if (this.scope && this.scope !== 'all') {
-            throw this._makeIOError(`Scope must be 'all' for this query`);
+        else if (this.scope) {
+            throw this._makeIOError(`No scope may be specified for this query`);
         }
         else if (Object.keys(this.params).length) {
             throw this._makeIOError(`No parameters may be specified for this query`);

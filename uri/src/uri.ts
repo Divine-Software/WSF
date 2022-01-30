@@ -190,18 +190,7 @@ export class URI extends URL implements AsyncIterable<Buffer> {
     private static _protocols = new Map<string, typeof URI>();
 
     /**
-     * All selectors that may apply to this URI.
-     *
-     * Selectors is a way to specify in what situations some kind of parameters or configuration is valid. When some
-     * kind of configuration is required (such as authentication of connection parameters), all registered selectors are
-     * evaluated and based on the matching score, the best selector is chosen. The more specific a selector is, the
-     * higher the score it will receive if it matches.
-     *
-     * Based on this, it's possible to limit the scope of credentials or to configure certain HTTP headers to be sent to
-     * a specific set of servers.
-     *
-     * It's also perfectly valid *not* to specify a selector for some kind of parameters. As long as there is only one
-     * kind of this configuration, it will apply unconditionally.
+     * All selectors that may apply to this URI. Use [[addSelector]] to modify this property.
      */
     selectors: {
         /** Authentication/Credentials selectors. See [[AuthSelector]]. */
@@ -303,6 +292,17 @@ export class URI extends URL implements AsyncIterable<Buffer> {
     /**
      * Adds a new selector to this URI.
      *
+     * Selectors is a way to specify in what situations some kind of parameters or configuration is valid. When some
+     * kind of configuration is required (such as authentication of connection parameters), all registered selectors are
+     * evaluated and based on the matching score, the best selector is chosen. The more specific a selector is, the
+     * higher the score it will receive if it matches.
+     *
+     * Based on this, it's possible to limit the scope of credentials or to configure certain HTTP headers to be sent to
+     * a specific set of servers.
+     *
+     * It's also perfectly valid *not* to specify a selector for some kind of parameters. As long as there is only one
+     * kind of this configuration, it will apply unconditionally.
+     *
      * @param  selector   The selector to add.
      * @throws TypeError  If the selector to add is invalid.
      * @returns           This URI.
@@ -340,7 +340,7 @@ export class URI extends URL implements AsyncIterable<Buffer> {
     /**
      * This method will return information about the resource this URI references, if the subclass supports it.
      *
-     * The actual operation depends on what kind of URI this is. See [[FileURI.info]] or [HTTPURI.info] for two common
+     * The actual operation depends on what kind of URI this is. See [[FileURI.info]] or [[HTTPURI.info]] for two common
      * examples.
      *
      * @template T        The actual type of information record returned. Must extend [[DirectoryEntry]].
@@ -438,7 +438,8 @@ export class URI extends URL implements AsyncIterable<Buffer> {
     /**
      * Modifies/patches data the resource this URI references, if the subclass supports it.
      *
-     * The actual operation depends on what kind of URI this is. See [[HTTPURI.modify]] for a common example.
+     * The actual operation depends on what kind of URI this is. See [[HTTPURI.modify]] or [[DatabaseURI.modify]] for
+     * two common examples.
      *
      * See [[Parser.parse]] for details about the returned *object* (never a primitive). You may always set `recvCT` to
      * [[ContentType.bytes]] to receive a Node.js `Buffer` and [[ContentType.stream]] for an `AsyncIterable<Buffer>`

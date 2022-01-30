@@ -1,4 +1,3 @@
-export * from '@divine/x4e';
 export * from './html-parser';
 export * from './xml-parser';
 

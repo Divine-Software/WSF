@@ -3,19 +3,134 @@
 
 const lightCodeTheme = require('prism-react-renderer/themes/github');
 const darkCodeTheme = require('prism-react-renderer/themes/dracula');
+const yaml = require('yaml');
+const { readFileSync } = require('fs');
 
 /** @type {import('@docusaurus/types').Config} */
 const config = {
-  title: 'My Site',
-  tagline: 'Dinosaurs are cool',
-  url: 'https://your-docusaurus-test-site.com',
-  baseUrl: '/',
+  title: 'The Divine Web Service Framework',
+  tagline: 'A divine collection of awesome web-related Node.js modules',
+  url: 'https://divine-software.github.io/',
+  baseUrl: '/esxx-2/',
   onBrokenLinks: 'throw',
-  onBrokenMarkdownLinks: 'warn',
-  favicon: 'img/favicon.ico',
-  organizationName: 'facebook', // Usually your GitHub org/user name.
-  projectName: 'docusaurus', // Usually your repo name.
-
+  onBrokenMarkdownLinks: 'throw',
+  favicon: 'img/favicon.png',
+  organizationName: 'Divine-Software',
+  projectName: 'esxx-2',
+  themeConfig:
+    /** @type {import('@docusaurus/preset-classic').ThemeConfig} */
+    ({
+      navbar: {
+        title: 'Divine WSF',
+        logo: {
+          alt: 'The Divine Web Service Framework',
+          src: 'img/logo.png',
+        },
+        items: [
+          {
+            to: 'blog/',
+            label: 'News',
+            position: 'left'},
+          {
+            type: 'doc',
+            docId: 'intro',
+            position: 'left',
+            label: 'Documentation',
+          },
+          {
+            href: 'https://github.com/Divine-Software/esxx-2',
+            label: 'Fork me on GitHub!',
+            position: 'right',
+          },
+        ],
+        hideOnScroll: false,
+      },
+      hideableSidebar: true,
+      footer: {
+        style: 'dark',
+        links: [
+          {
+            title: 'More Divine Software™',
+            items: [
+              {
+                label: 'Ghostly',
+                href: 'https://divine-software.github.io/ghostly/',
+              },
+              {
+                label: 'Synchronization Library',
+                to: 'https://github.com/Divine-Software/divine-synchronization',
+              },
+              {
+                label: 'Syslog Console',
+                href: 'https://github.com/Divine-Software/sysconsole',
+              },
+            ],
+          },
+          {
+            title: 'Projects we ❤️',
+            items: [
+              {
+                label: 'CockroachDB',
+                href: 'https://www.cockroachlabs.com/',
+              },
+              {
+                label: 'Knative',
+                href: 'https://knative.dev/',
+              },
+              /*{
+                label: 'TypeDoc',
+                href: 'https://typedoc.org/',
+              },*/
+              {
+                label: 'TypeScript',
+                href: 'https://www.typescriptlang.org//',
+              },
+            ],
+          },
+          {
+            title: 'Get in touch',
+            items: [
+              {
+                label: 'Ask a question',
+                href: 'https://github.com/Divine-Software/esxx-2/discussions'
+              },
+              {
+                label: 'Contribute code or docs',
+                href: 'https://github.com/Divine-Software/esxx-2/pulls'
+              },
+              {
+                label: 'Report an issue',
+                href: 'https://github.com/Divine-Software/esxx-2/issues'
+              },
+            ]
+          },
+        ],
+        copyright: `Copyright © 2007-${new Date().getFullYear()} Martin Blom. A Divine Software™ production.`,
+      },
+      prism: {
+        theme: lightCodeTheme,
+        darkTheme: darkCodeTheme,
+      },
+    }),
+  plugins: [
+    [
+      'docusaurus-plugin-typedoc', {
+        entryPointStrategy: "packages",
+        entryPoints: yaml.parse(readFileSync('../pnpm-workspace.yaml').toString()).packages.map((pkg) => `../${pkg}`),
+        excludePrivate: true,
+        excludeInternal: true,
+        tsconfig: '../tsconfig.json',
+        watch: typeof process !== 'undefined' && process.env.TYPEDOC_WATCH === 'true',
+        readme: 'none',
+        sidebar: {
+          categoryLabel: 'Framework APIs',
+          fullNames: false,
+          position: 10,
+          sidebarFile: null,
+        },
+      },
+    ],
+  ],
   presets: [
     [
       'classic',
@@ -23,14 +138,12 @@ const config = {
       ({
         docs: {
           sidebarPath: require.resolve('./sidebars.js'),
-          // Please change this to your repo.
-          editUrl: 'https://github.com/facebook/docusaurus/tree/main/packages/create-docusaurus/templates/shared/',
+          editUrl: 'https://github.com/Divine-Software/esxx-2/tree/master/website/',
         },
         blog: {
           showReadingTime: true,
-          // Please change this to your repo.
           editUrl:
-            'https://github.com/facebook/docusaurus/tree/main/packages/create-docusaurus/templates/shared/',
+            'https://github.com/Divine-Software/esxx-2/tree/master/website/',
         },
         theme: {
           customCss: require.resolve('./src/css/custom.css'),
@@ -38,81 +151,6 @@ const config = {
       }),
     ],
   ],
-
-  themeConfig:
-    /** @type {import('@docusaurus/preset-classic').ThemeConfig} */
-    ({
-      navbar: {
-        title: 'My Site',
-        logo: {
-          alt: 'My Site Logo',
-          src: 'img/logo.svg',
-        },
-        items: [
-          {
-            type: 'doc',
-            docId: 'intro',
-            position: 'left',
-            label: 'Tutorial',
-          },
-          {to: '/blog', label: 'Blog', position: 'left'},
-          {
-            href: 'https://github.com/facebook/docusaurus',
-            label: 'GitHub',
-            position: 'right',
-          },
-        ],
-      },
-      footer: {
-        style: 'dark',
-        links: [
-          {
-            title: 'Docs',
-            items: [
-              {
-                label: 'Tutorial',
-                to: '/docs/intro',
-              },
-            ],
-          },
-          {
-            title: 'Community',
-            items: [
-              {
-                label: 'Stack Overflow',
-                href: 'https://stackoverflow.com/questions/tagged/docusaurus',
-              },
-              {
-                label: 'Discord',
-                href: 'https://discordapp.com/invite/docusaurus',
-              },
-              {
-                label: 'Twitter',
-                href: 'https://twitter.com/docusaurus',
-              },
-            ],
-          },
-          {
-            title: 'More',
-            items: [
-              {
-                label: 'Blog',
-                to: '/blog',
-              },
-              {
-                label: 'GitHub',
-                href: 'https://github.com/facebook/docusaurus',
-              },
-            ],
-          },
-        ],
-        copyright: `Copyright © ${new Date().getFullYear()} My Project, Inc. Built with Docusaurus.`,
-      },
-      prism: {
-        theme: lightCodeTheme,
-        darkTheme: darkCodeTheme,
-      },
-    }),
 };
 
 module.exports = config;
