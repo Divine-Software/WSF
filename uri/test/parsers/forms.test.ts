@@ -101,12 +101,22 @@ SGVsbG8gLW4K
 --${boundary}--
 epilogue`.replace(/\n/g, '\r\n');
 
+const formdata =`\r
+-----------------------------361616418439485539163961981474\r
+content-disposition: form-data; name="Filen"; filename="Bia.md"\r
+content-type: text/markdown\r
+\r
+# H1
+\r
+-----------------------------361616418439485539163961981474--\r
+`;
+
 describe('the MultiPartParser class', () => {
-    const ct = `multipart/foobar; boundary=${boundary}`;
 
     it('decodes & re-encodes multipart data', async () => {
         expect.assertions(6);
 
+        const ct = `multipart/foobar; boundary=${boundary}`;
         const decoded = await Parser.parse<MultiPartData>(multipart, ct);
         expect(decoded[FIELDS]![0].headers).toStrictEqual({});
         expect(decoded[FIELDS]![0].value).toBe(`Headerless text`);
@@ -118,6 +128,20 @@ describe('the MultiPartParser class', () => {
 
         const [ encoded2 ] = await Parser.serializeToBuffer(decoded[FIELDS], ct);
         expect(encoded2.toString()).toBe(encoded1.toString());
+    });
+
+    it('handles multipart/form-data messages from streams', async () => {
+        expect.assertions(2);
+
+        const ct  = 'multipart/form-data; boundary=---------------------------361616418439485539163961981474';
+        const uri = CacheURI.create(ct);
+        await uri.save(formdata);
+
+        const decoded = await uri.load<MultiPartData>();
+        expect(decoded['Filen']).toBeInstanceOf(CacheURI);
+
+        const [ encoded ] = await Parser.serializeToBuffer(decoded, ct);
+        expect(encoded.toString()).toBe(formdata.toString());
     });
 });
 
