@@ -1,8 +1,8 @@
-import { copyStream, StringParams } from '@divine/commons';
+import { StringParams } from '@divine/commons';
 import { ContentDisposition, ContentType } from '@divine/headers';
 import { randomBytes } from 'crypto';
 import Dicer from 'dicer';
-import { PassThrough, Readable } from 'stream';
+import { Readable } from 'stream';
 import { URLSearchParams } from 'url';
 import { Encoder } from '../encoders';
 import { Parser, StringParser } from '../parsers';
@@ -188,7 +188,14 @@ export class MultiPartParser extends Parser {
 
         const isParsableType = (type: ContentType) => type.baseType === 'multipart' || type.baseType === 'message' || type.type === 'text/plain';
 
-        await copyStream(Readable.from(stream), new Dicer({ boundary })
+        // Cannot use copyStream/pipeline because Dicer might not emit 'end'
+        await new Promise<void>((resolve, reject) => Readable.from(stream).pipe(new Dicer({ boundary })
+            .on('error', (err) => {
+                reject(err);
+            })
+            .on('finish', () => {
+                resolve();
+            })
             .on('part', (part) => {
                 let partFailed = true;
 
@@ -232,9 +239,8 @@ export class MultiPartParser extends Parser {
                         values.push(Promise.reject(new Error(`Missing headers`)));
                     }
                 })
-                .pipe(new PassThrough());
             })
-        );
+        ));
 
         const result: MultiPartData = {
             [FIELDS]:   await Promise.all(values),
