@@ -21,11 +21,11 @@ export function xmlListNS(defaultNamespace: string): XMLListLiteral {
 }
 
 export function html(strings: TemplateStringsArray, ...values: unknown[]): XML<Element> {
-    return XML(parseHTMLFromString(strings[0] + values.map((value, i) => escapeHTMLAttribute(String(value)) + strings[i + 1])).documentElement);
+    return XML(parseHTMLFromString(strings[0] + values.map((value, i) => escapeHTMLAttribute(String(value)) + strings[i + 1]).join('')).documentElement);
 }
 
 export function htmlList<TNode extends Node = Node>(strings: TemplateStringsArray, ...values: unknown[]): XMLList<TNode> {
-    return XML(parseHTMLFragmentFromString(strings[0] + values.map((value, i) => escapeHTMLAttribute(String(value)) + strings[i + 1]))).$children() as XMLList<TNode>;
+    return XML(parseHTMLFragmentFromString(strings[0] + values.map((value, i) => escapeHTMLAttribute(String(value)) + strings[i + 1]).join(''))).$children() as XMLList<TNode>;
 }
 
 export const xml       = xmlNS(NS_DEFAULT);

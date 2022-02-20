@@ -1,4 +1,4 @@
-import { BasicTypes, isAsyncIterable, isDOMNode, isJSON, toAsyncIterable } from '@divine/commons';
+import { BasicTypes, isAsyncIterable, isXML, isHTML, isJSON, toAsyncIterable } from '@divine/commons';
 import { ContentType } from '@divine/headers';
 import iconv from 'iconv-lite';
 import { Finalizable, IOError, NULL, VOID } from './uri';
@@ -133,7 +133,8 @@ export abstract class Parser {
                 data instanceof Buffer        ? ContentType.bytes :
                 isAsyncIterable(data)         ? ContentType.bytes :
                 isJSON(data) || data === null ? ContentType.json :
-                isDOMNode(data)               ? ContentType.xml :
+                isHTML(data)                  ? ContentType.html :
+                isXML(data)                   ? ContentType.xml :
                 ContentType.text);
 
             // 1. Pass Buffer and ReadableStream right through, ignoring `contentType`; URIs will be load()'ed and passed as-is

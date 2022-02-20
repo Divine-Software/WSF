@@ -13,7 +13,7 @@ export class HTMLParser extends Parser {
     serialize(data: Node | XML<Node>): Buffer {
         this._assertSerializebleData(isDOMNode(data) || data instanceof XML, data);
 
-        return new StringParser(this.contentType).serialize(isDOMNode(data) ? serializeHTMLToString(data) : data.$toXMLString());
+        return new StringParser(this.contentType).serialize(serializeHTMLToString(isDOMNode(data) ? data : data.$domNode()));
     }
 }
 
