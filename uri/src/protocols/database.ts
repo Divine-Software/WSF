@@ -146,7 +146,7 @@ q.list = function(list: (BasicTypes | undefined)[]): DBQuery {
  * *values* list (or lists), or both, depending on the `parts` argument. Examples:
  *
  * ```ts
- * // Insert columns nane, language, country
+ * // Insert columns name, language, country
  * const entry = { name: 'Martin', language: 'sv', country: 'se' };
  * const query = q`insert into locale ${q.values(entry)}`;
  * ```
@@ -160,7 +160,7 @@ q.list = function(list: (BasicTypes | undefined)[]): DBQuery {
  * @param data    The object or objects to insert. The key represents the column name and the value is the column value.
  * @param columns Specifies what keys (columns) to fetch from the data objects. Defaults to all keys from all objects.
  * @param parts   What part of the statement to generate. Use `columns` to only generate a list of column names,
- *                `values` for a list of value tuples or `expr`, the default` for the complete subexpression.
+ *                `values` for a list of value tuples or `expr`, the default, for the complete subexpression.
  * @param quote   The quote function to use when escaping the column names. Defaults to [[q.quote]].
  * @returns       A DBQuery suitable to be used in an SQL `INSERT` statement.
  */
@@ -248,7 +248,7 @@ export interface DBTransactionParams { // NOTE: Don't forget to update isDatabas
 
     /**
      * The backoff function to use when calculating the time to wait between retries. Default is
-     * [[DBConnectionPool.defaultBackoff]] (exponential backoff—100 ms, 200 ms, 400 ms etc—with random jitter).
+     * [[DBConnectionPool.defaultBackoff]] (exponential backoff — 100 ms, 200 ms, 400 ms etc — with random jitter).
      */
     backoff?: (count: number) => number;
 
@@ -858,10 +858,11 @@ function withDBMetadata<T extends object>(meta: DBMetadata, value: object): T & 
  *
  * ```ts
  * const orderID = await db.query(async () => {
- *   const order = await db.$`orders`.append({ user_id: userID, date: new Date() });
- *   await db.$`order_lines`.append(lines.map((line) => ({ ...line, order_id: order.rowKey }));
+ *   const order = await db.$`orders`.append<Order>({ user_id: userID, date: new Date() });
+ *   const orderID = order.order_id ?? order[FIELDS][0].rowKey; // Not all drivers support `RETURNING *`
+ *   await db.$`order_lines`.append(lines.map((line) => ({ ...line, order_id: orderID }));
  *
- *   return order.rowKey;
+ *   return orderID;
  * });
  * ```
  *
@@ -1061,7 +1062,7 @@ export abstract class DatabaseURI extends URI {
      * @throws   TypeError  If one of the parameters is `undefined` or if the arguments are invalid.
      * @throws   IOError    On I/O errors.
      * @throws   DBError    On database/query errors.
-     * @returns             An array of rows. The raw set is available as a [[DBResult]] array—of length 1—via
+     * @returns             An array of rows. The raw set is available as a [[DBResult]] array — of length 1 — via
      *                      [[FIELDS]] (from the DBMetadata).
      */
     override query<T extends object = object[]>(query: TemplateStringsArray, ...params: (BasicTypes)[]): Promise<T & DBMetadata>;
@@ -1086,7 +1087,7 @@ export abstract class DatabaseURI extends URI {
      * @throws   TypeError  If one of the parameters is `undefined` or if the arguments are invalid.
      * @throws   IOError    On I/O errors.
      * @throws   DBError    On database/query errors.
-     * @returns             An array of rows. The raw set is available as a [[DBResult]] array—of length 1—via
+     * @returns             An array of rows. The raw set is available as a [[DBResult]] array — of length 1 — via
      *                      [[FIELDS]] (from the DBMetadata).
      */
     override query<T extends object = object[]>(query: string, params: Params): Promise<T & DBMetadata>;

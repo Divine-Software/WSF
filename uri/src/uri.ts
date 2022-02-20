@@ -116,7 +116,8 @@ export class IOError extends URIError {
  * transport/transfer encoding and any authentication protocol.
  *
  * The URI class naturally handles all kinds of URLs, like [[FileURI | `file:`]] and [[HTTPURI | `http:`]], but also
- * some—perhaps no so obvious—non-URL URIs like [[DatabaseURI | database connections]] for many common SQL databases.
+ * some — perhaps no so obvious — non-URL URIs like [[DatabaseURI | database connections]] for many common SQL
+ * databases.
  *
  * Below is a list of all known URI/protocol handlers:
  *

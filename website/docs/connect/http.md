@@ -27,7 +27,6 @@ Example:
 import { URI } from '@divine/uri';
 import { XML } from '@divine/x4e';
 import { SEP01, Product } from '...';
-
 import '@divine/uri-x4e-parser'; // Activate optional XML & HTML parsers
 
 const sep01 = await new URI('https://www.stellar.org/.well-known/stellar.toml').load<SEP01>(); // Parse TOML

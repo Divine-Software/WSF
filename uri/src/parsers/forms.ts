@@ -102,7 +102,7 @@ export class FormParser extends Parser {
 /**
  * The `message/*` parser handles all kinds of messages, including `message/rfc822`.
  *
- * The parsed data is a [[MimeMessage]], but the serializer cna handle any [[MimeMessageLike]] object.
+ * The parsed data is a [[MimeMessage]], but the serializer can handle any [[MimeMessageLike]] object.
  */
 export class MessageParser extends Parser {
     async parse(stream: AsyncIterable<Buffer>): Promise<MimeMessage> {
@@ -199,18 +199,18 @@ export class MultiPartParser extends Parser {
             .on('part', (part) => {
                 let partFailed = true;
 
-                const stream = part.on('header', (_headers: DicerHeaders) => {
+                const stream = part.on('header', (rawHeaders: DicerHeaders) => {
                     partFailed = false;
 
                     // eslint-disable-next-line no-async-promise-executor
                     values.push(new Promise(async (resolve, reject) => {
                         try {
-                            const headers: StringParams = Object.fromEntries(Object.entries(_headers).map(([k, v]) => [k, v?.join(', ')]));
-                            const type             = ContentType.create(headers['content-type'], MultiPartParser.defaultContentType);
-                            const disposition      = headers['content-disposition'] && new ContentDisposition(headers['content-disposition']) || undefined;
-                            const name             = disposition?.param('name');
-                            const parse            = disposition?.type === 'form-data' && disposition?.filename === undefined ||
-                                                     disposition?.type !== 'form-data' && isParsableType(type);
+                            const headers     = Object.fromEntries(Object.entries(rawHeaders).map(([k, v]) => [k, v?.join(', ')]));
+                            const type        = ContentType.create(headers['content-type'], MultiPartParser.defaultContentType);
+                            const disposition = headers['content-disposition'] && new ContentDisposition(headers['content-disposition']) || undefined;
+                            const name        = disposition?.param('name');
+                            const parse       = disposition?.type === 'form-data' && disposition?.filename === undefined ||
+                                                disposition?.type !== 'form-data' && isParsableType(type);
                             let value: string | URI | MultiPartData;
                             const data: AsyncIterable<Buffer> = Encoder.decode(stream, headers['content-transfer-encoding'] ?? []);
 

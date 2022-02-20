@@ -51,7 +51,7 @@ await new URI('file.conf').save(config, 'application/yaml');
 
 ## Watching Files
 
-Open and iterate a filesytem event stream using [watch], like this:
+Open and iterate a filesystem event stream using [watch], like this:
 
 ```ts
 import { URI } from '@divine/uri';

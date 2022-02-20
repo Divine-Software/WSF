@@ -98,7 +98,7 @@ export class WebServer {
      * until the server is stopped in that case.
      *
      * @param startOptions Start-up options.
-     * @returns this WebServer.
+     * @returns This WebServer.
      */
     async start(startOptions?: StartOptions): Promise<this> {
         const options: Required<StartOptions> = {
@@ -128,7 +128,7 @@ export class WebServer {
     /**
      * Stops the WebServer and returns when the server is fully stopped.
      *
-     * @returns this WebServer.
+     * @returns This WebServer.
      */
     async stop(): Promise<this> {
         await new Promise((resolve, reject) => {
@@ -144,7 +144,7 @@ export class WebServer {
      * This method waits for [[stop]] to be called, either manually or indirectly by one of the signals that was
      * registered during the [[start]] method.
      *
-     * @returns this WebServer.
+     * @returns This WebServer.
      */
     async wait(): Promise<this> {
         if (this.server.address() !== null) {

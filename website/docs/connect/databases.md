@@ -4,9 +4,9 @@ sidebar_position: 3
 
 # Databases
 
-As a database connection is also commonly defined by an URL or URI, you might expect that there is some kind of support
-for databases in some kind of [URI subclass][DatabaseURI] as well. And you wouldn't be wrong: The [query] method can be
-used to execute arbitrary queries to SQL databases; you can read more about this in the section about [queries].
+Since database connections are also commonly defined by an URL or URI, you might expect that there is some kind of
+support for databases in one of the [URI subclasses][DatabaseURI] as well. And you wouldn't be wrong: The [query] method
+can be used to execute arbitrary queries to SQL databases; you can read more about this in the section about [queries].
 
 What you might not expect is that most of the other methods of [URI] also work on database URIs. But what does really it
 mean to [load], [save] or [remove] a database? Probably not what you think at first.
@@ -14,8 +14,8 @@ mean to [load], [save] or [remove] a database? Probably not what you think at fi
 ## DB References
 
 Truth to be told, this author is a bit old-school when it comes to databases; I don't mind writing SQL queries and I'm
-not really an [ORM] kind of person[^1]. On the other hand, especially when building REST services, writing lots of trivial SQL
-queries just to access database rows can quickly become a bit repetitive.
+not really an [ORM] kind of person[^1]. On the other hand, especially when building REST services, writing lots of
+trivial SQL queries just to access database rows can quickly become a bit repetitive.
 
 That's why the WSF provides something we call [DB references], a small expression language that lives in the URI's
 *fragment* part and which defines, in a compact manner, what table, rows and columns a specific URI references.
@@ -23,7 +23,7 @@ That's why the WSF provides something we call [DB references], a small expressio
 So the answer to the question above is not some kind of database backup and restore handling, but rather direct access
 to table rows inside the database. Let's show some quick examples.
 
-## Reading rows
+## Reading Rows
 
 Assuming you have a `users` table with `id` as primary key, here is how to retrieve it using [load], given an `userID`
 identifier:
@@ -47,7 +47,7 @@ from the database, as a `String`[^2].
 const name = await dbURI.$`#users(name);scalar?(eq,id,${userID})`.load<String>();
 ```
 
-## Writing rows
+## Writing Rows
 
 To insert a row into a table, use [append]. Depending on what database you use, a generated key is either available
 directly (if `INSERT ... RETURNING *` is supported), or via [DBResult.rowKey]:
@@ -82,7 +82,9 @@ await dbURI.$`#users(eq,id,${userID})`.remove();
 
 [watch] allows you to subscribe to a live event feed from the database, which can be very useful for real-time services.
 This is currently only implemented for PostgreSQL and CockroachDB, but at least MySQL should be able to support this as
-well some day. Quick examples:
+well some day.
+
+Here are a couple of small examples:
 
 ```ts
 for await (const ev of dbURI.watch`experimental changefeed FOR orders`) {
@@ -108,9 +110,9 @@ for await (const ev of dbURI.watch`listen order_channel`) {
 [URI]:             ../api/classes/divine_uri.URI.md
 [queries]:         ../query/query.md
 
-[Metadata]:        ../api/interfaces/divine_uri.Metadata
-[DBMetadata]:      ../api/interfaces/divine_uri.DBMetadata
-[DBResult.rowKey]: ../api/classes/divine_uri.DBResult#rowkey
+[Metadata]:        ../api/interfaces/divine_uri.Metadata.md
+[DBMetadata]:      ../api/interfaces/divine_uri.DBMetadata.md
+[DBResult.rowKey]: ../api/classes/divine_uri.DBResult.md#rowkey
 [DatabaseURI]:     ../api/classes/divine_uri.DatabaseURI.md
 [DB references]:   ../api/classes/divine_uri.DatabaseURI.md#crud-row-operations-with-db-references
 [load]:            ../api/classes/divine_uri.DatabaseURI.md#load

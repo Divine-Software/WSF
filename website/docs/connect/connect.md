@@ -18,7 +18,7 @@ The following operations are defined for [URI]s:
 * [append]: Like `save`, but appends the data to the resource instead of replacing it.
 * [modify]: Applies some kind of protocol-specific modification; for HTTP, this maps to a `PATCH` request.
 * [remove]: Removes the resource.
-* [query]: Issues a protocol-specific query to the resource and retuns the response. Commonly used to query SQL databases.
+* [query]: Issues a protocol-specific query to the resource and returns the response. Commonly used to query SQL databases.
 * [watch]: Starts listening for changes from the resource and generates a stream of change events. Can be used to watch
   the local filesystem, but also to read a *change data feed* from a database.
 

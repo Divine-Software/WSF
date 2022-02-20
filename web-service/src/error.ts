@@ -3,7 +3,7 @@ import { WebResponse, WebResponseHeaders } from './response';
 /**
  * An Error subclass representing an HTTP response.
  *
- * In addition to the error message, an [[WebStatus | HTTP status code]] and—optionally—one or more custom response
+ * In addition to the error message, an [[WebStatus | HTTP status code]] and — optionally — one or more custom response
  * headers can be associated with the error.
  *
  * When caught by a [[WebService]], an HTTP response will be constructed from it by invoking its [[toWebResponse]]

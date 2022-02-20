@@ -6,7 +6,7 @@ sidebar_position: 1
 
 The most basic type of parsers are the byte and text parsers. There are two kind of byte parsers, one that collects all
 bytes in a byte stream into a [Buffer], and one that just passes each chunk through as they arrive[^1]. The text parser
-interprets the byte stream according to some character encoding and convers to JavaScript strings.
+interprets the byte stream according to some character encoding and converts to JavaScript strings.
 
 Format      | Main Media Type                         | Parser
 ------------|-----------------------------------------|--------------------

@@ -28,7 +28,7 @@ const FeatureList: FeatureItem[] = [
     href: 'docs/parse/',
     description: (
       <>
-        Effortlessly read and write any common formats, including CSV, JSON, TOML, YAML, XML
+        Effortlessly read and write any common formats, including CSV, HTML, JSON, TOML, YAML, XML
         and MIME multi-part messages.
       </>
     ),
