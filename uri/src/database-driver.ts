@@ -43,6 +43,7 @@ export abstract class DBConnectionPool {
 
     protected _params: DBParams;
 
+    private _connectionReaper: NodeJS.Timeout;
     private _connectionCount = 0;
     private _usedConnections: Set<DBConnection> = new Set();
     private _idleConnections: IdleConnection[] = [];
@@ -50,7 +51,7 @@ export abstract class DBConnectionPool {
 
     constructor(protected _dbURI: DatabaseURI, params: DBParamsSelector) {
         this._params = params.params;
-        setInterval(() => this._checkIdleConnections(), this._params.keepalive ?? DBConnectionPool.defaultKeepalive).unref();
+        this._connectionReaper = setInterval(() => this._checkIdleConnections(), this._params.keepalive ?? DBConnectionPool.defaultKeepalive).unref();
     }
 
     protected abstract _createDBConnection(): DBConnection | Promise<DBConnection>;
@@ -89,8 +90,9 @@ export abstract class DBConnectionPool {
     }
 
     async close(): Promise<void> {
-        // Close all connections (including in-use connections, if any)
+        clearInterval(this._connectionReaper);
 
+        // Close all connections (including in-use connections, if any)
         const connections = [...this._idleConnections.map((ic) => ic.conn), ...this._usedConnections];
         await Promise.all(connections.map((c) => this._closeConnection(c, false)));
     }
