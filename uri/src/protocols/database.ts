@@ -259,7 +259,7 @@ export interface DBTransactionParams { // NOTE: Don't forget to update isDatabas
     options?: DBQuery;
 }
 
-/** Like [[Metadata]], except that `[FIELD]` is always present as well and is an array of [[DBResult]]. */
+/** Like [[Metadata]], except that [[FIELDS]] is always present as well and is an array of [[DBResult]]. */
 export interface DBMetadata extends Metadata, Required<WithFields<DBResult>> {
 }
 

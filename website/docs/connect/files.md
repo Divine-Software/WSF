@@ -17,8 +17,8 @@ use [FileURI.create]. If you really need to create URIs for non-native paths, th
 
 ## Reading Files and Directories
 
-To read and parse a file, just [load][FileURI.load] it, optionally overriding the media type to invoke a non-default
-parser; to list objects in a directory, [list][FileURI.list] it.
+To read and parse a file, just [load] it, optionally overriding the media type to invoke a non-default parser; to list
+objects in a directory, [list] it.
 
 ```ts
 import { FileURI, URI } from '@divine/uri';
@@ -67,7 +67,9 @@ Note that in order to watch files, the optional peer dependency [chokidar] must 
 [encodeFilePath]:   ../api/modules/divine_uri.md#encodefilepath
 
 [FileURI.create]:   ../api/classes/divine_uri.FileURI.md#create
-[FileURI.list]:     ../api/classes/divine_uri.FileURI.md#list
-[FileURI.load]:     ../api/classes/divine_uri.FileURI.md#load
+[list]:             ../api/classes/divine_uri.FileURI.md#list
+[load]:             ../api/classes/divine_uri.FileURI.md#load
+[save]:             ../api/classes/divine_uri.FileURI.md#save
+[watch]:            ../api/classes/divine_uri.FileURI.md#watch
 
 [chokidar]:         https://www.npmjs.com/package/chokidar
