@@ -11,12 +11,12 @@ const config = {
   title: 'The Divine Web Service Framework',
   tagline: 'A divine collection of awesome web-related Node.js modules',
   url: 'https://divine-software.github.io/',
-  baseUrl: '/esxx-2/',
+  baseUrl: '/WSF/',
   onBrokenLinks: 'throw',
   onBrokenMarkdownLinks: 'throw',
   favicon: 'img/favicon.png',
   organizationName: 'Divine-Software',
-  projectName: 'esxx-2',
+  projectName: 'WSF',
   themeConfig:
     /** @type {import('@docusaurus/preset-classic').ThemeConfig} */
     ({
@@ -38,7 +38,7 @@ const config = {
             label: 'Documentation',
           },
           {
-            href: 'https://github.com/Divine-Software/esxx-2',
+            href: 'https://github.com/Divine-Software/WSF',
             label: 'Fork me on GitHub!',
             position: 'right',
           },
@@ -92,15 +92,15 @@ const config = {
             items: [
               {
                 label: 'Ask a question',
-                href: 'https://github.com/Divine-Software/esxx-2/discussions'
+                href: 'https://github.com/Divine-Software/WSF/discussions'
               },
               {
                 label: 'Contribute code or docs',
-                href: 'https://github.com/Divine-Software/esxx-2/pulls'
+                href: 'https://github.com/Divine-Software/WSF/pulls'
               },
               {
                 label: 'Report an issue',
-                href: 'https://github.com/Divine-Software/esxx-2/issues'
+                href: 'https://github.com/Divine-Software/WSF/issues'
               },
             ]
           },
@@ -138,12 +138,12 @@ const config = {
       ({
         docs: {
           sidebarPath: require.resolve('./sidebars.js'),
-          editUrl: 'https://github.com/Divine-Software/esxx-2/tree/master/website/',
+          editUrl: 'https://github.com/Divine-Software/WSF/tree/master/website/',
         },
         blog: {
           showReadingTime: true,
           editUrl:
-            'https://github.com/Divine-Software/esxx-2/tree/master/website/',
+            'https://github.com/Divine-Software/WSF/tree/master/website/',
         },
         theme: {
           customCss: require.resolve('./src/css/custom.css'),
