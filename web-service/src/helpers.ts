@@ -10,12 +10,26 @@ function asSet(array: string | string[] | undefined): Set<string> {
     return new Set(typeof array === 'string' ? array.split(/\s*,\s*/) : array ?? []);
 }
 
+/** Request parameters provided to the protected configuration methods in the [[CORSFilter]] helper class. */
 export interface CORSFilterParams {
+    /** The request arguments. */
     args:     WebArguments;
+
+    /** The potentially CORS-protected resource that was accessed. */
     resource: WebResource;
+
+    /** The response that the potentially CORS-protected [[WebResource]] produced. */
     response: WebResponse;
 }
 
+/**
+ * A CORS-handling [[WebFilter]] helper class.
+ *
+ * The implementation is configured/customized by overriding the filter's protected methods: [[_isOriginAllowed]],
+ * [[_isMethodAllowed]], [[_isHeaderAllowed]], [[_isHeaderExposed]], [[_isCredentialsSupported]] and [[_getMaxAge]].
+ *
+ * By default, all origins, methods and headers are allowed for 10 minutes. Credentials are *not* allowed by default.
+ */
 export abstract class CORSFilter implements WebFilter {
     protected static readonly _excluded = new Set(['cache-control', 'content-language', 'content-type', 'expires', 'last-modified', 'pragma']);
 
@@ -30,7 +44,7 @@ export abstract class CORSFilter implements WebFilter {
 
             if (method !== undefined && args.request.method === 'OPTIONS') { // Preflight
                 const methods = asSet(response.headers.allow).add(method);
-                const headers = args.string('@access-control-request-headers', '').split(/\s*,\s*/);
+                const headers = args.string('@access-control-request-headers', '').toLowerCase().split(/\s*,\s*/);
 
                 response
                     .setHeader('access-control-allow-methods',  [...methods].filter((h) => this._isMethodAllowed(h, params)).join(', '))
@@ -52,62 +66,113 @@ export abstract class CORSFilter implements WebFilter {
     }
 
     /**
-     * Check if the given `origin` is allowed to make a CORS request.
+     * Checks if the given `origin` is allowed to make a CORS request.
      *
      * The CORS specification recommends a server to return [[WebStatus.FORBIDDEN]] if a CORS request is denied. You can
      * do that by throwing a [[WebError]] instead of returning `false`, like this:
      *
      * ```ts
      * protected isOriginAllowed(origin: string | undefined, params: CORSFilterParams): boolean {
-     *     if (origin === 'https://example.com) {
+     *     if (origin === 'https://example.com') {
      *         return true;
-     *     }
-     *     else {
+     *     } else {
      *         throw new WebError(WebStatus.FORBIDDEN, `CORS request from origin ${origin} denied`);
      *     }
      * }
      * ```
      *
      * @param origin The value of the origin header, or undefined if the header was not provided.
-     * @param params Request params.
-     *
+     * @param params Request parameters.
      * @returns `true` if the request is allowed, else `false`.
      */
     protected _isOriginAllowed(origin: string | undefined, params: CORSFilterParams): boolean {
         return origin !== undefined;
     }
 
+    /**
+     * Checks if the given request method should be allowed.
+     *
+     * @param method Name of method.
+     * @param params Request parameters.
+     * @returns `true` if the method is allowed, else `false`.
+     */
     protected _isMethodAllowed(method: string, params: CORSFilterParams): boolean {
         return true;
     }
 
+    /**
+     * Checks if the given request header should be allowed.
+     *
+     * @param method Name of header.
+     * @param params Request parameters.
+     * @returns `true` if the header is allowed, else `false`.
+     */
     protected _isHeaderAllowed(header: string, params: CORSFilterParams): boolean {
         return true;
     }
 
+    /**
+     * Checks if the given response header should be exposed to the client.
+     *
+     * @param method Name of header.
+     * @param params Request parameters.
+     * @returns `true` if the header is exposed, else `false`.
+     */
     protected _isHeaderExposed(header: string, params: CORSFilterParams): boolean {
         return !CORSFilter._excluded.has(header);
     }
 
+    /**
+     * Checks if credentials should be allowed.
+     *
+     * @param params Request parameters.
+     * @returns `true` if credentials should be allowed, else `false`.
+     */
     protected _isCredentialsSupported(params: CORSFilterParams): boolean {
         return false;
     }
 
+    /**
+     * Returns the number of seconds the information provided by the `access-control-allow-methods` and
+     * `access-control-allow-headers` headers can be cached.
+     *
+     * The default for this implementation is 600 seconss or 10 minutes. Note that the default value in the CORS
+     * specification, i.e. if no `access-control-max-age` is sent to the client, is just 5 seconds.
+     *
+     * @param params Request parameters.
+     * @returns The number of seconds the client may cache the information.
+     */
     protected _getMaxAge(params: CORSFilterParams): number {
         return 600;
     }
 }
 
+/** A symbol in [[EventAttributes]] representing the event's `id` field */
 export const EVENT_ID    = Symbol('EVENT_ID');
+
+/** A symbol in [[EventAttributes]] representing the event's `event` field */
 export const EVENT_TYPE  = Symbol('EVENT_TYPE');
+
+/** A symbol in [[EventAttributes]] representing the event's `retry` field */
 export const EVENT_RETRY = Symbol('EVENT_RETRY');
 
+/** Metadata to be transmitted along with a single event by the [[EventStreamResponse]] helper class. */
 export interface EventAttributes {
+    /** Used to update the client's last event ID value. */
     [EVENT_ID]?:    string;
+
+    /** A string identifying the type of event described. */
     [EVENT_TYPE]?:  string;
+
+    /** The reconnection time. If the connection to the server is lost, the browser will wait for the specified time before attempting to reconnect. */
     [EVENT_RETRY]?: number;
 }
 
+/**
+ * Server-Sent Events (SSE) [[WebResponse]] serializer/helper class.
+ *
+ * @template T The type of events to transmit.
+ */
 export class EventStreamResponse<T extends object> extends WebResponse {
     private static async *_eventStream(source: AsyncIterable<object & EventAttributes | undefined | null>, dataType?: ContentType | string, keepaliveTimeout?: number): AsyncGenerator<EventStreamEvent | undefined> {
         const serialize = async (event: object): Promise<string> => {
@@ -145,6 +210,22 @@ export class EventStreamResponse<T extends object> extends WebResponse {
         }
     }
 
+    /**
+     * Converts an `AsyncIterable` into a *Server-Sent Event* response stream.
+     *
+     * Each object yielded by the `source` generator will be serialized and converted to an SSE event. Symbols from the
+     * [[EventAttributes]] interface may be added to transmit event metadata. `null` or `undefined` values will result
+     * in a comment event. If no value is emitted for `keepaliveTimeout` milliseconds, a comment line will be sent
+     * automatically, in order to signal to the client that the server is still alive and the connection is open.
+     *
+     * Exceptions from the generator will be serialized and sent as events of type `error`.
+     *
+     * @template T             The type of events to transmit.
+     * @param source           The `AsyncIterable` which yields events to transmit.
+     * @param dataType         The format of the individual events. Default is JSON.
+     * @param headers          Custom response headers to send.
+     * @param keepaliveTimeout How often, in milliseconds, to automatically send comments/keep-alive lines.
+     */
     constructor(source: AsyncIterable<T & EventAttributes | undefined | null>, dataType?: ContentType | string, headers?: WebResponseHeaders, keepaliveTimeout?: number) {
         super(WebStatus.OK, EventStreamResponse._eventStream(source, dataType, keepaliveTimeout), {
             'content-type':      'text/event-stream',

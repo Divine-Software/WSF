@@ -4,8 +4,8 @@
   "description": "Adds support for XML and HTML documents to @divine/uri",
   "author": "Martin Blom <martin@blom.org>",
   "license": "Apache-2.0",
-  "repository": "https://github.com/LeviticusMB/esxx-2.git",
-  "bugs": "https://github.com/LeviticusMB/esxx-2/issues",
+  "repository": "https://github.com/Divine-Software/WSF.git",
+  "bugs": "https://github.com/Divine-Software/WSF/issues",
   "main": "build/src/index.js",
   "types": "build/src/index.d.ts",
   "files": [
@@ -21,14 +21,15 @@
     "collectCoverage": true
   },
   "peerDependencies": {
-    "@divine/uri": "workspace:~0.4.0"
+    "@divine/uri": "workspace:~0.4.1",
+    "@divine/x4e": "workspace:~0.4.1"
   },
   "dependencies": {
-    "@divine/x4e": "workspace:~0.4.1",
     "tslib": "^2.3.1"
   },
   "devDependencies": {
     "@divine/uri": "workspace:~0.4.1",
+    "@divine/x4e": "workspace:~0.4.1",
     "@types/node": "^12.20.39",
     "@types/xmldom": "~0.1.31"
   },

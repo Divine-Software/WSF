@@ -7,16 +7,52 @@ import { WebRequest } from './request';
 import { WebArguments, WebErrorHandler, WebFilterCtor, WebResource, WebResourceCtor } from './resource';
 import { WebResponse, WebResponses } from './response';
 
+/** The WebService configuration properties. */
 export interface WebServiceConfig {
+    /** Where logs should be sent. Default is the global `console` object. */
     console?:              Console;
+
+    /**
+     * The name of the property holding the error message when a [[WebError]] is converted to a structued
+     * [[WebResponse]]. Default is `message`.
+     *
+     * When an error is caught, it can be converted a JSON object with a single property holding the error message, and
+     * the `errorMessageProperty` configuration specifies the name of that property.
+     *
+     * ```json
+     * { "message": "No resource matches the path /foobar" }
+     * ```
+     */
     errorMessageProperty?: string;
+
+    /** Specifies whether request IDs should be logged autmatically. Default is `true`. */
     logRequestID?:         boolean;
+
+    /**
+     * Specifies the default maximum payload size [[WebRequest.body]] should accept, unless an explicit limit is
+     * proveded in the call. Default is 1,000,000 bytes.
+     */
     maxContentLength?:     number;
+
+    /** If not `null`, the request ID will be automatically be returned in this HTTP response header. Default is `null`. */
     returnRequestID?:      string | null;
+
+    /** If `true`, incoming `x-forwarded-for` will be trusted and parsed. Default is `false`. */
     trustForwardedFor?:    boolean;
+
+    /** If `true`, incoming `x-forwarded-host` will be trusted and parsed. Default is `false`. */
     trustForwardedHost?:   boolean;
+
+    /** If `true`, incoming `x-forwarded-proto` will be trusted and parsed. Default is `false`. */
     trustForwardedProto?:  boolean;
+
+    /** If `true`, incoming `x-http-method-override` will be trusted and parsed. Default is `false`. */
     trustMethodOverride?:  boolean;
+
+    /**
+     * If not `null`, the HTTP request header containing the request ID. Default is `null`, which means a new request ID
+     * will be generated for each incoming request.
+     */
     trustRequestID?:       string | null;
 }
 
@@ -54,8 +90,52 @@ function regExpParams(match: RegExpExecArray, offset: number, count: number, pre
 
     return params;
 }
-
+/**
+ * A WebService is a collection of registered [[WebResource | resources]], [[WebFilter | filters]] and an optional
+ * [[WebErrorHandler | error handler]] that forms the web application.
+ *
+ * ## Concepts
+ *
+ * ### Context
+ *
+ * When a WebService is created, it can be associated with a custom object called the WebService *context*. This context
+ * is passed to the resources and filters as they are constructed and can provide configuration and/or services to the
+ * web application.
+ *
+ * ### Resources
+ *
+ * A [[WebResource]] is responsible for handling a specific location. It responds to one or more HTTP verbs and produces
+ * a [[WebResponse]] once finished. A new instance of the resource class is constructed for each incoming request,
+ * ensuring that no state is leaked between requests.
+ *
+ * Only a single resource will ever match an incoming request.
+ *
+ * ### Filters
+ *
+ * Filters are used to modify the behavior of a set of resources. They can be used to handle CORS requests,
+ * authentication and authorization, throttling etc. Just like resources, a new instance of the filter will always be
+ * constructed for each incoming request.
+ *
+ * Multiple filters may match an incoming request. They will be processed in the same order as they were added via
+ * [[addFilter]] or [[addFilters]].
+ *
+ * ### Error handler
+ *
+ * The error handler acts like a global `catch` block and can be used to produce non-generic error responses in case
+ * something is not right.
+ *
+ * @template Context The type of the `context` property.
+ */
 export class WebService<Context> {
+    /**
+     * Utilitiy method to calculate an `Allow` header based on an [[WebResource]].
+     *
+     * This method checks what methods are implemented on the provided object and generates a comma-separated list of
+     * allowed HTTP methods.
+     *
+     * @param rsrc The resource to produce an `Allow` header for.
+     * @returns    A comma-separated list of allowed HTTP methods.
+     */
     public static makeAllowHeader(rsrc?: WebResource): string {
         const methods: string[] = [];
 
@@ -76,7 +156,8 @@ export class WebService<Context> {
         return methods.sort().join(', ');
     }
 
-    public webServiceConfig: Required<WebServiceConfig>;
+    /** The actual [[WebServiceConfig]] used by this service. */
+    public readonly webServiceConfig: Required<WebServiceConfig>;
 
     private _mountPoint = '/';
     private _errorHandler?: WebErrorHandler<Context>;
@@ -84,6 +165,11 @@ export class WebService<Context> {
     private _resources: Array<ResourceDescriptor<Context>> = [];
     private _resourcePattern?: RegExp;
 
+    /**
+     *
+     * @param context The web service's *context*, which will provided to filter and resource constructors.
+     * @param config  The web service configuration.
+     */
     constructor(public context: Context, config?: WebServiceConfig) {
         this.webServiceConfig = {
             console:              console,
@@ -100,11 +186,18 @@ export class WebService<Context> {
         };
     }
 
+    /** The mount point where this service is mounted. Usually just '/'. */
     get webServiceMountPoint(): string {
         return this._mountPoint;
     }
 
-    mount(mountPoint: string): this {
+    /**
+     * Called by [[WebServer.mount]] when this WebService is mounted (attached to a WebServer).
+     *
+     * @param mountPoint The prefix path where this WebService should be mounted.
+     * @returns This WebService.
+     */
+    protected _mount(mountPoint: string): this {
         if (!mountPoint.startsWith('/') || !mountPoint.endsWith('/')) {
             throw new TypeError(`Mount-point must both start and end with a slash; '${mountPoint}' does not`);
         }
@@ -115,19 +208,41 @@ export class WebService<Context> {
         return this;
     }
 
-    unmount(): this {
+    /**
+     * Called by Called by [[WebServer.unmount]] when this WebService is unmounted.
+     *
+     * @returns This WebService.
+     */
+    protected _unmount(): this {
         this._mountPoint = '/';
         this._resourcePattern = undefined;
 
         return this;
     }
 
+    /**
+     * Installs a service-wide error handler.
+     *
+     * Whenever a resource of filter throws an exception, the error handler is invoked to handle the error. The error
+     * handler can either return a [[WebResponse]] or (re-)throw.
+     *
+     * @param errorHandler The error handler to install, or `undefined` to restore the default behaviour.
+     * @returns THis WebService.
+     */
     setErrorHandler(errorHandler: WebErrorHandler<Context> | undefined): this {
         this._errorHandler = errorHandler;
 
         return this;
     }
 
+    /**
+     * Registers a single [[WebFilter | filter]].
+     *
+     * The filter's [[WebFilterCtor.path | path]] property defines what locations the filter is applicable to.
+     *
+     * @param filter A filter class to register.
+     * @returns This WebService.
+     */
     addFilter(filter: WebFilterCtor<Context>): this {
         this._validatePath('WebFilter', filter.path.source);
 
@@ -137,6 +252,14 @@ export class WebService<Context> {
         return this;
     }
 
+    /**
+     * Registers multiple [[WebFilter | filters]].
+     *
+     * The filters' [[WebFilterCtor.path | path]] properties defines what locations each filter is applicable to.
+     *
+     * @param filters A sequence of filter classes to register.
+     * @returns This WebService.
+     */
     addFilters(filters: Iterable<WebFilterCtor<Context>>): this {
         for (const filter of filters) {
             this.addFilter(filter);
@@ -145,6 +268,14 @@ export class WebService<Context> {
         return this;
     }
 
+    /**
+     * Registers a single [[WebResource | resource]].
+     *
+     * The resource's [[WebResourceCtor.path | path]] property defines what locations the resource is applicable to.
+     *
+     * @param resource A resouece class to register.
+     * @returns This WebService.
+     */
     addResource(resource: WebResourceCtor<Context>): this {
         const offset  = this._resources.length ? this._resources.length + this._resources[this._resources.length - 1].groups : 1;
         const source  = resource.path.source;
@@ -160,6 +291,14 @@ export class WebService<Context> {
         return this;
     }
 
+    /**
+     * Registers multiple [[WebResource | resources]].
+     *
+     * The resources' [[WebResourceCtor.path | path]] properties defines what locations each resource is applicable to.
+     *
+     * @param filters A sequence of resource classes to register.
+     * @returns This WebService.
+     */
     addResources(resources: Iterable<WebResourceCtor<Context>>): this {
         for (const resource of resources) {
             this.addResource(resource);
@@ -168,6 +307,15 @@ export class WebService<Context> {
         return this;
     }
 
+    /**
+     * Returns a Node.jss HTTP request handler as specified by
+     * [createServer](https://nodejs.org/api/http.html#httpcreateserveroptions-requestlistener).
+     *
+     * The request handler will construct a [[WebRequest]] and then invoke [[dispatchRequest]]. The response will then
+     * be serialized and sent to the client.
+     *
+     * @returns A Node.js HTTP request handler for this WebService.
+     */
     requestEventHandler(): (req: IncomingMessage, res: ServerResponse) => Promise<void> {
         return async (req: IncomingMessage, res: ServerResponse) => {
             try {
@@ -217,6 +365,15 @@ export class WebService<Context> {
         };
     }
 
+    /**
+     * Dispatches a request to the intended [[WebResource | resource]] and also applies all matching [[WebFilter |
+     * filters]].
+     *
+     * Errors will also be handled, so this method does not normally throw.
+     *
+     * @param webreq The HTTP request to handle.
+     * @returns An HTTP response to be sent to the client.
+     */
     async dispatchRequest(webreq: WebRequest): Promise<WebResponse> {
         try {
             // Compile merged pattern

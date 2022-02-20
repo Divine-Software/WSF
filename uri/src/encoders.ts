@@ -3,15 +3,55 @@ import { Transform } from 'stream';
 import { createBrotliCompress, createBrotliDecompress, createDeflate, createGunzip, createGzip, createInflate } from 'zlib';
 import { IOError } from './uri';
 
+/** An IOError subclass thrown by the [[Encoder]] class. */
 export class EncoderError extends IOError {
 }
 
+/**
+ * The base class for all encoder subclasses. Encoders can be constructed manually, but usually aren't. Instead, this
+ * class provides the static methods [[Encoder.encode]] and [[Encoder.decode]].
+ *
+ * Encoders transform byte streams and are used, among other things, to handle the `content-encoding`,
+ * `content-transfer-encoding` and `transfer-encoding` headers in MIME and HTTP.
+ *
+ * Below is a list of all known encoders:
+ *
+ * Encoding           | Encoder class
+ * -------------------|---------------------------
+ * `7bit`             | [[IdentityEncoder]]
+ * `8bit`             | [[IdentityEncoder]]
+ * `base64`           | [[Base64Encoder]]
+ * `base64url`        | [[Base64Encoder]]
+ * `binary`           | [[IdentityEncoder]]
+ * `br`               | [[ZlibEncoder]]
+ * `deflate`          | [[ZlibEncoder]]
+ * `gzip`             | [[ZlibEncoder]]
+ * `identity`         | [[IdentityEncoder]]
+ * `quoted-printable` | [[QuotedPrintableEncoder]]
+ * `x-gzip`           | [[ZlibEncoder]]
+ */
 export abstract class Encoder {
-    static register(type: string, encoder: typeof Encoder): typeof Encoder {
+    /**
+     * Registers a new encoder. All subclasses must register their encoding type support with this method.
+     *
+     * @param type    The encoding format the encoder can handle.
+     * @param encoder The Encoder subclass to register.
+     * @returns       The Encoder base class (for method chaining).
+     */
+     static register(type: string, encoder: typeof Encoder): typeof Encoder {
         Encoder._encoders.set(type, encoder);
         return Encoder;
     }
 
+    /**
+     * Encodes the provided stream using one or more encoders.
+     *
+     * @param  stream        The data to encode. If a string, it will first converted to UTF-8.
+     * @param  types         An encoding format or an ordered list of encoding formats to apply to the stream. A list
+     *                       may either be a comma-separated string or an array of strings.
+     * @throws EncoderError  On encoding errors or if the encoding format is not recognized.
+     * @returns              An encoded byte stream.
+     */
     static encode(stream: string | Buffer | AsyncIterable<Buffer>, types: string | string[]): AsyncIterable<Buffer> {
         stream = isAsyncIterable(stream) ? stream : toAsyncIterable(stream);
         types  = typeof types === 'string' ? types.trim().split(/\s*,\s*/) : types;
@@ -28,7 +68,16 @@ export abstract class Encoder {
         }
     }
 
-    static decode(stream: string | Buffer | AsyncIterable<Buffer>, types: string | string[]): AsyncIterable<Buffer> {
+    /**
+     * Decodes the provided stream using one or more encoders.
+     *
+     * @param  stream        The data to encode. If a string, it will first converted to UTF-8.
+     * @param  types         An encoding format or an ordered list of encoding formats to apply (in reverse!) to the
+     *                       stream.  A list may either be a comma-separated string or an array of strings.
+     * @throws EncoderError  On decoding errors or if the encoding format is not recognized.
+     * @returns              An encoded byte stream.
+     */
+     static decode(stream: string | Buffer | AsyncIterable<Buffer>, types: string | string[]): AsyncIterable<Buffer> {
         stream = isAsyncIterable(stream) ? stream : toAsyncIterable(stream);
         types  = typeof types === 'string' ? types.trim().split(/\s*,\s*/) : types;
 
@@ -57,14 +106,41 @@ export abstract class Encoder {
         }
     }
 
-    constructor(readonly type: string) {
+    /**
+     * Constructs a new Encoder instance.
+     *
+     * @param type The encoding format this encoder object was instanciated for.
+     */
+    protected constructor(readonly type: string) {
         this.type = this.type.toLowerCase();
     }
 
+    /**
+     * Encodes the provided byte stream into an new byte stream.
+     *
+     * This method must be implemented by the actual subclass.
+     *
+     * @param  stream        The stream to encode.
+     * @throws EncoderError  On encoding errors.
+     * @returns              The encoded stream.
+     */
     abstract encode(stream: AsyncIterable<Buffer>): AsyncIterable<Buffer>;
-    abstract decode(stream: AsyncIterable<Buffer>): AsyncIterable<Buffer>;
+
+    /**
+     * Decodes the provided byte stream into an new byte stream.
+     *
+     * This method must be implemented by the actual subclass.
+     *
+     * @param  stream        The stream to decode.
+     * @throws EncoderError  On decoding errors.
+     * @returns              The decoded stream.
+     */
+     abstract decode(stream: AsyncIterable<Buffer>): AsyncIterable<Buffer>;
 }
 
+/**
+ * The `7bit`, `8bit`, `binary` and `identity` encoder just passes the provided byte stream through as-is.
+ */
 export class IdentityEncoder extends Encoder {
     async *encode(stream: AsyncIterable<Buffer>): AsyncIterable<Buffer> {
         yield *stream;
@@ -75,7 +151,11 @@ export class IdentityEncoder extends Encoder {
     }
 }
 
-export class QuotedPrintableEncoder extends Encoder { // See <https://tools.ietf.org/html/rfc2045#section-6.7>
+/**
+ * The `quoted-printable` encoder applies or removes the
+ * [Quoted-Printable](https://tools.ietf.org/html/rfc2045#section-6.7) encoding to the provided byte stream.
+ */
+export class QuotedPrintableEncoder extends Encoder {
     private static readonly _hexEncoded = [...Array(256)].map((_, i) => '=' + (0x100 + i).toString(16).substr(1).toUpperCase());
     private _lineLength = 76;
 
@@ -145,7 +225,11 @@ export class QuotedPrintableEncoder extends Encoder { // See <https://tools.ietf
     }
 }
 
-export class Base64Encoder extends Encoder {
+/**
+ * The `base64` and `base64url` encoder applies or removes the [Base64](https://datatracker.ietf.org/doc/html/rfc4648)
+ * encodings to the provided byte stream. When encoding, lines will never be wider than 64 characters.
+ */
+ export class Base64Encoder extends Encoder {
     private _lineLength = 64; /* Be both PEM- and MIME-compatible */
     private _lineEnding = '\r\n';
 
@@ -208,6 +292,10 @@ export class Base64Encoder extends Encoder {
     }
 }
 
+/**
+ * The `br`, `gzip`, `x-gzip` and `deflate` encoder applies or removes various zlib-related encodings to the provided
+ * byte stream.
+ */
 export class ZlibEncoder extends Encoder {
     encode(stream: AsyncIterable<Buffer>): AsyncIterable<Buffer> {
         switch (this.type) {

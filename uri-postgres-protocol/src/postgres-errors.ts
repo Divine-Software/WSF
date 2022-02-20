@@ -1,4 +1,5 @@
 // From <https://www.postgresql.org/docs/13/errcodes-appendix.html>
+/** @ignore */
 export const enum PostgresSQLState {
     SUCCESSFUL_COMPLETION                                             = '00000',
     WARNING                                                           = '01000',

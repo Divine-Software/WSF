@@ -9,84 +9,245 @@ export { AuthSelector, HeadersSelector, ParamsSelector, Selector } from './selec
 
 const urlObject  = (url as any).Url;
 
+/** This symbol, wrapped in an `Object`, represents a `null` value. */
 export const NULL        = Symbol('NULL');
+
+/** This symbol, wrapped in an `Object`, represents an `undefined` value. */
 export const VOID        = Symbol('VOID');
 
+/** Used in [[WithFields]] to attach field metadata to an object. */
 export const FIELDS      = Symbol('FIELDS');
+
+/** Used in [[Finalizable]] to attach a finializer function to an object. */
 export const FINALIZE    = Symbol('FINALIZE');
 
+/** Used in [[Metadata]] to attach response headers to an object. */
 export const HEADERS     = Symbol('HEADERS');
+
+/** Used in [[Metadata]] to attach a response status code to an object. */
 export const STATUS      = Symbol('STATUS');
+
+/** Used in [[Metadata]] to attach a response status message to an object. */
 export const STATUS_TEXT = Symbol('STATUS_TEXT');
 
+/** Defines how a finalizer function is attached to an object. */
 export interface Finalizable {
+    /** A finalizer function, used to clean up temporary resources. */
     [FINALIZE]?: () => Promise<unknown>;
 }
 
+/**
+ * Defines how field metadata is attached to an object.
+ *
+ * @template T The field type.
+ */
 export interface WithFields<T extends BasicTypes> {
+    /** Defines how field information is attached to an object. */
     [FIELDS]?: T[];
 }
 
+/** Defines how response/result metadata is attached to an object. */
 export interface Metadata {
+    /** The response status. Example: the HTTP status or a Node.js `errno` value. */
     [STATUS]?:      number;
+
+    /** The response status message. Example: the HTTP status text or a Node.js `code` value. */
     [STATUS_TEXT]?: string;
+
+    /** Additional metadata as key-value pairs. Example: HTTP response headers. */
     [HEADERS]?:     StringParams;
 }
 
+/** Filesystem metadata, returned by [[URI.info]] and [[URI.list]]. */
 export interface DirectoryEntry {
+    /** The URI this entry describes. */
     uri:      URI;
+
+    /** The name of the entry. */
     name:     string;
+
+    /** The MIME type of the entry. */
     type:     ContentType;
+
+    /** The entry length, in bytes. */
     length?:  number;
+
+    /** When the entry was created. */
     created?: Date;
+
+    /** When the entry was last modified. */
     updated?: Date;
 }
 
+/**
+ * A general I/O error exception. Base class for all exceptions in this module.
+ */
 export class IOError extends URIError {
+    /** The Error that caused this exception to be thrown. */
     public cause?: Error;
 
+    /**
+     * Constructs a new IOError exception.
+     *
+     * @param message  The error message.
+     * @param cause    If this error was caused by another exception, pass it here to link it.
+     * @param data     Custom, per-exception information associated with the exception.
+     */
     constructor(message: string, cause?: Error | unknown, public data?: object & Metadata) {
         super(cause instanceof Error ? `${message}: ${cause.message}` : message);
         this.cause = cause instanceof Error ? cause : cause !== undefined ? new Error(String(cause)) : undefined;
     }
 
+    /** Converts this IOError to a string. */
     override toString(): string {
         return `${this.constructor.name}: ${this.message}`
     }
 }
 
-export class URI extends URL {
+/**
+ * The mother of all URI classes.
+ *
+ * Literally: This is the base class for all URI subclasses, which are the classes that actually implement a specific
+ * URI protocol.
+ *
+ * Figuratively: This class defines a basic API that operates on any resource that can be described by or referenced
+ * with an URI. It integrates pluggable [[Parser | parsers and serializers]], [[Encoder | encoders and decoders]] and
+ * [[AuthScheme | authentication methods]] to load, save, modify, delete any resource in any format, using any
+ * transport/transfer encoding and any authentication protocol.
+ *
+ * The URI class naturally handles all kinds of URLs, like [[FileURI | `file:`]] and [[HTTPURI | `http:`]], but also
+ * some — perhaps no so obvious — non-URL URIs like [[DatabaseURI | database connections]] for many common SQL
+ * databases.
+ *
+ * Below is a list of all known URI/protocol handlers:
+ *
+ * URI scheme/protocol | URI class
+ * --------------------|---------------
+ * `cache:`            | [[CacheURI]]
+ * `file:`             | [[FileURI]]
+ * `http:`             | [[HTTPURI]]
+ * `https:`            | [[HTTPURI]]
+ * `jdbc:`             | [[JDBCURI]]
+ * `mariadb:`          | [[MySQLURI]]
+ * `mysql:`            | [[MySQLURI]]
+ * `pg:`               | [[PostgresURI]]
+ * `postgres:`         | [[PostgresURI]]
+ * `postgresql:`       | [[PostgresURI]]
+ * `sqlite:`           | [[SQLiteURI]]
+ * `sqlserver:`        | [[TDSURI]]
+ * `tds:`              | [[TDSURI]]
+ */
+export class URI extends URL implements AsyncIterable<Buffer> {
+    /** An alias for [[VOID]]. */
     static readonly VOID        = VOID;
+
+    /** An alias for [[NULL]]. */
     static readonly NULL        = NULL;
+
+    /** An alias for [[FIELDS]]. */
     static readonly FIELDS      = FIELDS;
+
+    /** An alias for [[FIELDS]]. */
     static readonly FINALIZE    = FINALIZE;
+
+    /** An alias for [[HEADERS]]. */
     static readonly HEADERS     = HEADERS;
+
+    /** An alias for [[STATUS]]. */
     static readonly STATUS      = STATUS;
+
+    /** An alias for [[STATUS_TEXT]]. */
     static readonly STATUS_TEXT = STATUS_TEXT;
 
+    /**
+     * Registers a new URI protocol. All subclasses must register their URL protocol support with this method.
+     *
+     * @param protocol  The URL protocol to register. Must include the trailing colon.
+     * @param uri       The URI subclass.
+     * @returns         The URI baseclass (for chaining).
+     */
     static register(protocol: string, uri: typeof URI): typeof URI {
         URI._protocols.set(protocol, uri);
         return URI;
     }
 
+    /**
+     * Creates a new URI from a template string, percent-encoding all arguments.
+     *
+     * Example:
+     *
+     * ```ts
+     * const href = URI.$`http://${host}/blobs/${blob}?as=${ct}
+     * ```
+     *
+     * @param strings  The template string array.
+     * @param values   The values to be encoded.
+     * @returns        A new URI subclass instance.
+     */
     static $(strings: TemplateStringsArray, ...values: unknown[]): URI {
         return new URI(uri(strings, ...values));
     }
 
     private static _protocols = new Map<string, typeof URI>();
 
+    /**
+     * All selectors that may apply to this URI. Use [[addSelector]] to modify this property.
+     */
     selectors: {
+        /** Authentication/Credentials selectors. See [[AuthSelector]]. */
         auth?:    AuthSelector[];
+
+        /** Headers selectors. See [[HeadersSelector]]. */
         headers?: HeadersSelector[];
+
+        /** Parameter selectos. See [[ParamsSelector]]. */
         params?:  ParamsSelector[];
+
+        /** Session selectors. Only used internally. */
         session?: SessionSelector[];
     };
 
+    /** This URI's string representation. Unlike in URL, this property may not be changed/updated. */
     override readonly href!: string;
+
+    /** This URI's origin. Unlike in URL, this property may not be changed/updated. */
     override readonly origin!: string;
+
+    /** This URI's protocol. Unlike in URL, this property may not be changed/updated. */
     override readonly protocol!: string;
 
+    /**
+     * Constructs a new URI subclass. The URI constructor is a bit unusual, as it will always return an URI subclass and
+     * never a plain URI object.
+     *
+     * If the URI contains user information (credentials), it will be added as an [[AuthSelector]] and removed from
+     * the URI.
+     *
+     * @param url     The URL to construct. If relative, it will be resolved as a `file:` URL relative to the current
+     *                working directory. If `url` is a string *and* `params` is provided, the string may contain
+     *                `{prop}` placeholders, which will then be resolved and percent-encoded against properties in
+     *                `params`.
+     * @param params  An optional record with parameters, used in case `url` is a string.
+     */
     constructor(url?: string | URL | Url, params?: Params);
+    /**
+     * Constructs a new URI subclass. The URI constructor is a bit unusual, as it will always return an URI subclass and
+     * never a plain URI object.
+     *
+     * If the URI contains user information (credentials), it will be added as an [[AuthSelector]] and removed from
+     * the URI.
+     *
+     * NOTE: If `base` is an URI, all its selectors will be inherited by the newly constructed URI.
+     *
+     * @param url     The URL to construct. If relative, it will be resolved against `base`. If `url` is a string *and*
+     *                `params` are provided, the string may contain `{prop}` placeholders, which will then be resolved
+     *                and percent-encoded against properties in `params`.
+     * @param base    A base URL that `url` will be resolved relative to, in case `url` is relative. If `base` itself is
+     *                relative, `base` will first be resolved as a `file:` URL relative to the current working directory.
+     *                Just like `url`, if `base` is a string and `params` is provided, `{prop}` placeholders may be
+     *                present in the string.
+     * @param params  An optional record with parameters, used in case `url` and/or `base` is a string.
+     */
     constructor(url?: string | URL | Url, base?: string | URL | Url, params?: Params);
     constructor(url?: string | URL | Url, base?: string | URL | Url | Params, params?: Params) {
         super(resolveURL(url, base, params).href);
@@ -111,10 +272,42 @@ export class URI extends URL {
         return new (this.protocol && URI._protocols.get(this.protocol) || UnknownURI)(this);
     }
 
+    /**
+     * Constructs a new URI, relative to this URI, from a template string, percent-encoding all arguments.
+     *
+     * Example:
+     *
+     * ```ts
+     * const base = new URI('http://api.example.com/v1/');
+     * const info = await base.$`items/${item}/info`.load();
+     * ```
+     *
+     * @param strings  The template string array.
+     * @param values   The values to be encoded.
+     * @returns        A new URI subclass instance.
+     */
     $(strings: TemplateStringsArray, ...values: unknown[]): URI {
         return new URI(uri(strings, ...values), this);
     }
 
+    /**
+     * Adds a new selector to this URI.
+     *
+     * Selectors is a way to specify in what situations some kind of parameters or configuration is valid. When some
+     * kind of configuration is required (such as authentication of connection parameters), all registered selectors are
+     * evaluated and based on the matching score, the best selector is chosen. The more specific a selector is, the
+     * higher the score it will receive if it matches.
+     *
+     * Based on this, it's possible to limit the scope of credentials or to configure certain HTTP headers to be sent to
+     * a specific set of servers.
+     *
+     * It's also perfectly valid *not* to specify a selector for some kind of parameters. As long as there is only one
+     * kind of this configuration, it will apply unconditionally.
+     *
+     * @param  selector   The selector to add.
+     * @throws TypeError  If the selector to add is invalid.
+     * @returns           This URI.
+     */
     addSelector<T extends AuthSelector | HeadersSelector | ParamsSelector | SessionSelector>(selector: T): this {
         let valid = false;
 
@@ -145,48 +338,201 @@ export class URI extends URL {
         return this;
     }
 
+    /**
+     * This method will return information about the resource this URI references, if the subclass supports it.
+     *
+     * The actual operation depends on what kind of URI this is. See [[FileURI.info]] or [[HTTPURI.info]] for two common
+     * examples.
+     *
+     * @template T        The actual type of information record returned. Must extend [[DirectoryEntry]].
+     * @throws   IOError  On I/O errors or if the subclass does not support this method.
+     * @returns           An information record describing the resources.
+     */
     async info<T extends DirectoryEntry>(): Promise<T & Metadata> {
         throw new IOError(`URI ${this} does not support info()`);
     }
 
+    /**
+     * This method will return information about this URI's children/subresources, if the subclass supports it.
+     *
+     * The actual operation depends on what kind of URI this is. See [[FileURI.info]] for a common example.
+     *
+     * @template T        The actual type of information record returned. Must extend [[DirectoryEntry]].
+     * @throws   IOError  On I/O errors or if the subclass does not support this method.
+     * @returns           An array of information record describing the subresources.
+     */
     async list<T extends DirectoryEntry>(): Promise<T[] & Metadata> {
         throw new IOError(`URI ${this} does not support list()`);
     }
 
-    async load<T extends object>(_recvCT?: ContentType | string): Promise<T & Metadata> {
+    /**
+     * Loads and parses the resource this URI references, if the subclass supports it.
+     *
+     * The actual operation depends on what kind of URI this is. See [[FileURI.load]] or [HTTPURI.load] for two common
+     * examples.
+     *
+     * See [[Parser.parse]] for details about the returned *object* (never a primitive). You may always set `recvCT` to
+     * [[ContentType.bytes]] to receive a Node.js `Buffer` and [[ContentType.stream]] for an `AsyncIterable<Buffer>`
+     * stream, if you prefer raw data.
+     *
+     * @template T            The actual type returned.
+     * @param    recvCT       Override the default response parser.
+     * @throws   IOError      On I/O errors or if the subclass does not support this method.
+     * @throws   ParserError  If the media type is unsupported or the parser fails to parse the resource.
+     * @returns               The remote resource parsed as `recvCT` *into an object*, including [[MetaData]].
+     */
+    // eslint-disable-next-line @typescript-eslint/no-unused-vars
+    async load<T extends object>(recvCT?: ContentType | string): Promise<T & Metadata> {
         throw new IOError(`URI ${this} does not support load()`);
     }
 
-    async save<T extends object, D = unknown>(_data: D, _sendCT?: ContentType | string, _recvCT?: ContentType | string): Promise<T & Metadata> {
+    /**
+     * Serializes and stores data to the resource this URI references, if the subclass supports it.
+     *
+     * The actual operation depends on what kind of URI this is. See [[FileURI.save]] or [[HTTPURI.save]] for two common
+     * examples.
+     *
+     * See [[Parser.parse]] for details about the returned *object* (never a primitive). You may always set `recvCT` to
+     * [[ContentType.bytes]] to receive a Node.js `Buffer` and [[ContentType.stream]] for an `AsyncIterable<Buffer>`
+     * stream, if you prefer raw data.
+     *
+     * @template T            The actual type returned.
+     * @template D            The type of data to store.
+     * @param    data         The data to store.
+     * @param    sendCT       Override the default data serializer.
+     * @param    recvCT       Override the default response parser.
+     * @throws   IOError      On I/O errors or if the subclass does not support this method.
+     * @throws   ParserError  If the media type is unsupported or the parser fails to parse the response.
+     * @returns               If the operation produced a result, it will be parsed as `recvCT` *into an object*,
+     *                        including [[MetaData]].
+     */
+    // eslint-disable-next-line @typescript-eslint/no-unused-vars
+    async save<T extends object, D = unknown>(data: D, sendCT?: ContentType | string, recvCT?: ContentType | string): Promise<T & Metadata> {
         throw new IOError(`URI ${this} does not support save()`);
     }
 
-    async append<T extends object, D = unknown>(_data: D, _sendCT?: ContentType | string, _recvCT?: ContentType | string): Promise<T & Metadata> {
+    /**
+     * Serializes and appends/adds data to the resource this URI references, if the subclass supports it.
+     *
+     * The actual operation depends on what kind of URI this is. See [[FileURI.append]] or [[HTTPURI.append]] for two
+     * common examples.
+     *
+     * See [[Parser.parse]] for details about the returned *object* (never a primitive). You may always set `recvCT` to
+     * [[ContentType.bytes]] to receive a Node.js `Buffer` and [[ContentType.stream]] for an `AsyncIterable<Buffer>`
+     * stream, if you prefer raw data.
+     *
+     * @template T            The actual type returned.
+     * @template D            The type of data to append.
+     * @param    data         The data to append.
+     * @param    sendCT       Override the default data serializer.
+     * @param    recvCT       Override the default response parser.
+     * @throws   IOError      On I/O errors or if the subclass does not support this method.
+     * @throws   ParserError  If the media type is unsupported or the parser fails to parse the response.
+     * @returns               If the operation produced a result, it will be parsed as `recvCT` *into an object*,
+     *                        including [[MetaData]].
+     */
+    // eslint-disable-next-line @typescript-eslint/no-unused-vars
+    async append<T extends object, D = unknown>(data: D, sendCT?: ContentType | string, recvCT?: ContentType | string): Promise<T & Metadata> {
         throw new IOError(`URI ${this} does not support append()`);
     }
 
-    async modify<T extends object, D = unknown>(_data: D, _sendCT?: ContentType | string, _recvCT?: ContentType | string): Promise<T & Metadata> {
+    /**
+     * Modifies/patches data the resource this URI references, if the subclass supports it.
+     *
+     * The actual operation depends on what kind of URI this is. See [[HTTPURI.modify]] or [[DatabaseURI.modify]] for
+     * two common examples.
+     *
+     * See [[Parser.parse]] for details about the returned *object* (never a primitive). You may always set `recvCT` to
+     * [[ContentType.bytes]] to receive a Node.js `Buffer` and [[ContentType.stream]] for an `AsyncIterable<Buffer>`
+     * stream, if you prefer raw data.
+     *
+     * @template T            The actual type returned.
+     * @template D            The type of patch data to apply.
+     * @param    data         The patch data to apply.
+     * @param    sendCT       Override the default data serializer.
+     * @param    recvCT       Override the default response parser.
+     * @throws   IOError      On I/O errors or if the subclass does not support this method.
+     * @throws   ParserError  If the media type is unsupported or the parser fails to parse the response.
+     * @returns               If the operation produced a result, it will be parsed as `recvCT` *into an object*,
+     *                        including [[MetaData]].
+     */
+    // eslint-disable-next-line @typescript-eslint/no-unused-vars
+    async modify<T extends object, D = unknown>(data: D, sendCT?: ContentType | string, recvCT?: ContentType | string): Promise<T & Metadata> {
         throw new IOError(`URI ${this} does not support modify()`);
     }
 
+    /**
+     * Removes the resource this URI references, if the subclass supports it.
+     *
+     * The actual operation depends on what kind of URI this is. See [[FileURI.remove]] or [[HTTPURI.remove]] for two
+     * common examples.
+     *
+     * See [[Parser.parse]] for details about the returned *object* (never a primitive). You may always set `recvCT` to
+     * [[ContentType.bytes]] to receive a Node.js `Buffer` and [[ContentType.stream]] for an `AsyncIterable<Buffer>`
+     * stream, if you prefer raw data.
+     *
+     * @template T            The actual type returned.
+     * @param    recvCT       Override the default response parser.
+     * @throws   IOError      On I/O errors or if the subclass does not support this method.
+     * @throws   ParserError  If the media type is unsupported or the parser fails to parse the response.
+     * @returns               If the operation produced a result, it will be parsed as `recvCT` *into an object*,
+     *                        including [[MetaData]].
+     */
+    // eslint-disable-next-line @typescript-eslint/no-unused-vars
     async remove<T extends object>(_recvCT?: ContentType | string): Promise<T & Metadata> {
         throw new IOError(`URI ${this} does not support remove()`);
     }
 
-    async query<T extends object>(..._args: unknown[]): Promise<T & Metadata> {
+    /**
+     * A generic method that sends/applies some kind of query to the resource and returns a response.
+     *
+     * The actual operation depends on what kind of URI this is. See [[HTTPURI.query]] or [[DatabaseURI.query]] for two
+     * common examples.
+     *
+     * @template T            The actual type returned.
+     * @param    args         Depends on the subclass.
+     * @throws   IOError      On I/O errors or if the subclass does not support this method.
+     * @throws   ParserError  If the media type is unsupported or the parser fails to parse the response.
+     * @returns               If the operation produced a result, it will returned together with [[MetaData]].
+     */
+    // eslint-disable-next-line @typescript-eslint/no-unused-vars
+    async query<T extends object>(...args: unknown[]): Promise<T & Metadata> {
         throw new IOError(`URI ${this} does not support query()`);
     }
 
-    // eslint-disable-next-line require-yield
-    async *watch(..._args: unknown[]): AsyncIterable<object & Metadata> {
+    /**
+     * Watches a resource for changes and returns a stream of subclass-specific events, if the subclass supports it.
+     *
+     * The actual operation depends on what kind of URI this is. See [[FileURI.watch]] or [[DatabaseURI.watch]] for two
+     * common examples.
+     *
+     * @param    args         Depends on the subclass.
+     * @throws   IOError      On I/O errors or if the subclass does not support this method.
+     * @throws   ParserError  If the media type is unsupported or the parser fails to parse the response.
+     * @returns               A stream of change events together with [[MetaData]].
+     */
+    // eslint-disable-next-line @typescript-eslint/no-unused-vars, require-yield
+    async *watch(...args: unknown[]): AsyncIterable<object & Metadata> {
         throw new IOError(`URI ${this} does not support watch()`);
     }
 
+    /**
+     * Closes this URI and frees any temporary resources in use.
+     *
+     * URIs are usually stateless, but some protocols may use a connection pool, and this method can be used to shut
+     * down the pool and all remaining connections that may otherwise prevent the process from exiting.
+     */
     async close(): Promise<void> {
         // No-op by default
     }
 
-    async *[Symbol.asyncIterator](): AsyncIterable<Buffer> & Metadata {
+    /**
+     * All URIs are `AsyncIterable<Buffer>`. This method implements that interface by calling
+     * [[load]]([[ContentType.stream]]).
+     *
+     * @returns An `AsyncIterator<Buffer>` stream.
+     */
+    async *[Symbol.asyncIterator](): AsyncIterator<Buffer> & Metadata {
         return yield* await this.load<AsyncIterable<Buffer>>('application/vnd.esxx.octet-stream');
     }
 

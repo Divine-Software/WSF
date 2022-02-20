@@ -96,7 +96,7 @@ export const X4EProxyHandler: ProxyHandler<X4EProxyTarget> = {
         return Reflect.getOwnPropertyDescriptor(target, p) ?? x4eProp ?? (typeof p === 'string' && p[0] !== '$' ? target[GetOwnProperty](p) : undefined);
     },
 
-    // Custom NodeJS inspector value: Hide this object from Node REPL
+    // Custom Node.js inspector value: Hide this object from Node REPL
     [inspect.custom as any]() {
         return 'xml';
     }

@@ -4,8 +4,8 @@
   "description": "Adds support for the H2 database (and JDBC in general) to @divine/uri",
   "author": "Martin Blom <martin@blom.org>",
   "license": "Apache-2.0",
-  "repository": "https://github.com/LeviticusMB/esxx-2.git",
-  "bugs": "https://github.com/LeviticusMB/esxx-2/issues",
+  "repository": "https://github.com/Divine-Software/WSF.git",
+  "bugs": "https://github.com/Divine-Software/WSF/issues",
   "main": "build/src/index.js",
   "types": "build/src/index.d.ts",
   "files": [

@@ -1,11 +1,11 @@
 {
-  "name": "@divine/esxx-2",
+  "name": "@divine/wsf",
   "version": "1.0.0",
   "description": "The Divine Web Service Framework",
   "author": "Martin Blom <martin@blom.org>",
   "license": "Apache-2.0",
-  "repository": "https://github.com/LeviticusMB/esxx-2.git",
-  "bugs": "https://github.com/LeviticusMB/esxx-2/issues",
+  "repository": "https://github.com/Divine-Software/WSF.git",
+  "bugs": "https://github.com/Divine-Software/WSF/issues",
   "private": true,
   "jest": {
     "projects": [
@@ -34,7 +34,6 @@
     "jest": "^27.4.5",
     "jest-cli": "^27.4.5",
     "node-java-maven": "~0.1.2",
-    "typedoc": "~0.22.10",
     "typescript": "~4.5.4"
   }
 }

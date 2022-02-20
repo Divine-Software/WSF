@@ -16,8 +16,6 @@ build::	prepare
 lint:
 	-pnpm exec eslint '*/src/**/*.ts'
 
-docs::	build
-
 test::	build lint
 	pnpm exec jest
 
@@ -27,7 +25,7 @@ clean::
 distclean::
 	rm -rf node_modules
 
-docs clean distclean::
+clean distclean::
 	$(MAKE) -C commons $@
 	$(MAKE) -C headers $@
 	$(MAKE) -C uri $@
@@ -41,4 +39,4 @@ docs clean distclean::
 	$(MAKE) -C web-service $@
 	$(MAKE) -C x4e $@
 
-.PHONY:		all prepare build lint docs test clean distclean
+.PHONY:		all prepare build lint test clean distclean

@@ -24,6 +24,22 @@ export function isDOMNode(obj: unknown): boolean {
     return !!obj && typeof (obj as any).nodeType === 'number'; /* FIXME */
 }
 
+export function isXML(obj: unknown): boolean {
+    return isDOMNode(obj) || typeof (obj as any)?.$domNode === 'function';
+}
+
+export function isHTML(obj: unknown): boolean {
+    if (isXML(obj)) {
+        const dom = isDOMNode(obj) ? obj : (obj as any)?.$domNode();
+        const uri = dom?.namespaceURI ?? dom?.ownerElement?.namespaceURI ?? dom?.ownerDocument?.documentElement?.namespaceURI;
+
+        return uri === 'http://www.w3.org/1999/xhtml';
+    }
+    else {
+        return false;
+    }
+}
+
 export function isJSON(obj: unknown): boolean {
     return !!obj && (Object.getPrototypeOf(obj) === Array.prototype || Object.getPrototypeOf(obj) === Object.prototype);
 }

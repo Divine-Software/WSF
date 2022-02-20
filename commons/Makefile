@@ -24,4 +24,4 @@ publish:	distclean build test
 	git tag -s $(BASENAME)-v$(VERSION) -m "$(NAME) v$(VERSION)"
 	pnpm publish --access public
 
-.PHONY:		all prepare build docs test clean distclean publish
+.PHONY:		all prepare build test clean distclean publish
