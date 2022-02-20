@@ -1,4 +1,4 @@
-import { SizeLimitedReadableStream } from '@divine/commons';
+import { BasicTypes, Params, SizeLimitedReadableStream, throwError } from '@divine/commons';
 import { ContentType } from '@divine/headers';
 import { AuthSchemeRequest, Finalizable, FINALIZE, Parser, ParserError } from '@divine/uri';
 import cuid from 'cuid';
@@ -57,6 +57,9 @@ export class WebRequest implements AuthSchemeRequest {
     /** A per-request logger. Decorated with request ID if [[WebServiceConfig.logRequestID]] is `true`. */
     public readonly log: Console;
 
+    /** Custom parameters from filters etc may be stored here. */
+    public readonly params: Params = {}
+
     private _body?: Promise<any>;
     private _finalizers: Array<() => Promise<unknown>> = [];
     private _maxContentLength: number;
@@ -104,6 +107,30 @@ export class WebRequest implements AuthSchemeRequest {
     /** All headers in a format compatible with the `AuthSchemeRequest` interface. */
     get headers(): Array<[string, string]> {
         return Object.entries(this.incomingMessage.headers).map(([name, value]) => [name, Array.isArray(value) ? value.join(', ') : value!]);
+    }
+
+    /**
+     * Returns the value of a custom parameter (set by [[setParam]]).
+     *
+     * @param name The name of the parameter to fetch.
+     * @param def  The default value to return, in case the parameter was not found. If not specified, an exception will
+     *             be thrown instead.
+     * @throws     [[WebError]]([[WebStatus.INTERNAL_SERVER_ERROR]]) if the requested header is missing and no default
+     *             was provided.
+     * @returns   The parameter value.
+     */
+    param(name: string, def?: BasicTypes): BasicTypes {
+        let value = this.params[name];
+
+        if (value === undefined) {
+            if (def === undefined) {
+                throw new WebError(WebStatus.INTERNAL_SERVER_ERROR, `Custom parameter '${name}' is missing`); // See also WebArguments
+            }
+
+            value = def;
+        }
+
+        return value;
     }
 
     /**
@@ -174,6 +201,19 @@ export class WebRequest implements AuthSchemeRequest {
                   err instanceof ParserError ? new WebError(WebStatus.UNSUPPORTED_MEDIA_TYPE, err.message) :
                   err;
         }
+    }
+
+    /**
+     * Sets a custom parameter. Useful for providing resources with custom properties from a [[WebFilter]], for
+     * instance.
+     *
+     * @param   param The name of the parameter to set.
+     * @param   value The parameter value.
+     * @returns This WebArguments.
+     */
+    setParam(param: string, value: BasicTypes): this {
+        this.params[param] = value;
+        return this;
     }
 
     /**

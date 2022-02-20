@@ -244,24 +244,28 @@ export class WebArguments {
      * * Request headers have a `@` prefix.
      * * Parameters from the request body have a `.` prefix. Note that these are only inserted once [[body]] has been
      *   called.
+     * * Custom request parameters manually set by [[WebRequest.setParam]] have a `~` prefix.
      *
      */
     public readonly params: { [key: string]: string | object | undefined };
 
     /**
+     * Constructs a new WebArguments instance.
      *
      * @param params   The RegExp groups from the path matcher.
      * @param request  The request this class wraps.
      */
     constructor(params: StringParams, public readonly request: WebRequest) {
         const urlargs = Object.entries(params);
-        const headers = Object.entries(request.incomingMessage.headers);
+        const headers = request.headers;
         const qparams = [...request.url.searchParams.entries()];
+        const rparams = Object.entries(request.params);
 
         this.params = Object.fromEntries([
             ...urlargs.map(([k, v]) => ['$' + k, v]),
-            ...headers.map(([k, v]) => ['@' + k, Array.isArray(v) ? v.join(', ') : v]),
-            ...qparams.map(([k, v]) => ['?' + k, v])
+            ...headers.map(([k, v]) => ['@' + k, v]),
+            ...qparams.map(([k, v]) => ['?' + k, v]),
+            ...rparams.map(([k, v]) => ['~' + k, typeof v === 'object' ? v : String(v)]),
         ]);
     }
 
@@ -529,13 +533,14 @@ export class WebArguments {
     }
 
     private _makeWebError(param: string, is: string): WebError {
-        const subject =
-            param[0] === '?' ? `Query parameter '${param.substr(1)}'`  :
-            param[0] === '@' ? `Request header '${param.substr(1)}'`   :
-            param[0] === '$' ? `URL parameter '${param.substr(1)}'`    :
-            param[0] === '.' ? `Entity parameter '${param.substr(1)}'` :
-            `(Invalid) parameter '${param}'`;
+        const [ status, subject ] =
+            param[0] === '?' ? [ WebStatus.BAD_REQUEST,           `Query parameter '${param.substr(1)}'`   ] :
+            param[0] === '@' ? [ WebStatus.BAD_REQUEST,           `Request header '${param.substr(1)}'`    ] :
+            param[0] === '$' ? [ WebStatus.BAD_REQUEST,           `URL parameter '${param.substr(1)}'`     ] :
+            param[0] === '.' ? [ WebStatus.UNPROCESSABLE_ENTITY,  `Entity parameter '${param.substr(1)}'`  ] :
+            param[0] === '~' ? [ WebStatus.INTERNAL_SERVER_ERROR, `Custom parameter '${param.substr(1)}'`  ] :
+            /* Not possible */ [ WebStatus.INTERNAL_SERVER_ERROR, `Invalid parameter '${param}'`           ] ;
 
-        return new WebError(param[0] === '.' ? WebStatus.UNPROCESSABLE_ENTITY : WebStatus.BAD_REQUEST, `${subject} ${is}`);
+        return new WebError(status, `${subject} ${is}`);
     }
 }
