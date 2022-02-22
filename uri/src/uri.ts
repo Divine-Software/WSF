@@ -100,7 +100,7 @@ export class IOError extends URIError {
 
     /** Converts this IOError to a string. */
     override toString(): string {
-        return `${this.constructor.name}: ${this.message}`
+        return `[${this.constructor.name}: ${this.message}]`
     }
 }
 
