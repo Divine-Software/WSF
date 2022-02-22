@@ -1,6 +1,7 @@
 import type { Constructor } from '@divine/commons';
 import { AuthenticationInfo, AuthHeader, Authorization, ServerAuthorization, WWWAuthenticate } from '@divine/headers';
 import { URL } from 'url';
+import { IOError, Metadata } from './uri';
 
 /** The base credentials interface. */
 export interface Credentials {
@@ -26,21 +27,18 @@ export interface AuthSchemeRequest {
     headers: Iterable<[string, string | undefined]>;
 }
 
-/** An Error subclass thrown by the [[AuthScheme]] class. */
-export class AuthSchemeError extends Error {
+/** An IOError subclass thrown by the [[AuthScheme]] class. */
+export class AuthSchemeError extends IOError {
     /**
      * Constructs a new AuthSchemeError exception.
      *
      * @param message    The error message.
      * @param challenge  An optional challenge in case the client should retry the operation.
+     * @param cause      If this error was caused by another exception, pass it here to link it.
+     * @param data       Custom, per-exception information associated with the exception.
      */
-    constructor(message: string, public challenge?: WWWAuthenticate) {
-        super(message);
-    }
-
-    /** Converts this AuthSchemeError to a string. */
-    override toString(): string {
-        return `${this.constructor.name}: ${this.message}`;
+    constructor(message: string, public challenge?: WWWAuthenticate, cause?: Error, data?: object & Metadata) {
+        super(message, cause, data);
     }
 }
 
