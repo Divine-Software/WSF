@@ -25,6 +25,18 @@ clean::
 distclean::
 	rm -rf node_modules
 
+version:	pristine
+	pnpm exec changeset version
+	pnpm install
+	git commit --amend --reuse-message=HEAD pnpm-lock.yaml
+
+publish:	pristine clean build test
+	pnpm publish -r --access public
+	GIT_CONFIG_COUNT=1 GIT_CONFIG_KEY_0=tag.gpgSign GIT_CONFIG_VALUE_0=true pnpm exec changeset tag
+
+pristine:
+	@[[ -z "$$(git status --porcelain)" ]] || (git status; false)
+
 clean distclean::
 	$(MAKE) -C commons $@
 	$(MAKE) -C headers $@
@@ -39,4 +51,4 @@ clean distclean::
 	$(MAKE) -C web-service $@
 	$(MAKE) -C x4e $@
 
-.PHONY:		all prepare build lint test clean distclean
+.PHONY:		all prepare build lint test clean distclean version publish pristine
