@@ -214,7 +214,6 @@ export interface WebResource {
  *
  * @template Context The type of the WebService context.
  */
-// @ts-expect-error ts(2559)
 export abstract class WebResourceBase<Context> implements WebResource {
     /**
      * Constructs a resource or filter instance.
@@ -224,6 +223,11 @@ export abstract class WebResourceBase<Context> implements WebResource {
      */
     constructor(protected _context: Context, protected _args: WebArguments) {
         // All done
+    }
+
+    async close(): Promise<void> {
+        // This method is just here to silence ts(2559): Type 'WebResourceBase<Context>' has no properties in common
+        // with type 'WebResource'.
     }
 }
 

@@ -1,5 +1,4 @@
 import { escapeRegExp, isAsyncIterable } from '@divine/commons';
-import { WebService } from './service';
 import { EventStreamResponse } from './helpers';
 import { WebArguments, WebResourceCtor } from './resource';
 
