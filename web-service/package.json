@@ -1,6 +1,6 @@
 {
   "name": "@divine/web-service",
-  "version": "0.4.1",
+  "version": "0.4.2",
   "description": "The Divine Web Service Library",
   "author": "Martin Blom <martin@blom.org>",
   "license": "Apache-2.0",

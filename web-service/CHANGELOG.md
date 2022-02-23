@@ -1,5 +1,11 @@
 # @divine/web-service
 
+## 0.4.2
+
+### Patch Changes
+
+- 0c9cce7: Fixed compiler error because of @ts-expect-error in public API.
+
 ## 0.4.1
 
 ### Patch Changes
