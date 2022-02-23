@@ -1,4 +1,4 @@
-import { BasicTypes, Params, SizeLimitedReadableStream, throwError } from '@divine/commons';
+import { BasicTypes, Params, SizeLimitedReadableStream } from '@divine/commons';
 import { ContentType } from '@divine/headers';
 import { AuthSchemeRequest, Finalizable, FINALIZE, Parser, ParserError } from '@divine/uri';
 import cuid from 'cuid';

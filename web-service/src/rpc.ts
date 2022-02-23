@@ -271,21 +271,3 @@ export function createRPCService<M extends RPCMethods<M>, Context = unknown>(con
         }
     );
 }
-
-interface MyAPI {
-    hello: [ { who?: string; }, { greeting: string } ];
-}
-
-const MyAPI: RPCEndpoints<MyAPI> = {
-    hello: null,
-}
-
-const myAPIService = new class implements RPCService<MyAPI> {
-    async hello({ who }: RPCParams<MyAPI, 'hello'>): Promise<RPCResult<MyAPI, 'hello'>> {
-        return { greeting: `Hello, ${who ?? 'World'}!` };
-    }
-}
-
-const ws = new WebService(null)
-    .addResources(createRPCService(MyAPI, myAPIService,
-        async (method, options, args, fn) => fn(await args.body())));

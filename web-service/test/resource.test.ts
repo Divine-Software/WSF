@@ -143,7 +143,7 @@ describe('the WebArguments class', () => {
         await body;
 
         expect(() => args.boolean('?missing')).toThrow(`Query parameter 'missing' is missing`);
-        expect(() => args.date('missing')).toThrow(`(Invalid) parameter 'missing' is missing`);
+        expect(() => args.date('missing')).toThrow(`Invalid parameter 'missing' is missing`);
         expect(() => args.number('.missing')).toThrow(`Entity parameter 'missing' is missing`);
         expect(() => args.string('@missing')).toThrow(`Request header 'missing' is missing`);
         expect(() => args.object('$missing')).toThrow(`URL parameter 'missing' is missing`);
