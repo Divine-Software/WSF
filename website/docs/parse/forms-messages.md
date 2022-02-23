@@ -80,4 +80,4 @@ new WebServer('localhost', 3333, new WebService(null).addResource(class implemen
 [remove]:            ../api/classes/divine_uri.URI.md#remove
 [FIELDS]:            ../api/modules/divine_uri.md#fields
 [WithFields]:        ../api/interfaces/divine_uri.WithFields.md
-[WebArguments.body]: ../api/classes/divine_web_service.WebArguments#body
+[WebArguments.body]: ../api/classes/divine_web_service.WebArguments.md#body

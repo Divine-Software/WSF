@@ -79,7 +79,7 @@ const meta = await apiBase.$`meta`.load<MetaResponse>();
 
 [URI]:       ../api/classes/divine_uri.URI.md
 [HTTPURI]:   ../api/classes/divine_uri.HTTPURI.md
-[IOError]:   ../api/classes/divine_uri.IOError
+[IOError]:   ../api/classes/divine_uri.IOError.md
 
 [info]:      ../api/classes/divine_uri.HTTPURI.md#info
 [load]:      ../api/classes/divine_uri.HTTPURI.md#load

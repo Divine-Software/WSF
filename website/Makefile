@@ -15,15 +15,17 @@ build-deps:
 
 test:
 
-clean:
+clean:	prepare
 	-pnpm run clear
 	rm -rf build docs/api
 
 distclean:	clean
 	rm -rf node_modules
 
-publish:	prepare clean
-	@[[ -z "$$(git status --porcelain)" ]] || (git status; false)
+publish:	pristine clean
 	GIT_USER=LeviticusMB USE_SSH=true pnpm run deploy
+
+pristine:
+	@[[ -z "$$(git status --porcelain)" ]] || (git status; false)
 
 .PHONY:		all prepare build watch build-deps test clean distclean publish

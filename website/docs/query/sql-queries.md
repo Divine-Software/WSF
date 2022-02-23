@@ -71,6 +71,6 @@ result set (all which can be accessed via [FIELDS]).
 [FIELDS]:              ../api/modules/divine_uri.md#fields
 [WithFields]:          ../api/interfaces/divine_uri.WithFields.md
 [DBMetadata]:          ../api/interfaces/divine_uri.DBMetadata.md
-[q]:                   ../api/namespaces/divine_uri.q
+[q]:                   ../api/namespaces/divine_uri.q.md
 [close]:               ../api/classes/divine_uri.DatabaseURI.md#close
 [query]:               ../api/classes/divine_uri.DatabaseURI.md#query

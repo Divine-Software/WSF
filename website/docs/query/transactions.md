@@ -58,4 +58,4 @@ This, and other transaction parameters, may be configured on a per-transaction b
 
 [query]:               ../api/classes/divine_uri.DatabaseURI.md#query
 [Deadlock handling]:   ../api/classes/divine_uri.DatabaseURI.md#deadlock-handling
-[DBTransactionParams]: ../api/interfaces/divine_uri.DBTransactionParams
+[DBTransactionParams]: ../api/interfaces/divine_uri.DBTransactionParams.md

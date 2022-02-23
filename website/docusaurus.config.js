@@ -17,6 +17,7 @@ const config = {
   favicon: 'img/favicon.png',
   organizationName: 'Divine-Software',
   projectName: 'WSF',
+  trailingSlash: true,
   themeConfig:
     /** @type {import('@docusaurus/preset-classic').ThemeConfig} */
     ({
