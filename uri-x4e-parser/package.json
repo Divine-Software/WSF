@@ -30,7 +30,7 @@
   "devDependencies": {
     "@divine/uri": "workspace:~0.4.3",
     "@divine/x4e": "workspace:~0.4.2",
-    "@types/node": "^12.20.39",
+    "@types/node": "^12.20.46",
     "@types/xmldom": "~0.1.31"
   },
   "engines": {

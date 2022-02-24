@@ -30,8 +30,8 @@
   },
   "devDependencies": {
     "@divine/uri": "workspace:~0.4.3",
-    "@types/node": "^12.20.39",
-    "@types/pg": "^8.6.3"
+    "@types/node": "^12.20.46",
+    "@types/pg": "^8.6.4"
   },
   "engines": {
     "node": ">= 12.17.0"

@@ -3,4 +3,3 @@
 declare type Blob = unknown;
 declare type BufferSource = unknown;
 declare type FormData = unknown;
-declare type URLSearchParams = unknown;

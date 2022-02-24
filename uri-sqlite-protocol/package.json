@@ -31,7 +31,7 @@
   "devDependencies": {
     "@divine/uri": "workspace:~0.4.3",
     "@types/better-sqlite3": "^7.4.2",
-    "@types/node": "^12.20.39"
+    "@types/node": "^12.20.46"
   },
   "engines": {
     "node": ">= 12.17.0"
