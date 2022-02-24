@@ -1,6 +1,6 @@
 {
   "name": "@divine/uri-jdbc-protocol",
-  "version": "0.4.1",
+  "version": "0.4.2",
   "description": "Adds support for the H2 database (and JDBC in general) to @divine/uri",
   "author": "Martin Blom <martin@blom.org>",
   "license": "Apache-2.0",
@@ -21,15 +21,15 @@
     "collectCoverage": true
   },
   "peerDependencies": {
-    "@divine/uri": "workspace:~0.4.3"
+    "@divine/uri": "workspace:~0.4.4"
   },
   "dependencies": {
-    "@divine/commons": "workspace:~0.4.1",
+    "@divine/commons": "workspace:~0.4.2",
     "java": "~0.12.2",
     "tslib": "^2.3.1"
   },
   "devDependencies": {
-    "@divine/uri": "workspace:~0.4.3",
+    "@divine/uri": "workspace:~0.4.4",
     "@types/java": "~0.9.2",
     "@types/node": "^12.20.46"
   },

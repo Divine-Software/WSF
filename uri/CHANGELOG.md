@@ -1,5 +1,15 @@
 # @divine/uri
 
+## 0.4.4
+
+### Patch Changes
+
+- 401e368: Bumped build tools.
+- 2865b40: Minor docs/website update.
+- Updated dependencies [401e368]
+  - @divine/commons@0.4.2
+  - @divine/headers@2.0.2
+
 ## 0.4.3
 
 ### Patch Changes

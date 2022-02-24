@@ -1,5 +1,16 @@
 # @divine/web-service
 
+## 0.4.3
+
+### Patch Changes
+
+- 401e368: Bumped build tools.
+- Updated dependencies [401e368]
+- Updated dependencies [2865b40]
+  - @divine/commons@0.4.2
+  - @divine/uri@0.4.4
+  - @divine/headers@2.0.2
+
 ## 0.4.2
 
 ### Patch Changes

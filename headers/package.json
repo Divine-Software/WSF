@@ -1,6 +1,6 @@
 {
   "name": "@divine/headers",
-  "version": "2.0.1",
+  "version": "2.0.2",
   "description": "The Divine HTTP Header Library",
   "author": "Martin Blom <martin@blom.org>",
   "license": "Apache-2.0",

@@ -1,5 +1,16 @@
 # @divine/uri-postgres-protocol
 
+## 0.4.2
+
+### Patch Changes
+
+- 401e368: Bumped build tools.
+- 08db9c0: Bumped pg to 8.7.3.
+- Updated dependencies [401e368]
+- Updated dependencies [2865b40]
+  - @divine/commons@0.4.2
+  - @divine/uri@0.4.4
+
 ## 0.4.1
 
 ### Patch Changes
