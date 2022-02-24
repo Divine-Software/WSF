@@ -1,7 +1,6 @@
 ---
 "@divine/commons": patch
 "@divine/uri": patch
-"@divine/uri-image-parser": patch
 "@divine/uri-jdbc-protocol": patch
 "@divine/uri-mysql-protocol": patch
 "@divine/uri-postgres-protocol": patch

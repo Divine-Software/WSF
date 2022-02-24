@@ -1,4 +1,5 @@
-NODE_MODULES	= node_modules/.modules.yaml $(shell awk '/^ *-/ { print $$2 "/node_modules" }' pnpm-workspace.yaml)
+SUB_PACKAGES	= $(shell awk '/^ *-/ { print $$2 }' pnpm-workspace.yaml)
+NODE_MODULES	= node_modules/.modules.yaml $(foreach package,$(SUB_PACKAGES),$(package)/node_modules)
 
 all:	build
 
@@ -25,7 +26,10 @@ clean::
 distclean::
 	rm -rf node_modules
 
-version:	pristine
+commit:
+	pnpm changeset
+
+release:	pristine
 	pnpm exec changeset version
 	pnpm install
 	git commit --amend --reuse-message=HEAD pnpm-lock.yaml
@@ -38,17 +42,6 @@ pristine:
 	@[[ -z "$$(git status --porcelain)" ]] || (git status; false)
 
 clean distclean::
-	$(MAKE) -C commons $@
-	$(MAKE) -C headers $@
-	$(MAKE) -C uri $@
-	$(MAKE) -C uri-image-parser $@
-	$(MAKE) -C uri-jdbc-protocol $@
-	$(MAKE) -C uri-mysql-protocol $@
-	$(MAKE) -C uri-postgres-protocol $@
-	$(MAKE) -C uri-sqlite-protocol $@
-	$(MAKE) -C uri-tds-protocol $@
-	$(MAKE) -C uri-x4e-parser $@
-	$(MAKE) -C web-service $@
-	$(MAKE) -C x4e $@
+	@for package in $(SUB_PACKAGES); do echo "► $${package} ► $@"; $(MAKE) -C $${package} $@; done
 
-.PHONY:		all prepare build lint test clean distclean version publish pristine
+.PHONY:		all prepare build lint test clean distclean commit release publish pristine
