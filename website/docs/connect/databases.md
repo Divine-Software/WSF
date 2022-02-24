@@ -78,6 +78,12 @@ And, naturally, rows can be deleted using [remove]:
 await dbURI.$`#users(eq,id,${userID})`.remove();
 ```
 
+:::tip
+
+When writing data, `undefined` values will map to the SQL `DEFAULT` keyword.
+
+:::
+
 ## Notifications and Change Data Capture
 
 [watch] allows you to subscribe to a live event feed from the database, which can be very useful for real-time services.

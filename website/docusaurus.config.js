@@ -40,7 +40,8 @@ const config = {
           },
           {
             href: 'https://github.com/Divine-Software/WSF',
-            label: 'Fork me on GitHub!',
+            'aria-label': 'Fork me on GitHub!',
+            className: 'header-github-link',
             position: 'right',
           },
         ],
