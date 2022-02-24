@@ -1,4 +1,4 @@
-import { DOMParser, XMLSerializer } from 'xmldom';
+import { DOMParser, XMLSerializer } from '@xmldom/xmldom';
 
 export const NS_DEFAULT   = '';
 export const NS_XHTML     = 'http://www.w3.org/1999/xhtml';

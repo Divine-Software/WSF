@@ -1,4 +1,4 @@
-import { DOMImplementation } from 'xmldom';
+import { DOMImplementation } from '@xmldom/xmldom';
 import { XML, XMLList } from './x4e';
 import { NS_XHTML } from './xml-utils';
 

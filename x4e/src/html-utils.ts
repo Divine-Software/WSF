@@ -1,10 +1,10 @@
+import { DOMImplementation } from '@xmldom/xmldom';
 import type * as AST from 'parse5';
 import { parse, parseFragment, serialize } from 'parse5';
-import { DOMImplementation } from 'xmldom';
 import { isAttribute, isComment, isDocument, isDocumentFragment, isDocumentType, isElement, isText } from './xml-utils';
 
 export {
-    escapeXML          as escapeHTML,
+    escapeXML as escapeHTML,
     escapeXMLAttribute as escapeHTMLAttribute
 } from './xml-utils';
 

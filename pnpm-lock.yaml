@@ -226,18 +226,16 @@ importers:
     specifiers:
       '@types/node': ^12.20.46
       '@types/parse5': ^6.0.3
-      '@types/xmldom': ~0.1.31
+      '@xmldom/xmldom': ^0.8.1
       parse5: ^6.0.1
       tslib: ^2.3.1
-      xmldom: ~0.6.0
     dependencies:
+      '@xmldom/xmldom': 0.8.1
       parse5: 6.0.1
       tslib: 2.3.1
-      xmldom: 0.6.0
     devDependencies:
       '@types/node': 12.20.46
       '@types/parse5': 6.0.3
-      '@types/xmldom': 0.1.31
 
 packages:
 
@@ -1609,6 +1607,11 @@ packages:
       '@typescript-eslint/types': 5.12.1
       eslint-visitor-keys: 3.3.0
     dev: true
+
+  /@xmldom/xmldom/0.8.1:
+    resolution: {integrity: sha512-4wOae+5N2RZ+CZXd9ZKwkaDi55IxrSTOjHpxTvQQ4fomtOJmqVxbmICA9jE1jvnqNhpfgz8cnfFagG86wV/xLQ==}
+    engines: {node: '>=10.0.0'}
+    dev: false
 
   /abab/2.0.5:
     resolution: {integrity: sha512-9IK9EadsbHo6jLWIpxpR6pL0sazTXV6+SQv25ZB+F7Bj9mJNaOc4nCRabwd5M/JwmUa8idz6Eci6eKfJryPs6Q==}
@@ -6056,7 +6059,7 @@ packages:
   /wide-align/1.1.5:
     resolution: {integrity: sha512-eDMORYaPNZ4sQIuuYPDHdQvf4gyCF9rEEV/yPxGfwPkRodwEgiMUUXTx/dex+Me0wxx53S+NgUHaP7y3MGlDmg==}
     dependencies:
-      string-width: 1.0.2
+      string-width: 4.2.3
     dev: false
 
   /winreg/1.2.4:
@@ -6136,11 +6139,6 @@ packages:
   /xmlchars/2.2.0:
     resolution: {integrity: sha512-JZnDKK8B0RCDw84FNdDAIpZK+JuJw+s7Lz8nksI7SIuU3UXJJslUthsi+uWBUYOwPFwW7W7PRLRfUKpxjtjFCw==}
     dev: true
-
-  /xmldom/0.6.0:
-    resolution: {integrity: sha512-iAcin401y58LckRZ0TkI4k0VSM1Qg0KGSc3i8rU+xrxe19A/BN1zHyVSJY7uoutVlaTSzYyk/v5AmkewAP7jtg==}
-    engines: {node: '>=10.0.0'}
-    dev: false
 
   /xtend/4.0.2:
     resolution: {integrity: sha512-LKYU1iAXJXUgAXn9URjiu+MWhyUXHsvfp7mcuYm9dSUKK0/CjtrUwFAxD82/mCWbtLsGjFIad0wIsod4zrTAEQ==}
