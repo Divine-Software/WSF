@@ -113,6 +113,11 @@ const config = {
         theme: lightCodeTheme,
         darkTheme: darkCodeTheme,
       },
+      algolia: {
+        appId: 'XMAD25WICF',
+        apiKey: '1076277ef839336ff30f0c27fc348a69',
+        indexName: 'divine-web-service',
+      }
     }),
   plugins: [
     [
