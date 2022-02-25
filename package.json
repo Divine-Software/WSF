@@ -36,5 +36,8 @@
     "jest-cli": "^27.5.1",
     "node-java-maven": "~0.1.2",
     "typescript": "~4.5.5"
+  },
+  "pnpm": {
+    "onlyBuiltDependencies": [ "better-sqlite3", "canvas", "java" ]
   }
 }
