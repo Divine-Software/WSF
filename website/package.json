@@ -16,9 +16,9 @@
   },
   "dependencies": {
     "@divine/uri": "link:../uri",
-    "@docusaurus/core": "2.0.0-beta.15",
-    "@docusaurus/plugin-google-gtag": "^2.0.0-beta.15",
-    "@docusaurus/preset-classic": "2.0.0-beta.15",
+    "@docusaurus/core": "2.0.0-beta.17",
+    "@docusaurus/plugin-google-gtag": "^2.0.0-beta.17",
+    "@docusaurus/preset-classic": "2.0.0-beta.17",
     "@mdx-js/react": "^1.6.22",
     "clsx": "^1.1.1",
     "docusaurus-plugin-typedoc": "~0.17.0",
@@ -30,13 +30,12 @@
     "yaml": "^1.10.2"
   },
   "devDependencies": {
-    "@docusaurus/module-type-aliases": "2.0.0-beta.15",
+    "@docusaurus/module-type-aliases": "2.0.0-beta.17",
     "@tsconfig/docusaurus": "^1.0.4",
-    "typescript": "^4.5.5"
+    "typescript": "~4.5.5"
   },
   "pnpm": {
     "overrides": {
-      "@docusaurus/utils": "canary",
       "mdast-util-to-hast": "Divine-Software/mdast-util-to-hast#0e709bd254f07bad424d74a1d98e727d1d7926e4"
     }
   },
