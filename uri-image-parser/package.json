@@ -24,12 +24,12 @@
     "@divine/uri": "workspace:~0.4.4"
   },
   "dependencies": {
-    "canvas": "^2.9.0",
+    "canvas": "^2.9.1",
     "tslib": "^2.3.1"
   },
   "devDependencies": {
     "@divine/uri": "workspace:~0.4.4",
-    "@types/node": "^12.20.46"
+    "@types/node": "^12.20.47"
   },
   "engines": {
     "node": ">= 12.17.0"
