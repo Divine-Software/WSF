@@ -21,6 +21,10 @@ const config = {
   themeConfig:
     /** @type {import('@docusaurus/preset-classic').ThemeConfig} */
     ({
+      colorMode: {
+        defaultMode: 'light',
+        respectPrefersColorScheme: true,
+      },
       navbar: {
         title: 'Divine WSF',
         logo: {
@@ -31,7 +35,8 @@ const config = {
           {
             to: 'blog/',
             label: 'News',
-            position: 'left'},
+            position: 'left'
+          },
           {
             type: 'doc',
             docId: 'intro',
@@ -79,10 +84,6 @@ const config = {
                 label: 'Knative',
                 href: 'https://knative.dev/',
               },
-              /*{
-                label: 'TypeDoc',
-                href: 'https://typedoc.org/',
-              },*/
               {
                 label: 'TypeScript',
                 href: 'https://www.typescriptlang.org//',
@@ -149,8 +150,7 @@ const config = {
         },
         blog: {
           showReadingTime: true,
-          editUrl:
-            'https://github.com/Divine-Software/WSF/tree/master/website/',
+          editUrl: 'https://github.com/Divine-Software/WSF/tree/master/website/',
         },
         theme: {
           customCss: require.resolve('./src/css/custom.css'),
