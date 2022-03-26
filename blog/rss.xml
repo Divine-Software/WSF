@@ -7,6 +7,7 @@
         <lastBuildDate>Sun, 20 Feb 2022 00:00:00 GMT</lastBuildDate>
         <docs>https://validator.w3.org/feed/docs/rss2.html</docs>
         <generator>https://github.com/jpmonette/feed</generator>
+        <language>en</language>
         <item>
             <title><![CDATA[Welcome Back!]]></title>
             <link>https://divine-software.github.io/WSF/blog/2022/02/20/new-docs-site</link>
