@@ -1,5 +1,16 @@
 # @divine/uri
 
+## 0.4.5
+
+### Patch Changes
+
+- 3a380f8: Bug fix when releasing DB connections.
+- cbb626b: Bumped deps.
+- 17668ed: Parser.serialize/Encoder.\*: Always return Readable. Parser.serialize now only passes Buffer/ReadableStream/URI through as-is. Other AsyncIterable are now once again correcly serialized (see EventStreamParser).
+- Updated dependencies [601b686]
+- Updated dependencies [04bb5ba]
+  - @divine/commons@0.4.3
+
 ## 0.4.4
 
 ### Patch Changes

@@ -1,5 +1,18 @@
 # @divine/web-service
 
+## 0.4.4
+
+### Patch Changes
+
+- a86c4ba: Only `null` will result in NO_CONTENT and not any falsy value.
+- Updated dependencies [3a380f8]
+- Updated dependencies [601b686]
+- Updated dependencies [cbb626b]
+- Updated dependencies [04bb5ba]
+- Updated dependencies [17668ed]
+  - @divine/uri@0.4.5
+  - @divine/commons@0.4.3
+
 ## 0.4.3
 
 ### Patch Changes

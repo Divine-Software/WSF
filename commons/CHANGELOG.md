@@ -1,5 +1,12 @@
 # @divine/commons
 
+## 0.4.3
+
+### Patch Changes
+
+- 601b686: isReadableStream/toReadableStream: Include AsyncIterable<> in return signature.
+- 04bb5ba: toAsyncIterable: Throw TypeError if an AsyncIterable contains anything except Buffer or string.
+
 ## 0.4.2
 
 ### Patch Changes
