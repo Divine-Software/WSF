@@ -6,7 +6,7 @@ import { AsyncLocalStorage } from 'async_hooks';
 import { PasswordCredentials } from './auth-schemes';
 import { BasicAuthScheme } from './auth-schemes/basic';
 import { parse as parseDBRef } from './private/dbref';
-import { DatabaseURI, DBParams, DBParamsSelector, DBQuery, DBResult, DBTransactionParams, q } from './protocols/database';
+import { DBParams, DBParamsSelector, DBQuery, DBResult, DBTransactionParams, DatabaseURI, q } from './protocols/database';
 import { getBestSelector } from './selectors';
 import { IOError } from './uri';
 
@@ -143,7 +143,7 @@ export abstract class DBConnectionPool {
     }
 
     private async _releaseConnection(conn: DBConnection, maybeDead: boolean): Promise<void> {
-        if (conn.state !== 'open' && this._closeConnection(conn, false) ||
+        if (conn.state !== 'open' && await this._closeConnection(conn, false) ||
             maybeDead && await this._closeConnection(conn, true)) {
             return;
         }
