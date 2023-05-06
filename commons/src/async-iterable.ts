@@ -1,5 +1,5 @@
 import { Queue } from '@divine/synchronization';
-import { sleep } from './utilities';
+import { sleep, throwError } from './utilities';
 
 interface ExtAsyncIterableIterator<T, TReturn, TNext> extends AsyncIterator<T, TReturn, TNext> {
     [Symbol.asyncIterator](): AsyncIterator<T, TReturn, TNext>;
@@ -15,7 +15,9 @@ export async function *toAsyncIterable(data: string | Buffer | AsyncIterable<Buf
     }
     else if (isAsyncIterable(data)) {
         for await (const chunk of data) {
-            yield chunk instanceof Buffer ? chunk : Buffer.from(chunk);
+            yield chunk instanceof Buffer   ? chunk
+                : typeof chunk === 'string' ? Buffer.from(chunk)
+                : throwError(new TypeError(`Expected AsyncIterable<Buffer | string> but found AsyncIterable<${chunk}>`))
         }
     }
     else {
