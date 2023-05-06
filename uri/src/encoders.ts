@@ -1,5 +1,5 @@
 import { isAsyncIterable, toAsyncIterable, toReadableStream } from '@divine/commons';
-import { Transform } from 'stream';
+import { Readable, Transform } from 'stream';
 import { createBrotliCompress, createBrotliDecompress, createDeflate, createGunzip, createGzip, createInflate } from 'zlib';
 import { IOError } from './uri';
 
@@ -52,7 +52,7 @@ export abstract class Encoder {
      * @throws EncoderError  On encoding errors or if the encoding format is not recognized.
      * @returns              An encoded byte stream.
      */
-    static encode(stream: string | Buffer | AsyncIterable<Buffer>, types: string | string[]): AsyncIterable<Buffer> {
+    static encode(stream: string | Buffer | AsyncIterable<Buffer>, types: string | string[]): Readable & AsyncIterable<Buffer> {
         stream = isAsyncIterable(stream) ? stream : toAsyncIterable(stream);
         types  = typeof types === 'string' ? types.trim().split(/\s*,\s*/) : types;
 
@@ -61,7 +61,7 @@ export abstract class Encoder {
                 stream = Encoder._create(type).encode(stream);
             }
 
-            return stream;
+            return toReadableStream(stream);
         }
         catch (err) {
             throw err instanceof EncoderError ? err : new EncoderError(`'${types}' encoder failed`, err);
@@ -77,7 +77,7 @@ export abstract class Encoder {
      * @throws EncoderError  On decoding errors or if the encoding format is not recognized.
      * @returns              An encoded byte stream.
      */
-     static decode(stream: string | Buffer | AsyncIterable<Buffer>, types: string | string[]): AsyncIterable<Buffer> {
+    static decode(stream: string | Buffer | AsyncIterable<Buffer>, types: string | string[]): Readable & AsyncIterable<Buffer> {
         stream = isAsyncIterable(stream) ? stream : toAsyncIterable(stream);
         types  = typeof types === 'string' ? types.trim().split(/\s*,\s*/) : types;
 
@@ -86,7 +86,7 @@ export abstract class Encoder {
                 stream = Encoder._create(type).decode(stream);
             }
 
-            return stream;
+            return toReadableStream(stream);
         }
         catch (err) {
             throw err instanceof EncoderError ? err : new EncoderError(`'${types}' encoder failed`, err);

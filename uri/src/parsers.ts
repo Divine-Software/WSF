@@ -1,7 +1,8 @@
-import { BasicTypes, isAsyncIterable, isXML, isHTML, isJSON, toAsyncIterable } from '@divine/commons';
+import { BasicTypes, isAsyncIterable, isHTML, isJSON, isReadableStream, isXML, toAsyncIterable, toReadableStream } from '@divine/commons';
 import { ContentType } from '@divine/headers';
 import iconv from 'iconv-lite';
-import { Finalizable, IOError, NULL, VOID } from './uri';
+import { Readable } from 'stream';
+import { Finalizable, IOError, NULL, URI, VOID } from './uri';
 
 /**
  * Converts a primitive value to an object and returns objects as-is.
@@ -102,7 +103,7 @@ export abstract class Parser {
      *                        possible that the Parser subclass allocated temporary resources as part of the process.
      *                        These resources may be cleaned up by calling [[FINALIZE]].
      */
-    static async parse<T extends object>(stream: string | Buffer | AsyncIterable<Buffer>, contentType: ContentType | string): Promise<T & Finalizable> {
+    static async parse<T extends object>(stream: string | Buffer | AsyncIterable<Buffer | string>, contentType: ContentType | string): Promise<T & Finalizable> {
         try {
             const result = await Parser._create(ContentType.create(contentType)).parse(toAsyncIterable(stream));
 
@@ -117,6 +118,9 @@ export abstract class Parser {
     /**
      * Converts a parsed (or manually constructed) object back into a byte stream representation.
      *
+     * Buffers and ReadableStream will be passed through as-is. Strings will just be encoded using the `charset` param
+     * from `contentType` (or UTF-8 if not present). Everything else is serialized using a Parser subclass.
+     *
      * @template T            The type of the object that is to be serialized.
      * @param    data         The object that is to be serialized.
      * @param    contentType  The media type that specifies what parser to use.
@@ -125,13 +129,13 @@ export abstract class Parser {
      *                        may return a slightly different media type than was given (for instance,
      *                        [[MultiPartParser]] might add a boundary param if none was given).
      */
-    static serialize<T = unknown>(data: T, contentType?: ContentType | string): [Buffer | AsyncIterable<Buffer>, ContentType] {
+    static serialize<T = unknown>(data: T, contentType?: ContentType | string): [Buffer | Readable & AsyncIterable<Buffer>, ContentType] {
         try {
             data = toPrimitive(data) as unknown as T; // Unpack values wrapped by toObject()
 
             contentType = ContentType.create(contentType,
                 data instanceof Buffer        ? ContentType.bytes :
-                isAsyncIterable(data)         ? ContentType.bytes :
+                isReadableStream(data)        ? ContentType.bytes :
                 isJSON(data) || data === null ? ContentType.json :
                 isHTML(data)                  ? ContentType.html :
                 isXML(data)                   ? ContentType.xml :
@@ -142,14 +146,17 @@ export abstract class Parser {
             // 3. Serialize everything else
 
             const dataOrParser =
-                data instanceof Buffer          ? data :
-                isAsyncIterable<Buffer>(data)   ? toAsyncIterable(data) :
-                typeof data === 'string'        ? new StringParser(contentType)
-                                                : Parser._create(contentType);
+                data instanceof Buffer     ? data :
+                data instanceof URI        ? toReadableStream(data) : // AsyncIterable<Buffer>           => Readble<Buffer>
+                isReadableStream(data)     ? toReadableStream(data) : // ReadableStream<Buffer | string> => Readble<Buffer>
+                typeof data === 'string'   ? new StringParser(contentType)
+                                           : Parser._create(contentType);
 
             if (dataOrParser instanceof Parser) {
+                const serialized = dataOrParser.serialize(data);
+
                 // Give Parser a chance to update content-type (for instance, MultiPartParser might add a boundary param)
-                return [ dataOrParser.serialize(data), dataOrParser.contentType ];
+                return [ serialized instanceof Buffer ? serialized : toReadableStream(serialized), dataOrParser.contentType ];
             }
             else {
                 return [ dataOrParser, contentType];

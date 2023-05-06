@@ -178,7 +178,7 @@ export class EventStreamResponse<T extends object> extends WebResponse {
         const serialize = async (event: object): Promise<string> => {
             const [serialized] = await Parser.serializeToBuffer(event, dataType);
 
-            return serialized.toString();
+            return serialized.toString(); // SSE is always UTF-8
         };
 
         try {

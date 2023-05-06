@@ -78,7 +78,7 @@ export class EventStreamParser extends Parser {
     }
 
     async *serialize(data: AsyncIterable<EventStreamEvent | undefined | null>): AsyncIterable<Buffer> {
-        this._assertSerializebleData(isAsyncIterable<EventStreamEvent | undefined | null>(data), data);
+        this._assertSerializebleData(isAsyncIterable(data), data);
 
         for await (const event of data) {
             if (!event) {
