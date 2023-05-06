@@ -2,18 +2,13 @@ import { EventEmitter } from 'events';
 import { pipeline, Readable, Transform, TransformCallback, TransformOptions } from 'stream';
 import { toAsyncIterable } from './async-iterable';
 
-export function isReadableStream(obj: any): obj is NodeJS.ReadableStream;
-export function isReadableStream(obj: NodeJS.ReadableStream): obj is NodeJS.ReadableStream {
+export function isReadableStream(obj: any): obj is NodeJS.ReadableStream & AsyncIterable<Buffer | string>;
+export function isReadableStream(obj: NodeJS.ReadableStream): boolean {
     return obj instanceof EventEmitter && typeof obj.readable === 'boolean' && typeof obj.read === 'function';
 }
 
-export function toReadableStream(data: string | Buffer | AsyncIterable<Buffer | string>): Readable {
-    if (typeof data === 'string' || data instanceof Buffer) {
-        return Readable.from(toAsyncIterable(data));
-    }
-    else {
-        return Readable.from(data);
-    }
+export function toReadableStream(data: string | Buffer | AsyncIterable<Buffer | string>): Readable & AsyncIterable<Buffer>{
+    return Readable.from(toAsyncIterable(data));
 }
 
 export function copyStream(from: NodeJS.ReadableStream, to: NodeJS.WritableStream): Promise<typeof to> {
