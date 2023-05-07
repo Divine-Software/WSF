@@ -229,7 +229,8 @@ export class EventStreamResponse<T extends object> extends WebResponse {
     constructor(source: AsyncIterable<T & EventAttributes | undefined | null>, dataType?: ContentType | string, headers?: WebResponseHeaders, keepaliveTimeout?: number) {
         super(WebStatus.OK, EventStreamResponse._eventStream(source, dataType, keepaliveTimeout), {
             'content-type':      'text/event-stream',
-            'cache-control':     'no-cache',
+            'connection':        'close',
+            'cache-control':     'no-store',
             'transfer-encoding': 'identity',
             ...headers
         });
