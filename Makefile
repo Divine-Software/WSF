@@ -20,13 +20,13 @@ build::		prepare								## Build all packages
 lint:		prepare								## Lint all sources with eslint
 	-pnpm exec eslint '*/src/**/*.ts'
 
-test::	build lint								## Build and run all tests
+test::		build lint							## Build and run all tests
 	pnpm exec jest
 
 clean::										## Clean all build artifacts (but not dependencies)
 	rm -rf coverage
 
-distclean::									## Like clean, but also remove all dependencies
+distclean::	clean								## Like clean, but also remove all dependencies
 	rm -rf node_modules
 
 commit:		prepare								## Commit a change and create a change-log entry for it
