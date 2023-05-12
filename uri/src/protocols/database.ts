@@ -708,7 +708,7 @@ export abstract class DBResult extends Array<unknown[]> {
 }
 
 function toObjects<T extends object = object[]>(results: DBResult[]): T & DBMetadata {
-    return results[results.length - 1].toObjects(results) as T & DBMetadata;
+    return results[results.length - 1].toObjects(results) as unknown as T & DBMetadata;
 }
 
 function withDBMetadata<T extends object>(meta: DBMetadata, value: object): T & DBMetadata {
@@ -990,7 +990,7 @@ export abstract class DatabaseURI extends URI {
                 }
             }
             else {
-                return result as T & DBMetadata;
+                return result as unknown as T & DBMetadata;
             }
         });
     }
@@ -1186,10 +1186,10 @@ export abstract class DatabaseURI extends URI {
             else if (typeof first === 'string' && rest.length === 1 && rest[0] !== null && typeof rest[0] === 'object') {
                 return toObjects(await conn.query(q(first, rest[0] as Params)));
             }
-            else if (isDatabaseTransactionParams(first) && rest.length === 1 && isDBCallback<T>(rest[0])) {
+            else if (isDatabaseTransactionParams(first) && rest.length === 1 && isDBCallback<T & Metadata & WithFields<DBResult>>(rest[0])) {
                 return conn.transaction(first, rest[0])
             }
-            else if (isDBCallback<T>(first) && rest.length === 0) {
+            else if (isDBCallback<T & Metadata & WithFields<DBResult>>(first) && rest.length === 0) {
                 return conn.transaction({}, first);
             }
             else {

@@ -92,7 +92,7 @@ export class FormParser extends Parser {
     serialize(data: FormData | FormField[]): Buffer {
         this._assertSerializebleData(data && typeof data === 'object' || data?.[FIELDS] && Array.isArray(data?.[FIELDS]), data);
 
-        const entries = (Array.isArray(data) ? data : data[FIELDS])?.map((f) => [f.name, f.value])
+        const entries = (Array.isArray(data) ? data : data[FIELDS])?.map<[string, string]>((f) => [f.name, f.value])
             ?? Object.fromEntries(Object.entries(data)) /* Remove symbols */;
 
         return new StringParser(this.contentType).serialize(new URLSearchParams(entries));
