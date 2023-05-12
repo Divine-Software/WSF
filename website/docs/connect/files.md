@@ -30,7 +30,7 @@ const files = await new URI('.').list();
 
 ## Writing Files
 
-Use [save] to write files. The default file format is inferred from the file name or data, but you can also specify a formay manually:
+Use [save] to write files. The default file format is inferred from the file name or data, but you can also specify a format manually:
 
 ```ts
 import { URI } from '@divine/uri';

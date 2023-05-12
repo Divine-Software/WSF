@@ -22,19 +22,19 @@
     "collectCoverage": true
   },
   "dependencies": {
-    "@divine/commons": "workspace:~0.4.3",
-    "cuid": "^2.1.8",
-    "tslib": "^2.3.1",
-    "ua-parser-js": "^1.0.2"
+    "@divine/commons": "workspace:~",
+    "@paralleldrive/cuid2": "^2.2.0",
+    "tslib": "^2.5.0",
+    "ua-parser-js": "^1.0.35"
   },
   "peerDependencies": {
     "@divine/headers": "workspace:^2.0.2",
     "@divine/uri": "workspace:~0.4.5"
   },
   "devDependencies": {
-    "@divine/headers": "workspace:^2.0.2",
-    "@divine/uri": "workspace:~0.4.5",
-    "@types/node": "^12.20.47",
+    "@divine/headers": "workspace:^",
+    "@divine/uri": "workspace:~",
+    "@types/node": "^12.20.55",
     "@types/ua-parser-js": "~0.7.36"
   },
   "engines": {

@@ -25,13 +25,13 @@
     "@divine/uri": "workspace:~0.4.4"
   },
   "dependencies": {
-    "@divine/commons": "workspace:~0.4.2",
-    "mysql2": "^2.3.3",
-    "tslib": "^2.3.1"
+    "@divine/commons": "workspace:~",
+    "mysql2": "^3.3.1",
+    "tslib": "^2.5.0"
   },
   "devDependencies": {
-    "@divine/uri": "workspace:~0.4.4",
-    "@types/node": "^12.20.47"
+    "@divine/uri": "workspace:~",
+    "@types/node": "^12.20.55"
   },
   "engines": {
     "node": ">= 12.17.0"

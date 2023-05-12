@@ -72,7 +72,7 @@ export abstract class CORSFilter implements WebFilter {
      * do that by throwing a [[WebError]] instead of returning `false`, like this:
      *
      * ```ts
-     * protected isOriginAllowed(origin: string | undefined, params: CORSFilterParams): boolean {
+     * protected _isOriginAllowed(origin: string | undefined, params: CORSFilterParams): boolean {
      *     if (origin === 'https://example.com') {
      *         return true;
      *     } else {
@@ -173,9 +173,9 @@ export interface EventAttributes {
  *
  * @template T The type of events to transmit.
  */
-export class EventStreamResponse<T extends object> extends WebResponse {
-    private static async *_eventStream(source: AsyncIterable<object & EventAttributes | undefined | null>, dataType?: ContentType | string, keepaliveTimeout?: number): AsyncGenerator<EventStreamEvent | undefined> {
-        const serialize = async (event: object): Promise<string> => {
+export class EventStreamResponse<T = unknown> extends WebResponse {
+    private static async *_eventStream(source: AsyncIterable<any>, dataType?: ContentType | string, keepaliveTimeout?: number): AsyncGenerator<EventStreamEvent | undefined> {
+        const serialize = async (event: unknown): Promise<string> => {
             const [serialized] = await Parser.serializeToBuffer(event, dataType);
 
             return serialized.toString(); // SSE is always UTF-8
@@ -226,7 +226,7 @@ export class EventStreamResponse<T extends object> extends WebResponse {
      * @param headers          Custom response headers to send.
      * @param keepaliveTimeout How often, in milliseconds, to automatically send comments/keep-alive lines.
      */
-    constructor(source: AsyncIterable<T & EventAttributes | undefined | null>, dataType?: ContentType | string, headers?: WebResponseHeaders, keepaliveTimeout?: number) {
+    constructor(source: AsyncIterable<T | T & EventAttributes | undefined | null>, dataType?: ContentType | string, headers?: WebResponseHeaders, keepaliveTimeout?: number) {
         super(WebStatus.OK, EventStreamResponse._eventStream(source, dataType, keepaliveTimeout), {
             'content-type':      'text/event-stream',
             'connection':        'close',

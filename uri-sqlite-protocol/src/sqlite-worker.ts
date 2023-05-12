@@ -1,5 +1,5 @@
-import { parentPort } from 'worker_threads';
 import Database from 'better-sqlite3';
+import { parentPort } from 'worker_threads';
 
 export interface ErrorResult {
     type:    'error';
@@ -87,7 +87,7 @@ parentPort?.on('message', (message: SQLiteWorkerMessage) => {
 
             if (query.reader) {
                 const reader  = query.raw(true);
-                const rows    = reader.all(...message.params);
+                const rows    = reader.all(...message.params) as unknown[][];
                 const columns = reader.columns();
 
                 sendResult({ type: message.type, columns, rows });

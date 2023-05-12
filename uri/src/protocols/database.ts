@@ -740,7 +740,8 @@ function withDBMetadata<T extends object>(meta: DBMetadata, value: object): T & 
  * SQL Server   | [[TDSURI]]
  * SQLite       | [[SQLiteURI]]
  *
- * † In theory, any JDBC-enabled database should have at least basic support, but our unit tests are only run against H2.
+ * † In theory, any JDBC-enabled database should have at least basic support, but our unit tests are only run against
+ * H2.
  *
  * ## CRUD row operations with *DB references*
  *
@@ -922,8 +923,8 @@ function withDBMetadata<T extends object>(meta: DBMetadata, value: object): T & 
  *
  * Some drivers, like [[PostgresURI]], also implement the [[watch]] method. Use this to listen for events from the
  * database and stream the results in realtime to your application. The PostgresURI class supports `LISTEN`/`NOTIFY`
- * events when when using PostgreSQL and [core
- * changefeeds](https://www.cockroachlabs.com/docs/v21.2/changefeed-for.html) when using CockroachDB.
+ * events when using PostgreSQL and [core changefeeds](https://www.cockroachlabs.com/docs/v21.2/changefeed-for.html)
+ * when using CockroachDB.
  *
  * ## Shutting down
  *

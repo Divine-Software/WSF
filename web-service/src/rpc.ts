@@ -87,7 +87,7 @@ export interface RPCServiceCtor<Context, M extends RPCMethods<M>> {
 }
 
 /**
- * This function is should issue an HTTP `POST` request to the remote server and return the response.
+ * This function should issue an HTTP `POST` request to the remote server and return the response.
  *
  * A minimal implementation using `@divine/uri` could look like this:
  *
@@ -113,7 +113,7 @@ export type RPCClientProxy<M extends RPCMethods<M>> = (method: keyof M, options:
  *
  * This is a great place to perform input validation (perhaps using a schema), authenticate the client somehow or add
  * custom response headers. If an `AsyncIterable` is returned, it will automatically be wrapped in an [[EventStreamResponse]],
- * but otherwise, you free to constuct the response as you wish.
+ * but otherwise, you're free to constuct the response as you wish.
  *
  * A minimal implementation could look like this:
  *
@@ -244,7 +244,7 @@ export function createRPCService<M extends RPCMethods<M>, Context>(config: RPCEn
  *         async (method, options, args, fn) => fn(await args.body())));
  * ```
  *
- * * @template M          The interface that defines all RPC method request and response types (as tuples).
+ * @template M          The interface that defines all RPC method request and response types (as tuples).
  * @template Context    The [[WebService]] context type.
  * @param config        RPC endpoint configuration to generate a client API for.
  * @param impl          An RPC service instance (which may be stateful). Its methods will be invoked directly.

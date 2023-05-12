@@ -161,7 +161,7 @@ class MyDatabaseConnection implements DBDriver.DBConnection {
 }
 
 type MySQLResult = ResultSetHeader | RowDataPacket[] | RowDataPacket[][] | OkPacket | OkPacket[];
-type FixedFields = FieldPacket & { schema?: string, columnType?: number } // Missing from mysql2 d.ts file
+type FixedFields = Omit<FieldPacket, 'constructor'> & { schema?: string, columnType?: number } // Missing from mysql2 d.ts file
 
 export class MyResult extends DBResult {
     constructor(_db: DatabaseURI, [result, fields]: [ result: MySQLResult, fields?: FixedFields[] ]) {

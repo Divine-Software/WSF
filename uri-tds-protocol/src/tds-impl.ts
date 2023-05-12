@@ -42,16 +42,17 @@ class TDSDatabaseConnection implements DBDriver.DBConnection {
                 authentication: {
                     type:         domain?.length > 0 ? 'ntlm' : 'default',
                     options: {
-                        domain:   domain?.join('@') || undefined,
+                        tenantId: domain?.join('@') || undefined,
                         userName: username,
                         password: this._creds?.secret,
                     },
                 },
                 options: {
-                    database:     decodeURIComponent(this._dbURI.pathname).substr(1),
-                    instanceName: instance.join('\\') || undefined,
-                    port:         Number(this._dbURI.port) || undefined,
-                    useUTC:       false,
+                    database:               decodeURIComponent(this._dbURI.pathname).substr(1),
+                    instanceName:           instance.join('\\') || undefined,
+                    port:                   Number(this._dbURI.port) || undefined,
+                    useUTC:                 false,
+                    trustServerCertificate: true,
                     ...this._options as ConnectionOptions
                 }
             })

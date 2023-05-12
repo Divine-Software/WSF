@@ -9,7 +9,7 @@ build:		prepare build-deps
 build-deps:	src/private/dbref.ts
 
 src/private/dbref.ts:	src/private/dbref.pegjs
-	pnpm exec tspegjs $<
+	pnpm exec peggy --plugin ./node_modules/ts-pegjs/dist/tspegjs.js $< -o $@
 
 test:		build
 	pnpm exec jest

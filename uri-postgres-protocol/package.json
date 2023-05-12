@@ -25,14 +25,14 @@
     "@divine/uri": "workspace:~0.4.4"
   },
   "dependencies": {
-    "@divine/commons": "workspace:~0.4.2",
-    "pg": "^8.7.3",
-    "tslib": "^2.3.1"
+    "@divine/commons": "workspace:~",
+    "pg": "^8.10.0",
+    "tslib": "^2.5.0"
   },
   "devDependencies": {
-    "@divine/uri": "workspace:~0.4.4",
-    "@types/node": "^12.20.47",
-    "@types/pg": "^8.6.5"
+    "@divine/uri": "workspace:~",
+    "@types/node": "^12.20.55",
+    "@types/pg": "^8.6.6"
   },
   "engines": {
     "node": ">= 12.17.0"
