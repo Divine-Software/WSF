@@ -27,7 +27,7 @@ export interface AuthSchemeRequest {
     headers: Iterable<[string, string | undefined]>;
 }
 
-/** An IOError subclass thrown by the [[AuthScheme]] class. */
+/** An IOError subclass thrown by the {@link AuthScheme} class. */
 export class AuthSchemeError extends IOError {
     /**
      * Constructs a new AuthSchemeError exception.
@@ -43,7 +43,7 @@ export class AuthSchemeError extends IOError {
 }
 
 /**
- * Parameters for a [[CredentialsProvider]].
+ * Parameters for a {@link CredentialsProvider}.
  *
  * @template C  The type of credentials that is to be provied.
  */
@@ -78,15 +78,15 @@ export type CredentialsProvider<C extends Credentials> = (options: CredentialsPr
 
 /**
  * The base class for all authentication scheme subclasses. The subclasses can be constructed manually, but usually
- * aren't. Instead, this class provides the static methods [[AuthScheme.create]] to create a authentication scheme from
+ * aren't. Instead, this class provides the static methods {@link AuthScheme.create} to create a authentication scheme from
  * an authentication header or by the registered authentication name.
  *
  * Below is a list of all known authentication schemes:
  *
  * Authentication name | AuthScheme class
  * --------------------|---------------------
- * `Basic`             | [[BasicAuthScheme]]
- * `Bearer`            | [[BearerAuthScheme]]
+ * `Basic`             | {@link BasicAuthScheme}
+ * `Bearer`            | {@link BearerAuthScheme}
  *
  * @template C  The type of credentials this authentication scheme uses.
  */
@@ -108,10 +108,10 @@ export abstract class AuthScheme<C extends Credentials> {
     /**
      * Creates an authentication scheme class from an authentication header or authentication name.
      *
-     * If the authentication scheme is unknown, an instance of [[UnknownAuthScheme]] will be returned.
+     * If the authentication scheme is unknown, an instance of {@link UnknownAuthScheme} will be returned.
      *
      * @param from   The type of authentication scheme to create.
-     * @param proxy  Set to `true` to force proxy mode. Defaults to [[AuthHeader.isProxyHeader]] or `false`.
+     * @param proxy  Set to `true` to force proxy mode. Defaults to {@link AuthHeader.isProxyHeader} or `false`.
      * @returns      An AuthScheme instance that provides authentication for the requested scheme.
      */
     static create(from: AuthHeader | string | RegExp, proxy?: boolean): AuthScheme<Credentials> {
@@ -184,32 +184,32 @@ export abstract class AuthScheme<C extends Credentials> {
     }
 
     /**
-     * Generates an [[Authorization]] header for an outgoing request.
+     * Generates an {@link Authorization} header for an outgoing request.
      *
      * @param  challenge        An optional challenge sent by the remote server.
      * @param  request          The request that is to be authenticated.
      * @param  payload          The request payload that will be sent.
-     * @throws AuthSchemeError  If the challenge or the credentials provided via [[setCredentialsProvider]] are
+     * @throws AuthSchemeError  If the challenge or the credentials provided via {@link setCredentialsProvider} are
      *                          incompatibe with this AuthScheme.
      * @returns                 An Authorization header with the provided credentials.
      */
     abstract createAuthorization(challenge?: WWWAuthenticate, request?: AuthSchemeRequest, payload?: Uint8Array): Promise<Authorization | undefined>;
 
     /**
-     * Verifies an [[Authorization]] header from an incoming request.
+     * Verifies an {@link Authorization} header from an incoming request.
      *
      * @template T                The type of the header to validate.
      * @param    authorization    The authentication provided by the remote client.
      * @param    request          The request that is to be authenticated.
      * @param    payload          The request payload that was sent.
-     * @throws   AuthSchemeError  If the authentication or the credentials provided via [[setCredentialsProvider]] are
-     *                            incompatibe with this AuthScheme.
+     * @throws   AuthSchemeError  If the authentication or the credentials provided via {@link setCredentialsProvider}
+     *                            are incompatibe with this AuthScheme.
      * @returns                   The validated Authorization header.
      */
     abstract verifyAuthorization<T extends Authorization | undefined>(authorization: T, request?: AuthSchemeRequest, payload?: Uint8Array): Promise<T>;
 
     /**
-     * Verifies an [[AuthenticationInfo]] or [[ServerAuthorization]] header received from a server response.
+     * Verifies an {@link AuthenticationInfo} or {@link ServerAuthorization} header received from a server response.
      *
      * Not all protocols supports verification of responses. In that case, this method does nothing.
      *
@@ -217,8 +217,8 @@ export abstract class AuthScheme<C extends Credentials> {
      * @param    authentication   The authentication provided by the remote server.
      * @param    request          The *response* to a request that is to be authenticated.
      * @param    payload          The *response* payload received from the remote server.
-     * @throws   AuthSchemeError  If the authentication or the credentials provided via [[setCredentialsProvider]] are
-     *                            incompatibe with this AuthScheme.
+     * @throws   AuthSchemeError  If the authentication or the credentials provided via {@link setCredentialsProvider}
+     *                            are incompatibe with this AuthScheme.
      * @returns                   The validated AuthenticationInfo/ServerAuthorization header.
      */
     abstract verifyAuthenticationInfo<T extends AuthenticationInfo | ServerAuthorization | undefined>(authentication: T, request?: AuthSchemeRequest, payload?: Uint8Array): Promise<T>;
@@ -249,7 +249,7 @@ export abstract class AuthScheme<C extends Credentials> {
      *
      * @param  options          Options to pass to the credentials provider.
      * @throws AuthSchemeError  If the authentication, challenge or the credentials provided via
-     *                          [[setCredentialsProvider]] are incompatibe with this AuthScheme.
+     *                          {@link setCredentialsProvider} are incompatibe with this AuthScheme.
      * @returns                 Valid credentials or `undefined` if no credentials could be provided.
      */
     protected async _getCredentials(options: CredentialsProviderOptions<C>): Promise<C | undefined> {

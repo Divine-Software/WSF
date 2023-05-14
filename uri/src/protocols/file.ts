@@ -10,7 +10,7 @@ import { DirectoryEntry, IOError, Metadata, URI, VOID } from '../uri';
 
 const _chokidar = import('chokidar').catch(() => null);
 
-/** The event produced by [[FileURI.watch]]. */
+/** The event produced by {@link FileURI.watch}. */
 export interface FileWatchEvent {
     /** The type of event. */
     type: 'create' | 'update' | 'delete';
@@ -35,7 +35,7 @@ const fileWatchEventType = {
  */
 export class FileURI extends URI {
     /**
-     * Creates a new FileURI by encoding the file path using [[encodeFilePath]].
+     * Creates a new FileURI by encoding the file path using {@link encodeFilePath}.
      *
      * @param  path       The a Windows or POSIX style file path, depending on current operating system.
      * @param  base       An optional URI to use when resolving relative paths.
@@ -76,10 +76,10 @@ export class FileURI extends URI {
     }
 
     /**
-     * Calls `fs.stat()` on the file resourcce and constructs a [[DirectoryEntry]].
+     * Calls `fs.stat()` on the file resourcce and constructs a {@link DirectoryEntry}.
      *
-     * Directories will have its type set to [[ContentType.dir]] and the media type of files will be guessed based on
-     * the file name extension.
+     * Directories will have its type set to {@link ContentType.dir} and the media type of files will be guessed based
+     * on the file name extension.
      *
      * @throws IOError  On I/O errors or if this file/directory does not exist.
      * @returns         Information about this file resource.
@@ -129,7 +129,7 @@ export class FileURI extends URI {
      * @param    recvCT       Override the default response parser.
      * @throws   IOError      On I/O errors or if this resource is not a file or does not exist.
      * @throws   ParserError  If the media type is unsupported or if the parser fails to parse the resource.
-     * @returns               The file resource parsed as `recvCT` *into an object*, including [[MetaData]].
+     * @returns               The file resource parsed as `recvCT` *into an object*, including {@link Metadata}.
      */
     override async load<T extends object>(recvCT?: ContentType | string): Promise<T & Metadata> {
         try {
@@ -153,7 +153,7 @@ export class FileURI extends URI {
      * @param    recvCT       Must not be used.
      * @throws   IOError      On I/O errors or if this resource is not a file.
      * @throws   ParserError  If the media type is unsupported or if the parser fails to serialize the data.
-     * @returns               Object([[VOID]]).
+     * @returns               Object({@link VOID}).
      */
     override async save<T extends object, D = unknown>(data: D, sendCT?: ContentType | string, recvCT?: undefined): Promise<T & Metadata> {
         if (recvCT !== undefined) {
@@ -179,7 +179,7 @@ export class FileURI extends URI {
      * @param    recvCT       Must not be used.
      * @throws   IOError      On I/O errors or if this resource is not a file.
      * @throws   ParserError  If the media type is unsupported or ig the parser fails to serialize the data.
-     * @returns               Object([[VOID]]).
+     * @returns               Object({@link VOID}).
      */
     override async append<T extends object, D = unknown>(data: D, sendCT?: ContentType | string, recvCT?: undefined): Promise<T & Metadata> {
         if (recvCT !== undefined) {
@@ -232,7 +232,7 @@ export class FileURI extends URI {
     /**
      * Watches the file or directory (recusively) this URI references for changes.
      *
-     * Each modification to the file or the filesystem below the directory will emit a [[FileWatchEvent]]. Use `for
+     * Each modification to the file or the filesystem below the directory will emit a {@link FileWatchEvent}. Use `for
      * await (...)` to read the events, propagate errors and to ensure the stream is closed correctly when you are done.
      *
      * Example usage:

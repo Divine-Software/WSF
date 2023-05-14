@@ -34,7 +34,7 @@ export interface SelectorBase {
     selector?: Selector;
 }
 
-/** Provides authentication for [[URI]] and its subclasses.. */
+/** Provides authentication for {@link URI} and its subclasses.. */
 export interface AuthSelector extends SelectorBase {
     /** The credentials or credential provider to use for authentication. */
     credentials: CredentialsProvider<Credentials> | Credentials | AuthScheme<Credentials>;
@@ -48,7 +48,7 @@ export function isAuthSelector(selector: any): selector is AuthSelector {
         (selector.preemptive === undefined || typeof selector.preemptive === 'boolean');
 }
 
-/** Provides request headers for [[URI]] and its subclasses, most notably [[HTTPURI]]. */
+/** Provides request headers for {@link URI} and its subclasses, most notably {@link HTTPURI}. */
 export interface HeadersSelector extends SelectorBase {
     /** The headers to send. */
     headers: StringParams;
@@ -64,7 +64,7 @@ export interface URIParams extends Params {
     console?: Console;
 }
 
-/** Provides configuration parameters for [[URI]] and its subclasses. */
+/** Provides configuration parameters for {@link URI} and its subclasses. */
 export interface ParamsSelector extends SelectorBase {
     /** The parameters to apply. */
     params: URIParams;

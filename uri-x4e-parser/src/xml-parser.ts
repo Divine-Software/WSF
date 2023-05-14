@@ -3,7 +3,7 @@ import { isDOMNode, parseXMLFromString, serializeXMLToString, XML } from '@divin
 
 /**
  * The `application/xml`, `text/xml` and `application/*+xml` parser uses [xmldom](https://github.com/xmldom/xmldom) to
- * convert XML documents to and from X4E [[XML]] objects.
+ * convert XML documents to and from X4E {@link XML} objects.
  */
 export class XMLParser extends Parser {
     async parse(stream: AsyncIterable<Buffer>): Promise<XML<Element>> {

@@ -26,11 +26,11 @@ export interface WebFilterCtor<Context> {
     path: RegExp;
 
     /**
-     * Constructs a filter instance. Invoked by [[WebService]] when a filter's path matches the request path.
+     * Constructs a filter instance. Invoked by {@link WebService} when a filter's path matches the request path.
      *
      * @param context The WebService context.
      * @param args    The request arguments.
-     * @returns       A new [[WebFilter]] instance.
+     * @returns       A new {@link WebFilter} instance.
      */
     new(context: Context, args: WebArguments): WebFilter;
 }
@@ -42,12 +42,12 @@ export interface WebFilterCtor<Context> {
  */
 export interface WebFilter {
     /**
-     * Invoked by [[WebService]] when the filter should process a request or response.
+     * Invoked by {@link WebService} when the filter should process a request or response.
      *
      * The filter may act on the request before or after a resource handles the request (or both). Call the `next`
      * function to process the request normally and receive the default response. It's also possible to get a reference
      * to the actual resource instance by calling the `resource` function. Note that this function may throw a
-     * [[WebError]] in case no resource matched the request.
+     * {@link WebError} in case no resource matched the request.
      *
      * The filter is free to modify the request, the resource instance and/or the response as part of its work.
      *
@@ -89,11 +89,11 @@ export interface WebResourceCtor<Context> {
     path: RegExp;
 
     /**
-     * Constructs a resource instance. Invoked by [[WebService]] when a resource's path matches the request path.
+     * Constructs a resource instance. Invoked by {@link WebService} when a resource's path matches the request path.
      *
      * @param context The WebService context.
      * @param args    The request arguments.
-     * @returns       A new [[WebResource]] instance.
+     * @returns       A new {@link WebResource} instance.
      */
     new(context: Context, args: WebArguments): WebResource;
 }
@@ -120,7 +120,7 @@ export interface WebResource {
     /**
      * Invoked when the client issues a `HEAD` request.
      *
-     * If this method is not implemented, [[WebService]] will fall back to the [[GET]] method.
+     * If this method is not implemented, {@link WebService} will fall back to the {@link GET} method.
      *
      * @param args The request arguments.
      * @returns The response. The response body will be discarded, but all other parts of the response applies.
@@ -130,11 +130,11 @@ export interface WebResource {
     /**
      * Invoked when the client issues a `GET` request.
      *
-     * This method may also be invoked for `HEAD` requests, if [[HEAD]] is not implemented.
+     * This method may also be invoked for `HEAD` requests, if {@link HEAD} is not implemented.
      *
      * @param args The request arguments.
-     * @returns The response; a [[WebResponse]] object or just the response payload from which a successful WebResponse
-     * will be constructed.
+     * @returns The response; a {@link WebResponse} object or just the response payload from which a successful
+     * WebResponse will be constructed.
      */
     GET     ?(args: WebArguments): Promise<WebResponses>;
 
@@ -142,8 +142,8 @@ export interface WebResource {
      * Invoked when the client issues a `PUT` request.
      *
      * @param args The request arguments.
-     * @returns The response; a [[WebResponse]] object or just the response payload from which a successful WebResponse
-     * will be constructed.
+     * @returns The response; a {@link WebResponse} object or just the response payload from which a successful
+     * WebResponse will be constructed.
      */
     PUT     ?(args: WebArguments): Promise<WebResponses>;
 
@@ -151,8 +151,8 @@ export interface WebResource {
      * Invoked when the client issues a `POST` request.
      *
      * @param args The request arguments.
-     * @returns The response; a [[WebResponse]] object or just the response payload from which a successful WebResponse
-     * will be constructed.
+     * @returns The response; a {@link WebResponse} object or just the response payload from which a successful
+     * WebResponse will be constructed.
      */
     POST    ?(args: WebArguments): Promise<WebResponses>;
 
@@ -160,8 +160,8 @@ export interface WebResource {
      * Invoked when the client issues a `PATCH` request.
      *
      * @param args The request arguments.
-     * @returns The response; a [[WebResponse]] object or just the response payload from which a successful WebResponse
-     * will be constructed.
+     * @returns The response; a {@link WebResponse} object or just the response payload from which a successful
+     * WebResponse will be constructed.
      */
     PATCH   ?(args: WebArguments): Promise<WebResponses>;
 
@@ -169,40 +169,40 @@ export interface WebResource {
      * Invoked when the client issues a `DELETE` request.
      *
      * @param args The request arguments.
-     * @returns The response; a [[WebResponse]] object or just the response payload from which a successful WebResponse
-     * will be constructed.
+     * @returns The response; a {@link WebResponse} object or just the response payload from which a successful
+     * WebResponse will be constructed.
      */
     DELETE  ?(args: WebArguments): Promise<WebResponses>;
 
     /**
      * Invoked when the client issues a `OPTIONS` request.
      *
-     * If this method is not implemented, [[WebService]] will use [[WebService.makeAllowHeader]] to construct a suitable
-     * response for the request.
+     * If this method is not implemented, {@link WebService} will use {@link WebService.makeAllowHeader} to construct a
+     * suitable response for the request.
      *
      * @param args The request arguments.
-     * @returns The response; a [[WebResponse]] object or just the response payload from which a successful WebResponse
-     * will be constructed.
+     * @returns The response; a {@link WebResponse} object or just the response payload from which a successful
+     * WebResponse will be constructed.
      */
     OPTIONS ?(args: WebArguments): Promise<WebResponses>;
 
     /**
-     * Invoked when the client issues any request that was not handled by [[HEAD]], [[GET]], [[PUT]], [[POST]],
-     * [[PATCH]], [[DELETE]] or [[OPTIONS]].
+     * Invoked when the client issues any request that was not handled by {@link HEAD}, {@link GET}, {@link PUT},
+     * {@link POST}, {@link PATCH}, {@link DELETE} or {@link OPTIONS}.
      *
      * Can be used to handle multiple verbs with the same code or to handle custom verbs not defined by this interface.
      * Note that automatic `OPTIONS` handling will not work as desired when this method is used, since there is no way
-     * for [[WebService]] to figure out what methods are supported.
+     * for {@link WebService} to figure out what methods are supported.
      *
      * @param args The request arguments.
-     * @returns The response; a [[WebResponse]] object or just the response payload from which a successful WebResponse
-     * will be constructed.
+     * @returns The response; a {@link WebResponse} object or just the response payload from which a successful
+     * WebResponse will be constructed.
      */
     default ?(args: WebArguments): Promise<WebResponses>;
 
     /**
-     * A resource-specific error handler. Will be invoked whenever one of the other methods (expcect [[close]]) throws
-     * an exception.
+     * A resource-specific error handler. Will be invoked whenever one of the other methods (expcect {@link close})
+     * throws an exception.
      *
      * @param err
      */
@@ -246,9 +246,9 @@ export class WebArguments {
      * * RegExp group parameters (matched from the URL path) have a `$` prefix.
      * * URL query parameters have a `?` prefix.
      * * Request headers have a `@` prefix.
-     * * Parameters from the request body have a `.` prefix. Note that these are only inserted once [[body]] has been
-     *   called.
-     * * Custom request parameters manually set by [[WebRequest.setParam]] have a `~` prefix.
+     * * Parameters from the request body have a `.` prefix. Note that these are only inserted once {@link body} has
+     *   been called.
+     * * Custom request parameters manually set by {@link WebRequest.setParam} have a `~` prefix.
      *
      */
     public readonly params: { [key: string]: string | object | undefined };
@@ -273,20 +273,23 @@ export class WebArguments {
         ]);
     }
 
-    /** An alias/shortcut for [[WebRequest.log]], which in turn is based on [[WebServiceConfig.console]]. */
+    /** An alias/shortcut for {@link WebRequest.log}, which in turn is based on {@link WebServiceConfig.console}. */
     get log(): Console {
         return this.request.log;
     }
 
     /**
-     * Invokes [[WebRequest.body]] and then inserts all top-level properties of the parsed body into [[params]] with a
-     * `.` prefix (unless the parsed body is an array).
+     * Invokes {@link WebRequest.body} and then inserts all top-level properties of the parsed body into {@link params}
+     * with a `.` prefix (unless the parsed body is an array).
      *
      * @template T             The type this method should return.
      * @param contentType      What parser to use. Defaults to the `content-type` request header.
-     * @param maxContentLength The maximum number of bytes to parse. Defaults to [[WebServiceConfig.maxContentLength]].
-     * @throws                 [[WebError]]([[WebStatus.PAYLOAD_TOO_LARGE]]) if the request body was larger than allowed.
-     * @throws                 [[WebError]]([[WebStatus.UNSUPPORTED_MEDIA_TYPE]]) if the body could not be parsed.
+     * @param maxContentLength The maximum number of bytes to parse. Defaults to
+     * {@link WebServiceConfig.maxContentLength}.
+     * @throws                 {@link WebError}({@link WebStatus.PAYLOAD_TOO_LARGE}) if the request body was larger than
+     * allowed.
+     * @throws                 {@link WebError}({@link WebStatus.UNSUPPORTED_MEDIA_TYPE}) if the body could not be
+     * parsed.
      * @returns                The parsed request entity.
      */
     async body<T extends object>(contentType?: ContentType | string, maxContentLength?: number): Promise<T> {
@@ -322,8 +325,10 @@ export class WebArguments {
      * The values `true` and `t` are accepted as `true`, while `false` and `f` represents `false`.
      *
      * @param param The name of the parameter to fetch (must include the desired prefix).
-     * @throws      [[WebError]]([[WebStatus.BAD_REQUEST]]) if a non-body parameter is missing or cannot be parsed.
-     * @throws      [[WebError]]([[WebStatus.UNPROCESSABLE_ENTITY]]) if a body parameter is missing or cannot be parsed.
+     * @throws      {@link WebError}({@link WebStatus.BAD_REQUEST}) if a non-body parameter is missing or cannot be
+     * parsed.
+     * @throws      {@link WebError}({@link WebStatus.UNPROCESSABLE_ENTITY}) if a body parameter is missing or cannot be
+     * parsed.
      * @returns     The parameter parsed as a boolean.
      */
     boolean(param: string): boolean;
@@ -332,11 +337,11 @@ export class WebArguments {
      *
      * The values `true` and `t` are accepted as `true`, while `false` and `f` represents `false`.
      *
-     * @template T  The type of the [[def]] parameter.
+     * @template T  The type of the {@link def} parameter.
      * @param param The name of the parameter to fetch (must include the desired prefix).
      * @param def   The value that should be returned if the parameter could not be found.
-     * @throws      [[WebError]]([[WebStatus.BAD_REQUEST]]) if a non-body parameter cannot be parsed.
-     * @throws      [[WebError]]([[WebStatus.UNPROCESSABLE_ENTITY]]) if a body parameter cannot be parsed.
+     * @throws      {@link WebError}({@link WebStatus.BAD_REQUEST}) if a non-body parameter cannot be parsed.
+     * @throws      {@link WebError}({@link WebStatus.UNPROCESSABLE_ENTITY}) if a body parameter cannot be parsed.
      * @returns     The parameter parsed as a boolean, or the value of `def`.
      */
     boolean<T extends boolean | undefined | null>(param: string, def: T): boolean | T;
@@ -363,8 +368,10 @@ export class WebArguments {
      * The values `true` and `t` are accepted as `true`, while `false` and `f` represents `false`.
      *
      * @param param The name of the parameter to fetch (must include the desired prefix).
-     * @throws      [[WebError]]([[WebStatus.BAD_REQUEST]]) if a non-body parameter is missing or cannot be parsed.
-     * @throws      [[WebError]]([[WebStatus.UNPROCESSABLE_ENTITY]]) if a body parameter is missing or cannot be parsed.
+     * @throws      {@link WebError}({@link WebStatus.BAD_REQUEST}) if a non-body parameter is missing or cannot be
+     * parsed.
+     * @throws      {@link WebError}({@link WebStatus.UNPROCESSABLE_ENTITY}) if a body parameter is missing or cannot be
+     * parsed.
      * @returns     The parameter parsed as an ISO date/timestamp.
      */
     date(param: string): Date;
@@ -373,11 +380,11 @@ export class WebArguments {
      *
      * Any date/timestamp that begins with at least 4 digits and is supported by `new Date()` is accepted.
      *
-     * @template T  The type of the [[def]] parameter.
+     * @template T  The type of the {@link def} parameter.
      * @param param The name of the parameter to fetch (must include the desired prefix).
      * @param def   The value that should be returned if the parameter could not be found.
-     * @throws      [[WebError]]([[WebStatus.BAD_REQUEST]]) if a non-body parameter cannot be parsed.
-     * @throws      [[WebError]]([[WebStatus.UNPROCESSABLE_ENTITY]]) if a body parameter cannot be parsed.
+     * @throws      {@link WebError}({@link WebStatus.BAD_REQUEST}) if a non-body parameter cannot be parsed.
+     * @throws      {@link WebError}({@link WebStatus.UNPROCESSABLE_ENTITY}) if a body parameter cannot be parsed.
      * @returns     The parameter parsed as an ISO date/timestamp, or the value of `def`.
      */
     date<T extends Date | undefined | null>(param: string, def: T): Date | T;
@@ -412,8 +419,10 @@ export class WebArguments {
      * Any number supported by `Number()` is accepted. This means that `0x`, `0b` and `0o` prefices are respected.
      *
      * @param param The name of the parameter to fetch (must include the desired prefix).
-     * @throws      [[WebError]]([[WebStatus.BAD_REQUEST]]) if a non-body parameter is missing or cannot be parsed.
-     * @throws      [[WebError]]([[WebStatus.UNPROCESSABLE_ENTITY]]) if a body parameter is missing or cannot be parsed.
+     * @throws      {@link WebError}({@link WebStatus.BAD_REQUEST}) if a non-body parameter is missing or cannot be
+     * parsed.
+     * @throws      {@link WebError}({@link WebStatus.UNPROCESSABLE_ENTITY}) if a body parameter is missing or cannot be
+     * parsed.
      * @returns     The parameter parsed as a number.
      */
     number(param: string): number;
@@ -422,11 +431,11 @@ export class WebArguments {
      *
      * Any number supported by `Number()` is accepted. This means that `0x`, `0b` and `0o` prefices are respected.
      *
-     * @template T  The type of the [[def]] parameter.
+     * @template T  The type of the {@link def} parameter.
      * @param param The name of the parameter to fetch (must include the desired prefix).
      * @param def   The value that should be returned if the parameter could not be found.
-     * @throws      [[WebError]]([[WebStatus.BAD_REQUEST]]) if a non-body parameter cannot be parsed.
-     * @throws      [[WebError]]([[WebStatus.UNPROCESSABLE_ENTITY]]) if a body parameter cannot be parsed.
+     * @throws      {@link WebError}({@link WebStatus.BAD_REQUEST}) if a non-body parameter cannot be parsed.
+     * @throws      {@link WebError}({@link WebStatus.UNPROCESSABLE_ENTITY}) if a body parameter cannot be parsed.
      * @returns     The parameter parsed as a number, or the value of `def`.
      */
     number<T extends number | undefined | null>(param: string, def: T): number | T;
@@ -453,8 +462,10 @@ export class WebArguments {
      * Note that only parameters coming from the request body can actually be objects.
      *
      * @param param The name of the parameter to fetch (must include the desired prefix).
-     * @throws      [[WebError]]([[WebStatus.BAD_REQUEST]]) if a non-body parameter is missing or cannot be parsed.
-     * @throws      [[WebError]]([[WebStatus.UNPROCESSABLE_ENTITY]]) if a body parameter is missing or cannot be parsed.
+     * @throws      {@link WebError}({@link WebStatus.BAD_REQUEST}) if a non-body parameter is missing or cannot be
+     * parsed.
+     * @throws      {@link WebError}({@link WebStatus.UNPROCESSABLE_ENTITY}) if a body parameter is missing or cannot be
+     * parsed.
      * @returns     The parameter as an object.
      */
     object<T extends object>(param: string): T;
@@ -463,11 +474,11 @@ export class WebArguments {
      *
      * Note that only parameters coming from the request body can actually be objects.
      *
-     * @template T  The type of the [[def]] parameter.
+     * @template T  The type of the {@link def} parameter.
      * @param param The name of the parameter to fetch (must include the desired prefix).
      * @param def   The value that should be returned if the parameter could not be found.
-     * @throws      [[WebError]]([[WebStatus.BAD_REQUEST]]) if a non-body parameter cannot be parsed.
-     * @throws      [[WebError]]([[WebStatus.UNPROCESSABLE_ENTITY]]) if a body parameter cannot be parsed.
+     * @throws      {@link WebError}({@link WebStatus.BAD_REQUEST}) if a non-body parameter cannot be parsed.
+     * @throws      {@link WebError}({@link WebStatus.UNPROCESSABLE_ENTITY}) if a body parameter cannot be parsed.
      * @returns     The parameter as an object, or the value of `def`.
      */
     object<T extends object | undefined | null>(param: string, def: T): object | T;
@@ -490,19 +501,21 @@ export class WebArguments {
      * Returns the value of a parameter as a string.
      *
      * @param param The name of the parameter to fetch (must include the desired prefix).
-     * @throws      [[WebError]]([[WebStatus.BAD_REQUEST]]) if a non-body parameter is missing or cannot be parsed.
-     * @throws      [[WebError]]([[WebStatus.UNPROCESSABLE_ENTITY]]) if a body parameter is missing or cannot be parsed.
+     * @throws      {@link WebError}({@link WebStatus.BAD_REQUEST}) if a non-body parameter is missing or cannot be
+     * parsed.
+     * @throws      {@link WebError}({@link WebStatus.UNPROCESSABLE_ENTITY}) if a body parameter is missing or cannot be
+     * parsed.
      * @returns     The parameter as a string.
      */
     string(param: string): string;
     /**
      * Returns the value of a parameter as a string.
      *
-     * @template T  The type of the [[def]] parameter.
+     * @template T  The type of the {@link def} parameter.
      * @param param The name of the parameter to fetch (must include the desired prefix).
      * @param def   The value that should be returned if the parameter could not be found.
-     * @throws      [[WebError]]([[WebStatus.BAD_REQUEST]]) if a non-body parameter cannot be parsed.
-     * @throws      [[WebError]]([[WebStatus.UNPROCESSABLE_ENTITY]]) if a body parameter cannot be parsed.
+     * @throws      {@link WebError}({@link WebStatus.BAD_REQUEST}) if a non-body parameter cannot be parsed.
+     * @throws      {@link WebError}({@link WebStatus.UNPROCESSABLE_ENTITY}) if a body parameter cannot be parsed.
      * @returns     The parameter as a string, or the value of `def`.
      */
     string<T extends string | undefined | null>(param: string, def: T): string | T;

@@ -2,7 +2,7 @@ import { b64Decode, b64Encode } from '@divine/commons';
 import { AuthenticationInfo, Authorization, ServerAuthorization, WWWAuthenticate } from '@divine/headers';
 import { AuthScheme, AuthSchemeError, AuthSchemeRequest, PasswordCredentials } from '../auth-schemes';
 
-/** A helper implementation of [[PasswordCredentials]] for 'Basic' HTTP authentication. */
+/** A helper implementation of {@link PasswordCredentials} for 'Basic' HTTP authentication. */
 export class BasicCredentials implements PasswordCredentials {
     identity: string;
     secret:   string;
@@ -10,8 +10,8 @@ export class BasicCredentials implements PasswordCredentials {
     /**
      * Constructs a new BasicCredentials/PasswordCredentials object.
      *
-     * @param username  The user name, to be stored in [[identity]].
-     * @param password  The user password, to be stored in [[secret]].
+     * @param username  The user name, to be stored in {@link identity}.
+     * @param password  The user password, to be stored in {@link secret}.
      */
     constructor(username: string, password: string) {
         this.identity = username;

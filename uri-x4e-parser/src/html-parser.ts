@@ -3,7 +3,7 @@ import { isDOMNode, parseHTMLFromString, serializeHTMLToString, XML } from '@div
 
 /**
  * The `text/html` parser uses [parse5](https://github.com/inikulin/parse5) to convert HTML documents to and from
- * X4E [[XML]] objects.
+ * X4E {@link XML} objects.
  */
 export class HTMLParser extends Parser {
     async parse(stream: AsyncIterable<Buffer>): Promise<XML<Element>> {

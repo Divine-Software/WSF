@@ -26,7 +26,7 @@ export interface FormField {
 
 /** A multi-part key-value record. */
 export interface MultiPartData extends WithFields<MultiPartField>, Finalizable {
-    /** Like [[FormData]], keys are strings but the value may be files and [[MultiPartData]] as well. */
+    /** Like {@link FormData}, keys are strings but the value may be files and {@link MultiPartData} as well. */
     [key: string]: string | URI | MultiPartData;
 }
 
@@ -57,7 +57,7 @@ export interface MimeMessage extends Finalizable {
     value:   string | URI | MimeMessage[];
 }
 
-/** A common interface compatible with [[FormField]], [[MultiPartField]] and [[MimeMessage]]. */
+/** A common interface compatible with {@link FormField}, {@link MultiPartField} and {@link MimeMessage}. */
 export interface MimeMessageLike {
     /** MIME messages may contain additional headers, available in this record. */
     headers?: StringParams;
@@ -71,9 +71,10 @@ function makeBoundary() {
 }
 
 /**
- * The `application/x-www-form-urlencoded` parser uses URLSearchParams and [[StringParser]] to handle URL HTML forms.
+ * The `application/x-www-form-urlencoded` parser uses URLSearchParams and {@link StringParser} to handle URL HTML
+ * forms.
  *
- * The parsed data is a [[FormData]] object, with the key-value pairs available via [[FIELDS]].
+ * The parsed data is a {@link FormData} object, with the key-value pairs available via {@link FIELDS}.
  */
 export class FormParser extends Parser {
     async parse(stream: AsyncIterable<Buffer>): Promise<FormData> {
@@ -102,7 +103,7 @@ export class FormParser extends Parser {
 /**
  * The `message/*` parser handles all kinds of messages, including `message/rfc822`.
  *
- * The parsed data is a [[MimeMessage]], but the serializer can handle any [[MimeMessageLike]] object.
+ * The parsed data is a {@link MimeMessage}, but the serializer can handle any {@link MimeMessageLike} object.
  */
 export class MessageParser extends Parser {
     async parse(stream: AsyncIterable<Buffer>): Promise<MimeMessage> {
@@ -163,11 +164,11 @@ interface DicerHeaders {
 /**
  * The `multipart/*` parser handles MIME multipart messages and `multipart/form-data` HTML forms.
  *
- * The parsed data is an [[MultiPartData]] object, but and array of [[MultiPartField]] objects may also be serialized by
- * this parser.
+ * The parsed data is an {@link MultiPartData} object, but and array of {@link MultiPartField} objects may also be
+ * serialized by this parser.
  *
- * Files will be copied and wrapped as [[CacheURI]] objects. These temporary files can be removed by calling the
- * [[FINALIZE]] function.
+ * Files will be copied and wrapped as {@link CacheURI} objects. These temporary files can be removed by calling the
+ * {@link FINALIZE} function.
  */
 export class MultiPartParser extends Parser {
     static defaultContentType = ContentType.text;

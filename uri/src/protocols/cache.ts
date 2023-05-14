@@ -40,13 +40,13 @@ function v4uuid() {
 /**
  * The `cache:` protocol handler can be used to store (large and small) temporary files on disk.
  *
- * A cached file will be automatically pruned after 1 hour, if [[remove]] has not been called manually.
+ * A cached file will be automatically pruned after 1 hour, if {@link remove} has not been called manually.
  */
 export class CacheURI extends URI {
     /**
      * Creates a new cached file resource.
      *
-     * Then use [[save]] to store data and [[load]] to retrieve it back.
+     * Then use {@link save} to store data and {@link load} to retrieve it back.
      *
      * @param   type  The cache file's media type.
      * @returns       A new CacheURI instance.
@@ -77,32 +77,32 @@ export class CacheURI extends URI {
         this._file = FileURI.create(this._path);
     }
 
-    /** See [[FileURI.info]]. */
+    /** See {@link FileURI.info}. */
     override async info<T extends DirectoryEntry>(): Promise<T & Metadata> {
         return { ...await this._delegate('info') as T, type: new ContentType(this._type) };
     }
 
-    /** See [[FileURI.load]]. */
+    /** See {@link FileURI.load}. */
     override async load<T extends object>(recvCT?: ContentType | string): Promise<T & Metadata> {
         return this._delegate('load', recvCT ?? this._type);
     }
 
-    /** See [[FileURI.save]]. */
+    /** See {@link FileURI.save}. */
     override async save<T extends object, D = unknown>(data: D, sendCT?: ContentType | string, recvCT?: undefined): Promise<T & Metadata> {
         return this._delegate('save', data, sendCT, recvCT);
     }
 
-    /** See [[FileURI.append]]. */
+    /** See {@link FileURI.append}. */
     override async append<T extends object, D = unknown>(data: D, sendCT?: ContentType | string, recvCT?: undefined): Promise<T & Metadata> {
         return this._delegate('append', data, sendCT, recvCT);
     }
 
-    /** See [[FileURI.remove]]. */
+    /** See {@link FileURI.remove}. */
     override async remove<T extends object>(recvCT?: undefined): Promise<T & Metadata> {
         return this._delegate('remove', recvCT);
     }
 
-    /** See [[FileURI.watch]]. */
+    /** See {@link FileURI.watch}. */
     override async* watch(): AsyncIterable<FileWatchEvent & Metadata> {
         await createCacheDir();
 

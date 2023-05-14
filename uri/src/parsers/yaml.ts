@@ -5,10 +5,10 @@ import { FIELDS, WithFields } from '../uri';
 
 /**
  * The `application/yaml`, `application/x-yaml`, `text/vnd.yaml`, `text/x-yaml` and `text/yaml` parser handles
- * [YAML](https://yaml.org/) using [yaml](https://eemeli.org/yaml/) and [[StringParser]].
+ * [YAML](https://yaml.org/) using [yaml](https://eemeli.org/yaml/) and {@link StringParser}.
  *
  * Only the first document in a multi-document YAML file is returned when parsing. To access all documents, use the
- * [[FIELDS]] property.
+ * {@link FIELDS} property.
  *
  */
 export class YAMLParser extends Parser {

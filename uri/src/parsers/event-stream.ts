@@ -17,7 +17,7 @@ export interface EventStreamEvent {
 }
 
 /**
- * Checks whether the passed argument is an [[EventStreamEvent]].
+ * Checks whether the passed argument is an {@link EventStreamEvent}.
  *
  * @param event The object to check
  * @returns     `true` if `event` is an EventStreamEvent.
@@ -32,7 +32,7 @@ export function isEventStreamEvent(event: any): event is EventStreamEvent {
 /**
  * The `text/event-stream` parser reads and writes [SSE/server-sent
  * events](https://developer.mozilla.org/en-US/docs/Web/API/Server-sent_events/) streams, translating between
- * `AsyncIterable<Buffer>` and `AsyncIterable<`[[`EventStreamEvent`]]`>`.
+ * `AsyncIterable<Buffer>` and `AsyncIterable<`{@link EventStreamEvent}`>`.
  */
 export class EventStreamParser extends Parser {
     // See <https://html.spec.whatwg.org/multipage/server-sent-events.html#event-stream-interpretation>

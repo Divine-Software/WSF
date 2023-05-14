@@ -2,8 +2,8 @@ import type { BasicTypes } from '@divine/commons';
 import { Parser, StringParser } from '../parsers';
 
 /**
- * The `application/json` and `application/*+json` parser handles [JSON](https://www.json.org) using [[JSON.parse]],
- * [[JSON.stringify]] and [[StringParser]].
+ * The `application/json` and `application/*+json` parser handles [JSON](https://www.json.org) using {@link JSON.parse},
+ * {@link JSON.stringify} and {@link StringParser}.
  */
 export class JSONParser extends Parser {
     async parse(stream: AsyncIterable<Buffer>): Promise<BasicTypes> {

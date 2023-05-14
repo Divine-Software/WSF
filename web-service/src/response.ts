@@ -87,9 +87,9 @@ export class WebResponse {
      * Serializes the response.
      *
      * For successful `GET` and `HEAD` responses, if an `etag` response header matches the `if-none-match` request
-     * header, [[WebStatus.NOT_MODIFIED]] will be returned instead.
+     * header, {@link WebStatus.NOT_MODIFIED} will be returned instead.
      *
-     * If [[WebServiceConfig.returnRequestID]] is configured, the request ID will also be automatically added to the
+     * If {@link WebServiceConfig.returnRequestID} is configured, the request ID will also be automatically added to the
      * response.
      *
      * @param webreq The request this is a response to.
@@ -332,5 +332,5 @@ export interface WebResponseHeaders {
     'x-xss-protection'?:                 string;
 }
 
-/** A union of all types a [[WebResource]] method may return. */
+/** A union of all types a {@link WebResource} method may return. */
 export type WebResponses = null | WebResponse | NodeJS.ReadableStream | Buffer | string | number | bigint | boolean | Date | object;

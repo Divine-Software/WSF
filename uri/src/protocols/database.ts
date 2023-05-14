@@ -9,7 +9,7 @@ import { URIParams } from '../selectors';
 import { FIELDS, HEADERS, IOError, Metadata, ParamsSelector, STATUS, STATUS_TEXT, URI, VOID, WithFields } from '../uri';
 
 /**
- * Constructs a [[DBQuery]] from a template literal.
+ * Constructs a {@link DBQuery} from a template literal.
  *
  * All values/parameters will either be quoted and encoded or sent separately to the database server for processing,
  * depending on the actual database driver. Example:
@@ -18,17 +18,18 @@ import { FIELDS, HEADERS, IOError, Metadata, ParamsSelector, STATUS, STATUS_TEXT
  * const query = q`select * from table where first_name = ${firstName}`;
  * ```
  *
- * See also [[q.quote]], [[q.raw]], [[q.join]], [[q.list]], [[q.values]] and [[q.assign]] for handy utility functions.
+ * See also {@link q.quote}, {@link q.raw}, {@link q.join}, {@link q.list}, {@link q.values} and {@link q.assign} for
+ * handy utility functions.
  *
  * @param  strings    The query as a template string array.
- * @param  values     The query parameters. Values may be [[DBQuery]] instances themselves, or of any type supported by
- *                    the database.
+ * @param  values     The query parameters. Values may be {@link DBQuery} instances themselves, or of any type supported
+ *                    by the database.
  * @throws TypeError  If one of the parameters is `undefined`.
  * @returns           A new DBQeury object.
  */
 export function q(query: TemplateStringsArray, ...params: unknown[]): DBQuery;
 /**
- * Constructs a [[DBQuery]] from a query string. The string may contain `{prop}` placeholders, which will then be
+ * Constructs a {@link DBQuery} from a query string. The string may contain `{prop}` placeholders, which will then be
  * resolved against properties in `params`.
  *
  * All values/parameters will either be quoted and encoded or sent separately to the database server for processing,
@@ -38,7 +39,8 @@ export function q(query: TemplateStringsArray, ...params: unknown[]): DBQuery;
  * const query = q('select * from table where first_name = {name}', { name: firstName });
  * ```
  *
- * See also [[q.quote]], [[q.raw]], [[q.join]], [[q.list]], [[q.values]] and [[q.assign]] for handy utility functions.
+ * See also {@link q.quote}, {@link q.raw}, {@link q.join}, {@link q.list}, {@link q.values} and {@link q.assign} for
+ * handy utility functions.
  *
  * @param  query      The query, with `{prop}` placeholders for parameters.
  * @param  params     An record with parameters, used to look up placeholders from the query. Parameters may be DBQuery
@@ -67,7 +69,7 @@ export function q(query: TemplateStringsArray | string, ...params: unknown[]): D
 }
 
 /**
- * Constructs a [[DBQuery]] by enclosing the provied string in quotes.
+ * Constructs a {@link DBQuery} by enclosing the provied string in quotes.
  *
  * This function is used to escape SQL identifiers, like table or column names. Quotes inside the string will be encoded
  * as `""`. Example:
@@ -85,7 +87,7 @@ q.quote = function quote(ident: string): DBQuery {
 }
 
 /**
- * Constructs a [[DBQuery]] by taking the provided raw string as-is.
+ * Constructs a {@link DBQuery} by taking the provided raw string as-is.
  *
  * This is useful if the database does not accept a parameter at this place in the query. However, you *must be very
  * careful* not to introduce query injection vulnerabilities when using this function! Example:
@@ -104,7 +106,7 @@ q.raw = function raw(raw: string | number | bigint): DBQuery {
 }
 
 /**
- * Constructs a [[DBQuery]] by concatenating a list of subqueries and separating then with the provided delimiter.
+ * Constructs a {@link DBQuery} by concatenating a list of subqueries and separating then with the provided delimiter.
  *
  * If the list of subqueries contains `undefined`, those elements will be filtered out. Example usage:
  *
@@ -127,7 +129,7 @@ q.join = function join(delimiter: string, queries: (DBQuery | undefined)[]): DBQ
 }
 
 /**
- * Constructs a [[DBQuery]] by creating a list of the provided parameters: `(elem1, elem2, ...)`.
+ * Constructs a {@link DBQuery} by creating a list of the provided parameters: `(elem1, elem2, ...)`.
  *
  * This utility function is suitable for SQL `IN` clauses. If the parameter list contains `undefined`, those elements
  * will be filtered out. Example:
@@ -154,7 +156,7 @@ q.list = function list(list: (BasicTypes | undefined)[]): DBQuery {
 }
 
 /**
- * Constructs a [[DBQuery]] to be used as part of SQL `INSERT` statements.
+ * Constructs a {@link DBQuery} to be used as part of SQL `INSERT` statements.
  *
  * Given an object (or list of objects) containing the column/value pairs, constructs either the *columns* list or the
  * *values* list (or lists), or both, depending on the `parts` argument. Examples:
@@ -181,7 +183,7 @@ q.list = function list(list: (BasicTypes | undefined)[]): DBQuery {
  * @param columns Specifies what keys (columns) to fetch from the data objects. Defaults to all keys from all objects.
  * @param parts   What part of the statement to generate. Use `columns` to only generate a list of column names,
  *                `values` for a list of value tuples or `expr`, the default, for the complete subexpression.
- * @param quote   The quote function to use when escaping the column names. Defaults to [[q.quote]].
+ * @param quote   The quote function to use when escaping the column names. Defaults to {@link q.quote}.
  * @returns       A DBQuery suitable to be used in an SQL `INSERT` statement.
  */
 q.values = function values(data: Params | Params[], columns?: string[], parts: 'columns' | 'values' | 'expr' = 'expr', quote = q.quote): DBQuery {
@@ -198,7 +200,7 @@ q.values = function values(data: Params | Params[], columns?: string[], parts: '
 }
 
 /**
- * Constructs a [[DBQuery]] to be used as part of SQL `UPDATE` statements.
+ * Constructs a {@link DBQuery} to be used as part of SQL `UPDATE` statements.
  *
  * Given an object containing the column/value pairs, constructs an assignment expression that can be used as part of an
  * SQL `UPDATE` statement. Example:
@@ -215,7 +217,7 @@ q.values = function values(data: Params | Params[], columns?: string[], parts: '
  *
  * @param data    The object to assign. The key represents the column name and the value is the column value.
  * @param columns Specifies what keys (columns) to fetch from the data object. Defaults to all keys from the object.
- * @param quote   The quote function to use when escaping the column names. Defaults to [[q.quote]].
+ * @param quote   The quote function to use when escaping the column names. Defaults to {@link q.quote}.
  * @returns       A DBQuery suitable to be used in an SQL `UPDATE` statement.
  */
 q.assign = function assign(data: Params, columns?: string[], quote = q.quote): DBQuery {
@@ -227,25 +229,25 @@ q.assign = function assign(data: Params, columns?: string[], quote = q.quote): D
 /** Database configuration parameters. */
 export interface DBParams extends URIParams {
     /**
-     * Maximum time to wait for a free connection, in milliseconds. Default is [[DBConnectionPool.defaultTimeout]]
+     * Maximum time to wait for a free connection, in milliseconds. Default is {@link DBConnectionPool.defaultTimeout}
      * (60 seconds).
      */
     timeout?: number;
 
     /**
-     * How long an unused connection should be kept before it's closed. Default is [[DBConnectionPool.defaultTTL]]
+     * How long an unused connection should be kept before it's closed. Default is {@link DBConnectionPool.defaultTTL}
      * (30 seconds).
      */
     ttl?: number;
 
     /**
      * How often the status of an unused connection should be checked. Default is
-     * [[DBConnectionPool.defaultKeepalive]] (10 seconds).
+     * {@link DBConnectionPool.defaultKeepalive} (10 seconds).
      */
     keepalive?: number;
 
     /**
-     * The maximum number of connections to use. Default is [[DBConnectionPool.defaultMaxConnections]] (10
+     * The maximum number of connections to use. Default is {@link DBConnectionPool.defaultMaxConnections} (10
      * connections).
      */
     maxConnections?: number;
@@ -260,7 +262,7 @@ export interface DBParams extends URIParams {
     }
 }
 
-/** Provides configuration parameters for [[DatabaseURI]]. */
+/** Provides configuration parameters for {@link DatabaseURI}. */
 export interface DBParamsSelector extends ParamsSelector {
     params: DBParams;
 }
@@ -268,12 +270,12 @@ export interface DBParamsSelector extends ParamsSelector {
 /** Transaction parameters. */
 export interface DBTransactionParams { // NOTE: Don't forget to update isDatabaseTransactionParams()!
     /** The number of times to retry the transaction in case of a deadlock. Default is
-     * [[DBConnectionPool.defaultRetries]] (8 times). */
+     * {@link DBConnectionPool.defaultRetries} (8 times). */
     retries?: number;
 
     /**
      * The backoff function to use when calculating the time to wait between retries. Default is
-     * [[DBConnectionPool.defaultBackoff]] (exponential backoff — 100 ms, 200 ms, 400 ms etc — with random jitter).
+     * {@link DBConnectionPool.defaultBackoff} (exponential backoff — 100 ms, 200 ms, 400 ms etc — with random jitter).
      */
     backoff?: (count: number) => number;
 
@@ -284,7 +286,7 @@ export interface DBTransactionParams { // NOTE: Don't forget to update isDatabas
     options?: DBQuery;
 }
 
-/** Like [[Metadata]], except that [[FIELDS]] is always present as well and is an array of [[DBResult]]. */
+/** Like {@link Metadata}, except that {@link FIELDS} is always present as well and is an array of {@link DBResult}. */
 export interface DBMetadata extends Metadata, Required<WithFields<DBResult>> {
 }
 
@@ -347,7 +349,7 @@ export interface DBColumnInfo {
     column_comment?:            string;
 }
 
-/** An IOError subclass thrown by the [[DatabaseURI]] class and its subclasses. */
+/** An IOError subclass thrown by the {@link DatabaseURI} class and its subclasses. */
 export class DBError extends IOError {
     /**
      * Constructs a new DBError exception.
@@ -382,8 +384,9 @@ export class DBQuery {
      * If one of the parameters is itself a DBQuery, the query will be merged with this one at constructon time and its
      * parameters adopted.
      *
-     * This constructor is semi-private: You should use [[q]], [[q.quote]], [[q.raw]], [[q.join]], [[q.list]],
-     * [[q.values]] or [[q.assign]] to construct queries, or just call [[DatabaseURI.query]] directly.
+     * This constructor is semi-private: You should use {@link q}, {@link q.quote}, {@link q.raw}, {@link q.join},
+     * {@link q.list}, {@link q.values} or {@link q.assign} to construct queries, or just call {@link DatabaseURI.query}
+     * directly.
      *
      * @param  query      The query segments, much like a template literal string array.
      * @param  params     The parameters. There should be exactly one less parameter than query segments.
@@ -530,7 +533,7 @@ const booleanColInfoProps: PropTypeMap<InformationSchema, boolean> = {
  * A raw database result set.
  *
  * This Array subclass hold rows of cells in a tabular format and metadata about the columns (name, type etc) in the
- * [[columns]] property. Additional metadata such as *row count* and *row key* is also available.
+ * {@link columns} property. Additional metadata such as *row count* and *row key* is also available.
  *
  * This is an abstract class. Each database driver is expected to provide a full implementation and a concrete subclass.
  */
@@ -572,12 +575,12 @@ export abstract class DBResult extends Array<unknown[]> {
      * column by querying the database for more information.
      *
      * The base class implementation of this method queries the `INFORMATION_SCHEMA.COLUMNS` view based on
-     * [[DBColumnInfo.table_catalog]], [[DBColumnInfo.table_schema]], [[DBColumnInfo.table_name]] and
-     * [[DBColumnInfo.column_name]]. Subclasses may override or extend this method, based on how the actual database
+     * {@link DBColumnInfo.table_catalog}, {@link DBColumnInfo.table_schema}, {@link DBColumnInfo.table_name} and
+     * {@link DBColumnInfo.column_name}. Subclasses may override or extend this method, based on how the actual database
      * provides column metadata.
      *
      * @throws DBError  On database/query errors.
-     * @returns         The updated/expanded column metadata (also available in [[columns]] after this call has
+     * @returns         The updated/expanded column metadata (also available in {@link columns} after this call has
      * completed).
      */
     async updateColumnInfo(): Promise<DBColumnInfo[]> {
@@ -654,7 +657,8 @@ export abstract class DBResult extends Array<unknown[]> {
      * The result is an object where keys are the column labels holding the values (unlike the rows in this class, where
      * each row is just an array of values).
      *
-     * This method is used by [[DatabaseURI.watch]] if the event contains only a single row, which is usually the case.q
+     * This method is used by {@link DatabaseURI.watch} if the event contains only a single row, which is usually the
+     * case.q
      *
      * @template T          The actual record type.
      * @param    fields     What to set `[FIELDS]` to. Defaults to `[ this ]`.
@@ -683,7 +687,7 @@ export abstract class DBResult extends Array<unknown[]> {
      * The result is an array of object where keys are the column labels holding the values (unlike the rows in this
      * class, where each row is just an array of values).
      *
-     * This method is used by [[DatabaseURI]] to convert all result sets created by the database drivers before
+     * This method is used by {@link DatabaseURI} to convert all result sets created by the database drivers before
      * returning them to the caller.
      *
      * @template T       The actual record type.
@@ -724,21 +728,21 @@ function withDBMetadata<T extends object>(meta: DBMetadata, value: object): T & 
 
 /**
  * The database URI base class defines the API for all database-specific protocols. It provides CRUD access to database
- * rows via [[load]], [[save]], [[append]], [[modify]] and [[remove]], [[query]] for executing custom queries in a
- * databases-specific query language (read "SQL") and [[watch]] for *change data capture*, provided the database and
- * driver supports it.
+ * rows via {@link load}, {@link save}, {@link append}, {@link modify} and {@link remove}, {@link query} for executing
+ * custom queries in a databases-specific query language (read "SQL") and {@link watch} for *change data capture*,
+ * provided the database and driver supports it.
  *
  * Below is a list of all known supported databases:
  *
  * Database     | Database driver class
  * -------------|----------------------
- * CockroachDB  | [[PostgresURI]]
- * H2           | [[JDBCURI]]†
- * MariaDB      | [[MySQLURI]]
- * MySQL        | [[MySQLURI]]
- * PostgreSQL   | [[PostgresURI]]
- * SQL Server   | [[TDSURI]]
- * SQLite       | [[SQLiteURI]]
+ * CockroachDB  | {@link @divine/uri-postgres-protocol!PostgresURI}
+ * H2           | {@link @divine/uri-jdbc-protocol!JDBCURI}†
+ * MariaDB      | {@link @divine/uri-mysql-protocol!MySQLURI}
+ * MySQL        | {@link @divine/uri-mysql-protocol!MySQLURI}
+ * PostgreSQL   | {@link @divine/uri-postgres-protocol!PostgresURI}
+ * SQL Server   | {@link @divine/uri-tds-protocol!TDSURI}
+ * SQLite       | {@link @divine/uri-sqlite-protocol!SQLiteURI}
  *
  * † In theory, any JDBC-enabled database should have at least basic support, but our unit tests are only run against
  * H2.
@@ -749,7 +753,8 @@ function withDBMetadata<T extends object>(meta: DBMetadata, value: object): T & 
  * small expression language called *DB reference* in the URI fragment to specify what table, rows and columns to
  * access. A DB reference looks like this:
  *
- * `#` *table* { `[` *keys* `]` } { `(` *columns* `)` } { `;` *scope* } { `?` *filter* } { `&` *name* `=` *value* ... }
+ * `#` *table* \{ `[` *keys* `]` \} \{ `(` *columns* `)` \} \{ `;` *scope* \} \{ `?` *filter* \} \{ `&` *name* `=`
+ * *value* ... \}
  *
  * It always starts with a hash sign, which signals the start of the URI fragment part, followed by a reference to what
  * table to access. The *table* value may actually be a forward slash-separated table path, so it's possible to specify
@@ -757,9 +762,9 @@ function withDBMetadata<T extends object>(meta: DBMetadata, value: object): T & 
  *
  * The remaining parts of the expression is optional (well, depeneding on what operation you're trying to perform).
  *
- * The [[save]] operation may, depending on the actual database, require the primary key in order to work. The name of
- * the primary key optionally follows the table name, enclosed by square brackets. *keys* may be a comma-separated list
- * of columns, if the primary key spans multiple columns.
+ * The {@link save} operation may, depending on the actual database, require the primary key in order to work. The name
+ * of the primary key optionally follows the table name, enclosed by square brackets. *keys* may be a comma-separated
+ * list of columns, if the primary key spans multiple columns.
  *
  * In order to limit what colomns to operate on, a list of *columns*, enclosed by parentheses, may then follow. The
  * default is all columns when reading and all the columns present in the data when writing.
@@ -867,25 +872,25 @@ function withDBMetadata<T extends object>(meta: DBMetadata, value: object): T & 
  *
  * ## Custom SQL queries
  *
- * CRUD operations beside, the main interface to databases is the SQL query, and that's what the [[query]] method is all
- * about. It has a few different signatures, but most common is to use it as a tagged template literal:
+ * CRUD operations beside, the main interface to databases is the SQL query, and that's what the {@link query} method is
+ * all about. It has a few different signatures, but most common is to use it as a tagged template literal:
  *
  * ```ts
  * const [ user ] = await db.query<User[]>`select * from users where id = ${userID}`;
  * ```
  *
- * The `query` function always returns an array. The raw [[DBResult | result set]] is available via the [[FIELDS]]
- * symbol. Sessions are handled automatically and is usually not something you will have to worry about. However, since
- * the database connections are pooled, two consecutive queries might execute on different connections. To execute
- * multiple queries in the same session, construct [[DBQuery]] objects explicitly and pass them all to `query` (or use a
- * transaction; see below):
+ * The `query` function always returns an array. The raw {@link DBResult | result set} is available via the
+ * {@link FIELDS} symbol. Sessions are handled automatically and is usually not something you will have to worry about.
+ * However, since the database connections are pooled, two consecutive queries might execute on different connections.
+ * To execute multiple queries in the same session, construct {@link DBQuery} objects explicitly and pass them all to
+ * `query` (or use a transaction; see below):
  *
  * ```ts
  * const id = await db.query(q`insert into users (name) values ('Martin')`, q`select last_insert_id()`);
  * ```
  *
- * Note that the generated primary key is always available as [[DBResult.rowKey]], so this particular example is a bit
- * silly.
+ * Note that the generated primary key is always available as {@link DBResult.rowKey}, so this particular example is a
+ * bit silly.
  *
  * ## Transactions
  *
@@ -914,22 +919,22 @@ function withDBMetadata<T extends object>(meta: DBMetadata, value: object): T & 
  * instead of a number.
  *
  * This behaviour, as well as other transaction parameters like isolation level, may be customized by passing a
- * [[DBTransactionParams]] object as the first argument to `query`, before the callback.
+ * {@link DBTransactionParams} object as the first argument to `query`, before the callback.
  *
  * Deadlock handling is supported by all database drivers, and there is even custom handling for CockroachDB, which
  * automatically increases the transaction priority on retries.
  *
  * ## Change Data Capture
  *
- * Some drivers, like [[PostgresURI]], also implement the [[watch]] method. Use this to listen for events from the
- * database and stream the results in realtime to your application. The PostgresURI class supports `LISTEN`/`NOTIFY`
+ * Some drivers, like {@link PostgresURI}, also implement the {@link watch} method. Use this to listen for events from
+ * the database and stream the results in realtime to your application. The PostgresURI class supports `LISTEN`/`NOTIFY`
  * events when using PostgreSQL and [core changefeeds](https://www.cockroachlabs.com/docs/v21.2/changefeed-for.html)
  * when using CockroachDB.
  *
  * ## Shutting down
  *
- * Call [[close]] to terminate the connection pool. Otherwise, it may take a minute or so before all idle connections
- * time out and Node.js exits.
+ * Call {@link close} to terminate the connection pool. Otherwise, it may take a minute or so before all idle
+ * connections time out and Node.js exits.
  *
  */
 export abstract class DatabaseURI extends URI {
@@ -1042,7 +1047,7 @@ export abstract class DatabaseURI extends URI {
      * @param     _recvCT  Must not be used.
      * @throws    IOError  On I/O errors or if this URI does not have a valid *DB reference* fragment.
      * @throws    DBError  On database/query errors.
-     * @returns            Object([[VOID]]), with DBMetadata.
+     * @returns            Object({@link VOID}), with DBMetadata.
      */
     override modify<T extends object, D = unknown>(data: D, _sendCT?: ContentType | string, _recvCT?: ContentType | string): Promise<T & DBMetadata> {
         return this._session(async (conn) => {
@@ -1057,7 +1062,7 @@ export abstract class DatabaseURI extends URI {
      * @param     _recvCT  Must not be used.
      * @throws    IOError  On I/O errors or if this URI does not have a valid *DB reference* fragment.
      * @throws    DBError  On database/query errors.
-     * @returns            Object([[VOID]]), with DBMetadata.
+     * @returns            Object({@link VOID}), with DBMetadata.
      */
     override remove<T extends object>(_recvCT?: ContentType | string): Promise<T & DBMetadata> {
         return this._session(async (conn) => {
@@ -1073,8 +1078,8 @@ export abstract class DatabaseURI extends URI {
      * @throws   TypeError  If the arguments are invalid.
      * @throws   IOError    On I/O errors.
      * @throws   DBError    On database/query errors.
-     * @returns             An array of rows from the *last* query. All result sets are available as a [[DBResult]]
-     *                      array via [[FIELDS]] (from the DBMetadata).
+     * @returns             An array of rows from the *last* query. All result sets are available as a {@link DBResult}
+     *                      array via {@link FIELDS} (from the DBMetadata).
      */
     override query<T extends object = object[]>(...queries: DBQuery[]): Promise<T & DBMetadata>;
     /**
@@ -1087,18 +1092,18 @@ export abstract class DatabaseURI extends URI {
      * const users = dbURI.query<User>[]>`select * from users where first_name = ${firstName}`;
      * ```
      *
-     * See also [[q]], [[q.quote]], [[q.raw]], [[q.join]], [[q.list]], [[q.values]] and [[q.assign]] for handy utility
-     * functions.
+     * See also {@link q}, {@link q.quote}, {@link q.raw}, {@link q.join}, {@link q.list}, {@link q.values} and
+     * {@link q.assign} for handy utility functions.
      *
      * @template T          The actual type returned. Always an array.
      * @param    query      The query as a template string array.
-     * @param    params     The query parameters. Values may be [[DBQuery]] instances or of any type supported by the
-     *                      database.
+     * @param    params     The query parameters. Values may be {@link DBQuery} instances or of any type supported by
+     *                      the database.
      * @throws   TypeError  If one of the parameters is `undefined` or if the arguments are invalid.
      * @throws   IOError    On I/O errors.
      * @throws   DBError    On database/query errors.
-     * @returns             An array of rows. The raw set is available as a [[DBResult]] array — of length 1 — via
-     *                      [[FIELDS]] (from the DBMetadata).
+     * @returns             An array of rows. The raw set is available as a {@link DBResult} array — of length 1 — via
+     *                      {@link FIELDS} (from the DBMetadata).
      */
     override query<T extends object = object[]>(query: TemplateStringsArray, ...params: (BasicTypes)[]): Promise<T & DBMetadata>;
     /**
@@ -1112,18 +1117,18 @@ export abstract class DatabaseURI extends URI {
      * const users = dbURI.query<User>[]>('select * from users where first_name = {name}', { name: firstName });
      * ```
      *
-     * See also [[q]], [[q.quote]], [[q.raw]], [[q.join]], [[q.list]], [[q.values]] and [[q.assign]] for handy utility
-     * functions.
+     * See also {@link q}, {@link q.quote}, {@link q.raw}, {@link q.join}, {@link q.list}, {@link q.values} and
+     * {@link q.assign} for handy utility functions.
      *
      * @template T          The actual type returned. Always an array.
      * @param    query      The query, with `{prop}` placeholders for parameters.
      * @param    params     An record with parameters, used to look up placeholders from the query. Parameters may be
-     *                      [[DBQuery]] instances themselves, or of any type supported by the database.
+     *                      {@link DBQuery} instances themselves, or of any type supported by the database.
      * @throws   TypeError  If one of the parameters is `undefined` or if the arguments are invalid.
      * @throws   IOError    On I/O errors.
      * @throws   DBError    On database/query errors.
-     * @returns             An array of rows. The raw set is available as a [[DBResult]] array — of length 1 — via
-     *                      [[FIELDS]] (from the DBMetadata).
+     * @returns             An array of rows. The raw set is available as a {@link DBResult} array — of length 1 — via
+     *                      {@link FIELDS} (from the DBMetadata).
      */
     override query<T extends object = object[]>(query: string, params: Params): Promise<T & DBMetadata>;
     /**
@@ -1133,10 +1138,10 @@ export abstract class DatabaseURI extends URI {
      * value; if the callback throws, the transaction is rolled back and the exception is propagated.
      *
      * Transaction deadlocks are handled automatically by default. When the driver detects that a transaction was
-     * aborted because of a deadlock, it waits a little based on the [[DBTransactionParams.backoff]] function, and then
-     * invokes the callback again (the `retryCount` argument will be 1 on the first retry and so on), up to a maximum of
-     * [[DBTransactionParams.retries]] times. Only then will the deadlock exception be propagated. To this behaviour,
-     * set `retry` to 0.
+     * aborted because of a deadlock, it waits a little based on the {@link DBTransactionParams.backoff} function, and
+     * then invokes the callback again (the `retryCount` argument will be 1 on the first retry and so on), up to a
+     * maximum of {@link DBTransactionParams.retries} times. Only then will the deadlock exception be propagated. To
+     * this behaviour, set `retry` to 0.
      *
      * If this method is called recursively, *savepoints* will be created (and rolled back) instead of transactions, and
      * `params` will be *silently ignored*. The `retryCount` argument is set to `null` in this case.
@@ -1227,8 +1232,8 @@ export abstract class DatabaseURI extends URI {
      *
      * @template T          The type of events that will be emitted.
      * @param    query      The query that opens the change event stream.
-     * @param    params     The query parameters. Values may be [[DBQuery]] instances or of any type supported by the
-     *                      database.
+     * @param    params     The query parameters. Values may be {@link DBQuery} instances or of any type supported by
+     *                      the database.
      * @throws   TypeError  If one of the parameters is `undefined` or if the arguments are invalid.
      * @throws   IOError    On I/O errors.
      * @throws   DBError    On database/query errors.
@@ -1245,9 +1250,9 @@ export abstract class DatabaseURI extends URI {
      * ```
      *
      * @template T          The type of events that will be emitted.
-     * @param    query      The query that opens the change event streamq, with `{prop}` placeholders for parameters.
+     * @param    query      The query that opens the change event stream, with `{prop}` placeholders for parameters.
      * @param    params     An record with parameters, used to look up placeholders from the query. Parameters may be
-     *                      [[DBQuery]] instances themselves, or of any type supported by the database.
+     *                      {@link DBQuery} instances themselves, or of any type supported by the database.
      * @throws   TypeError  If one of the parameters is `undefined` or if the arguments are invalid.
      * @throws   IOError    On I/O errors.
      * @throws   DBError    On database/query errors.

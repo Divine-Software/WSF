@@ -10,7 +10,7 @@ function asSet(array: string | string[] | undefined): Set<string> {
     return new Set(typeof array === 'string' ? array.split(/\s*,\s*/) : array ?? []);
 }
 
-/** Request parameters provided to the protected configuration methods in the [[CORSFilter]] helper class. */
+/** Request parameters provided to the protected configuration methods in the {@link CORSFilter} helper class. */
 export interface CORSFilterParams {
     /** The request arguments. */
     args:     WebArguments;
@@ -18,15 +18,16 @@ export interface CORSFilterParams {
     /** The potentially CORS-protected resource that was accessed. */
     resource: WebResource;
 
-    /** The response that the potentially CORS-protected [[WebResource]] produced. */
+    /** The response that the potentially CORS-protected {@link WebResource} produced. */
     response: WebResponse;
 }
 
 /**
- * A CORS-handling [[WebFilter]] helper class.
+ * A CORS-handling {@link WebFilter} helper class.
  *
- * The implementation is configured/customized by overriding the filter's protected methods: [[_isOriginAllowed]],
- * [[_isMethodAllowed]], [[_isHeaderAllowed]], [[_isHeaderExposed]], [[_isCredentialsSupported]] and [[_getMaxAge]].
+ * The implementation is configured/customized by overriding the filter's protected methods: {@link _isOriginAllowed},
+ * {@link _isMethodAllowed}, {@link _isHeaderAllowed}, {@link _isHeaderExposed}, {@link _isCredentialsSupported} and
+ * {@link _getMaxAge}.
  *
  * By default, all origins, methods and headers are allowed for 10 minutes. Credentials are *not* allowed by default.
  */
@@ -68,8 +69,8 @@ export abstract class CORSFilter implements WebFilter {
     /**
      * Checks if the given `origin` is allowed to make a CORS request.
      *
-     * The CORS specification recommends a server to return [[WebStatus.FORBIDDEN]] if a CORS request is denied. You can
-     * do that by throwing a [[WebError]] instead of returning `false`, like this:
+     * The CORS specification recommends a server to return {@link WebStatus.FORBIDDEN} if a CORS request is denied. You
+     * can do that by throwing a {@link WebError} instead of returning `false`, like this:
      *
      * ```ts
      * protected _isOriginAllowed(origin: string | undefined, params: CORSFilterParams): boolean {
@@ -147,16 +148,16 @@ export abstract class CORSFilter implements WebFilter {
     }
 }
 
-/** A symbol in [[EventAttributes]] representing the event's `id` field */
+/** A symbol in {@link EventAttributes} representing the event's `id` field */
 export const EVENT_ID    = Symbol('EVENT_ID');
 
-/** A symbol in [[EventAttributes]] representing the event's `event` field */
+/** A symbol in {@link EventAttributes} representing the event's `event` field */
 export const EVENT_TYPE  = Symbol('EVENT_TYPE');
 
-/** A symbol in [[EventAttributes]] representing the event's `retry` field */
+/** A symbol in {@link EventAttributes} representing the event's `retry` field */
 export const EVENT_RETRY = Symbol('EVENT_RETRY');
 
-/** Metadata to be transmitted along with a single event by the [[EventStreamResponse]] helper class. */
+/** Metadata to be transmitted along with a single event by the {@link EventStreamResponse} helper class. */
 export interface EventAttributes {
     /** Used to update the client's last event ID value. */
     [EVENT_ID]?:    string;
@@ -169,7 +170,7 @@ export interface EventAttributes {
 }
 
 /**
- * Server-Sent Events (SSE) [[WebResponse]] serializer/helper class.
+ * Server-Sent Events (SSE) {@link WebResponse} serializer/helper class.
  *
  * @template T The type of events to transmit.
  */
@@ -214,9 +215,9 @@ export class EventStreamResponse<T = unknown> extends WebResponse {
      * Converts an `AsyncIterable` into a *Server-Sent Event* response stream.
      *
      * Each object yielded by the `source` generator will be serialized and converted to an SSE event. Symbols from the
-     * [[EventAttributes]] interface may be added to transmit event metadata. `null` or `undefined` values will result
-     * in a comment event. If no value is emitted for `keepaliveTimeout` milliseconds, a comment line will be sent
-     * automatically, in order to signal to the client that the server is still alive and the connection is open.
+     * {@link EventAttributes} interface may be added to transmit event metadata. `null` or `undefined` values will
+     * result in a comment event. If no value is emitted for `keepaliveTimeout` milliseconds, a comment line will be
+     * sent automatically, in order to signal to the client that the server is still alive and the connection is open.
      *
      * Exceptions from the generator will be serialized and sent as events of type `error`.
      *

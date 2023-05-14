@@ -4,7 +4,7 @@ import { createServer, IncomingMessage, Server, ServerResponse } from 'http';
 import { AddressInfo } from 'net';
 import { WebService } from './service';
 
-/** Start-up options for the [[WebServer.start]] method. */
+/** Start-up options for the {@link WebServer.start} method. */
 export interface StartOptions {
     /**
      * Signals to listen for.
@@ -14,13 +14,13 @@ export interface StartOptions {
      */
     stopSignals?: boolean | NodeJS.Signals[];
 
-    /** Set to `true` to automatically wait for [[WebServer.stop]] to be called. Defaults to `false`. */
+    /** Set to `true` to automatically wait for {@link WebServer.stop} to be called. Defaults to `false`. */
     waitForStop?: boolean;
 }
 
 /**
  * A web server that listens for incoming HTTP requests on a specific port and delegates requests to one or more
- * [[WebService]] instances.
+ * {@link WebService} instances.
  */
 export class WebServer {
     /** The underlying Node.js [Server](https://nodejs.org/api/http.html#class-httpserver) instance. */
@@ -53,16 +53,16 @@ export class WebServer {
     }
 
     /**
-     * Mounts/adds a secondary [[WebService]] at a specific path.
+     * Mounts/adds a secondary {@link WebService} at a specific path.
      *
-     * By default, all requests are routed to the default [[WebService]] which was provided when the [[constructor]] was
-     * invoced, but it's possible to mount additional [[WebService]] instances as well, forming a multi-application
-     * server. In this case, the default [[WebService]] could be used for only a landing/front page and global error
-     * handlers for missing pages.
+     * By default, all requests are routed to the default {@link WebService} which was provided when the
+     * {@link constructor} was invoced, but it's possible to mount additional {@link WebService} instances as well,
+     * forming a multi-application server. In this case, the default {@link WebService} could be used for only a
+     * landing/front page and global error handlers for missing pages.
      *
      * @param mountPoint The path prefix where the service should be available. Must both begin and end with a forward
      *                   slash.
-     * @param service    The [[WebService]] to mount.
+     * @param service    The {@link WebService} to mount.
      */
     mount(mountPoint: string, service: WebService<any>): this {
         this._services.push(service['_mount'](mountPoint));
@@ -72,9 +72,9 @@ export class WebServer {
     }
 
     /**
-     * Unmounts/removes a secondary [[WebService]].
+     * Unmounts/removes a secondary {@link WebService}.
      *
-     * @param serviceOrMountPoint Either a [[WebService]].
+     * @param serviceOrMountPoint Either a {@link WebService}.
      */
     unmount(serviceOrMountPoint: WebService<any> | string): this {
         const service = typeof serviceOrMountPoint === 'string'
@@ -91,11 +91,11 @@ export class WebServer {
     /**
      * Starts the WebServer.
      *
-     * Registers signal handlers (unless [[StartOptions.stopSignals]] is false) for automatic shutdown, and then starts
+     * Registers signal handlers (unless {@link StartOptions.stopSignals} is false) for automatic shutdown, and then starts
      * listening on the configured port.
      *
-     * If [[StartOptions.waitForStop]] is `true`, [[wait]] is automatically invoked and this method will thus not return
-     * until the server is stopped in that case.
+     * If {@link StartOptions.waitForStop} is `true`, {@link wait} is automatically invoked and this method will thus not
+     * return until the server is stopped in that case.
      *
      * @param startOptions Start-up options.
      * @returns This WebServer.
@@ -141,8 +141,8 @@ export class WebServer {
     /**
      * Waits until the WebServer is stopped.
      *
-     * This method waits for [[stop]] to be called, either manually or indirectly by one of the signals that was
-     * registered during the [[start]] method.
+     * This method waits for {@link stop} to be called, either manually or indirectly by one of the signals that was
+     * registered during the {@link start} method.
      *
      * @returns This WebServer.
      */

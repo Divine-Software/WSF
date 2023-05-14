@@ -49,18 +49,18 @@ export interface RPCEndpointOptions {
     /** The path of this RPC method. Default is simply the RPC method name. */
     path?:      string;
 
-    /** Keep-alive time in milliseconds, in case this RPC call is an event stream. Default is [[RPC_DEFAULT_KEEPALIVE]]. */
+    /** Keep-alive time in milliseconds, in case this RPC call is an event stream. Default is {@link RPC_DEFAULT_KEEPALIVE}. */
     keepalive?: number | null;
 }
 
 /**
- * RPC endpoint configuration. For each RPC method (the key) this interface contains either an [[RPCEndpointOptions]]
- * object or `null` for defaults.
+ * RPC endpoint configuration. For each RPC method (the key) this interface contains either an
+ * {@link RPCEndpointOptions} object or `null` for defaults.
  *
  * This object is the run-time (JavaScript) view of the RPC service API. It's important that every RPC method is present
  * in this object, even if its configuration is `null`, becasue this is the only source of method names for JavaScript.
- * Both [[createRPCClient]] and [[createRPCService]] use this object as input when creating the RPC client or service
- * proxy.
+ * Both {@link createRPCClient} and {@link createRPCService} use this object as input when creating the RPC client or
+ * service proxy.
  *
  * @template M  The interface that defines all RPC method request and response types (as tuples). This is the
  *              compile-time (TypeScript) view of the RPC service API.
@@ -79,9 +79,9 @@ export interface RPCServiceCtor<Context, M extends RPCMethods<M>> {
     /**
      * Constructs a new RPC service instance.
      *
-     * @param context The [[WebService]] context.
+     * @param context The {@link WebService} context.
      * @param args    The request arguments.
-     * @returns       A new [[RPCService]] instance.
+     * @returns       A new {@link RPCService} instance.
      */
     new(context: Context, args: WebArguments): RPCService<M>;
 }
@@ -102,18 +102,18 @@ export interface RPCServiceCtor<Context, M extends RPCMethods<M>> {
  *
  * @template M       The interface that defines all RPC method request and response types (as tuples).
  * @param    method  The name of the RPC method to invoke.
- * @param    options Contains the RPC method endpoint in the [[RPCEndpointOptions.path | path]] property.
+ * @param    options Contains the RPC method endpoint in the {@link RPCEndpointOptions.path | path} property.
  * @param    params  RPC method parameters to be `POST`'ed.
  * @returns          The response as receieved from the RPC serivce.
  */
 export type RPCClientProxy<M extends RPCMethods<M>> = (method: keyof M, options: Required<RPCEndpointOptions>, params: RPCParamsType) => Promise<RPCResultType>
 
 /**
- * This function should load the request parameters from [[WebArguments.body]] and invoke the callback function.
+ * This function should load the request parameters from {@link WebArguments.body} and invoke the callback function.
  *
  * This is a great place to perform input validation (perhaps using a schema), authenticate the client somehow or add
- * custom response headers. If an `AsyncIterable` is returned, it will automatically be wrapped in an [[EventStreamResponse]],
- * but otherwise, you're free to constuct the response as you wish.
+ * custom response headers. If an `AsyncIterable` is returned, it will automatically be wrapped in an
+ * {@link EventStreamResponse}, but otherwise, you're free to constuct the response as you wish.
  *
  * A minimal implementation could look like this:
  *
@@ -131,7 +131,7 @@ export type RPCClientProxy<M extends RPCMethods<M>> = (method: keyof M, options:
  * @param    options Contains the configured options for the RPC endpoint.
  * @param    args    Incoming HTTP request arguments. You should at least load the body from it.
  * @param    fn      The RPC service method that should be invoked with the request parameters.
- * @returns          The return value of the `fn` service method, either directly or wrapped in a [[WebResponse]].
+ * @returns          The return value of the `fn` service method, either directly or wrapped in a {@link WebResponse}.
  */
 export type RPCSeviceProxy<M extends RPCMethods<M>> = (method: keyof M, options: Required<RPCEndpointOptions>, args: WebArguments, fn: (params: RPCParamsType) => Promise<RPCResultType>) => Promise<RPCResultType>
 
@@ -145,7 +145,7 @@ function endpoints<M extends RPCMethods<M>>(endpoints: RPCEndpoints<M>): Array<[
 }
 
 /**
- * Enumerates all keys in the [[RPCEndpoints]] object and generates an [[RPCClient]].
+ * Enumerates all keys in the {@link RPCEndpoints} object and generates an {@link RPCClient}.
  *
  * Example usage:
  *
@@ -183,8 +183,8 @@ export function createRPCClient<M extends RPCMethods<M>>(config: RPCEndpoints<M>
 }
 
 /**
- * Enumerates all keys in the [[RPCEndpoints]] object and generates an array of [[WebResource]] classes which will
- * invoke the RPC service methods provided.
+ * Enumerates all keys in the {@link RPCEndpoints} object and generates an array of {@link WebResource} classes which
+ * will invoke the RPC service methods provided.
  *
  * Example usage:
  *
@@ -209,18 +209,18 @@ export function createRPCClient<M extends RPCMethods<M>>(config: RPCEndpoints<M>
  * ```
  *
  * @template M          The interface that defines all RPC method request and response types (as tuples).
- * @template Context    The [[WebService]] context type.
+ * @template Context    The {@link WebService} context type.
  * @param config        RPC endpoint configuration to generate a client API for.
  * @param impl          An RPC service class. A new instance will be constructed for each incoming request.
  * @param serviceProxy  A function that extracts the request parameters, calls the RPC service method and retuns the
  *                      result.
- * @returns             An array of [[WebResource]] classes that should be registered to a WebService via
- *                      [[WebService.addResources]].
+ * @returns             An array of {@link WebResource} classes that should be registered to a WebService via
+ *                      {@link WebService.addResources}.
  */
 export function createRPCService<M extends RPCMethods<M>, Context>(config: RPCEndpoints<M>, impl: RPCServiceCtor<Context, M>, serviceProxy: RPCSeviceProxy<M>): Array<WebResourceCtor<Context>>;
 /**
- * Enumerates all keys in the [[RPCEndpoints]] object and generates an array of [[WebResource]] classes which will
- * invoke the RPC service methods provided.
+ * Enumerates all keys in the {@link RPCEndpoints} object and generates an array of {@link WebResource} classes which
+ * will invoke the RPC service methods provided.
  *
  * Example usage:
  *
@@ -245,13 +245,13 @@ export function createRPCService<M extends RPCMethods<M>, Context>(config: RPCEn
  * ```
  *
  * @template M          The interface that defines all RPC method request and response types (as tuples).
- * @template Context    The [[WebService]] context type.
+ * @template Context    The {@link WebService} context type.
  * @param config        RPC endpoint configuration to generate a client API for.
  * @param impl          An RPC service instance (which may be stateful). Its methods will be invoked directly.
  * @param serviceProxy  A function that extracts the request parameters, calls the RPC service method and retuns the
  *                      result.
- * @returns             An array of [[WebResource]] classes that should be registered to a WebService via
- *                      [[WebService.addResources]].
+ * @returns             An array of {@link WebResource} classes that should be registered to a WebService via
+ *                      {@link WebService.addResources}.
  */
 export function createRPCService<M extends RPCMethods<M>>(config: RPCEndpoints<M>, impl: RPCService<M>, serviceProxy: RPCSeviceProxy<M>): Array<WebResourceCtor<unknown>>;
 export function createRPCService<M extends RPCMethods<M>, Context = unknown>(config: RPCEndpoints<M>, impl: RPCServiceCtor<Context, M> | RPCService<M>, serviceProxy: RPCSeviceProxy<M>): Array<WebResourceCtor<Context>> {

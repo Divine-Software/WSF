@@ -3,13 +3,13 @@ import { Readable, Transform } from 'stream';
 import { createBrotliCompress, createBrotliDecompress, createDeflate, createGunzip, createGzip, createInflate } from 'zlib';
 import { IOError } from './uri';
 
-/** An IOError subclass thrown by the [[Encoder]] class. */
+/** An IOError subclass thrown by the {@link Encoder} class. */
 export class EncoderError extends IOError {
 }
 
 /**
  * The base class for all encoder subclasses. Encoders can be constructed manually, but usually aren't. Instead, this
- * class provides the static methods [[Encoder.encode]] and [[Encoder.decode]].
+ * class provides the static methods {@link Encoder.encode} and {@link Encoder.decode}.
  *
  * Encoders transform byte streams and are used, among other things, to handle the `content-encoding`,
  * `content-transfer-encoding` and `transfer-encoding` headers in MIME and HTTP.
@@ -18,17 +18,17 @@ export class EncoderError extends IOError {
  *
  * Encoding           | Encoder class
  * -------------------|---------------------------
- * `7bit`             | [[IdentityEncoder]]
- * `8bit`             | [[IdentityEncoder]]
- * `base64`           | [[Base64Encoder]]
- * `base64url`        | [[Base64Encoder]]
- * `binary`           | [[IdentityEncoder]]
- * `br`               | [[ZlibEncoder]]
- * `deflate`          | [[ZlibEncoder]]
- * `gzip`             | [[ZlibEncoder]]
- * `identity`         | [[IdentityEncoder]]
- * `quoted-printable` | [[QuotedPrintableEncoder]]
- * `x-gzip`           | [[ZlibEncoder]]
+ * `7bit`             | {@link IdentityEncoder}
+ * `8bit`             | {@link IdentityEncoder}
+ * `base64`           | {@link Base64Encoder}
+ * `base64url`        | {@link Base64Encoder}
+ * `binary`           | {@link IdentityEncoder}
+ * `br`               | {@link ZlibEncoder}
+ * `deflate`          | {@link ZlibEncoder}
+ * `gzip`             | {@link ZlibEncoder}
+ * `identity`         | {@link IdentityEncoder}
+ * `quoted-printable` | {@link QuotedPrintableEncoder}
+ * `x-gzip`           | {@link ZlibEncoder}
  */
 export abstract class Encoder {
     /**

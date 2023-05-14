@@ -3,11 +3,11 @@ import { WebResponse, WebResponseHeaders } from './response';
 /**
  * An Error subclass representing an HTTP response.
  *
- * In addition to the error message, an [[WebStatus | HTTP status code]] and — optionally — one or more custom response
- * headers can be associated with the error.
+ * In addition to the error message, an {@link WebStatus | HTTP status code} and — optionally — one or more custom
+ * response headers can be associated with the error.
  *
- * When caught by a [[WebService]], an HTTP response will be constructed from it by invoking its [[toWebResponse]]
- * method.
+ * When caught by a {@link WebService}, an HTTP response will be constructed from it by invoking its
+ * {@link toWebResponse} method.
  */
 export class WebError extends Error {
     /**
@@ -27,15 +27,15 @@ export class WebError extends Error {
     }
 
     /**
-     * Converts this WebError to a [[WebResponse]].
+     * Converts this WebError to a {@link WebResponse}.
      *
-     * By default, a JSON-ish object will be returned with a single property specified by the [[errorMessageProperty]]
-     * parameter holding the error message. However, subclasses are free to override this method to provide custom error
-     * responses. (Alternatively, [[WebService.setErrorHandler]] can be used to provide per-service customization of any
-     * kind of errors/exceptions.)
+     * By default, a JSON-ish object will be returned with a single property specified by the
+     * {@link errorMessageProperty} parameter holding the error message. However, subclasses are free to override this
+     * method to provide custom error responses. (Alternatively, {@link WebService.setErrorHandler} can be used to
+     * provide per-service customization of any kind of errors/exceptions.)
      *
      * @param errorMessageProperty The name
-     * @returns A [[WebResponse]] to be sent back to the client.
+     * @returns A {@link WebResponse} to be sent back to the client.
      */
     toWebResponse(errorMessageProperty: string): WebResponse {
         return new WebResponse(this.status, { [errorMessageProperty]: this.message }, this.headers);

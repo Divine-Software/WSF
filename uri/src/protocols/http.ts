@@ -33,7 +33,7 @@ export interface HTTPParams extends URIParams {
     }
 }
 
-/** Provides configuration parameters for [[HTTPURI]]. */
+/** Provides configuration parameters for {@link HTTPURI}. */
 export interface HTTPParamsSelector extends ParamsSelector {
     params: HTTPParams;
 }
@@ -41,15 +41,16 @@ export interface HTTPParamsSelector extends ParamsSelector {
 /**
  * The `http:` and `https:` protocol handler is used to access web services.
  *
- * Redirects are handled automatically. To configure the handler, add an [[HTTPParamsSelector]] with [[addSelector]].
- * You can also provide authentication with an [[AuthSelector]] and add custom headers with a [[HeadersSelector]].
+ * Redirects are handled automatically. To configure the handler, add an {@link HTTPParamsSelector} with
+ * {@link addSelector}. You can also provide authentication with an {@link AuthSelector} and add custom headers with a
+ * {@link HeadersSelector}.
  */
 export class HTTPURI extends URI {
     /**
-     * Issues a `HEAD` request and constructs a [[DirectoryEntry]] from the result.
+     * Issues a `HEAD` request and constructs a {@link DirectoryEntry} from the result.
      *
      * @throws IOError  On I/O errors or if this the HTTP response status is outside the 200-299 range.
-     * @returns         Information about this HTTP resource, including [[MetaData]].
+     * @returns         Information about this HTTP resource, including {@link MetaData}.
      */
     override async info<T extends DirectoryEntry>(): Promise<T & Metadata> {
         const response = await this._query<T>('HEAD', {}, undefined, undefined, undefined);
@@ -77,7 +78,7 @@ export class HTTPURI extends URI {
      * @param    recvCT       Override the default response parser. Defaults to the `content-type` response header.
      * @throws   IOError      On I/O errors or if this the HTTP response status is outside the 200-299 range.
      * @throws   ParserError  If the media type is unsupported or if the parser fails to parse the resource.
-     * @returns               The HTTP resource parsed as `recvCT` *into an object*, including [[MetaData]].
+     * @returns               The HTTP resource parsed as `recvCT` *into an object*, including {@link MetaData}.
      */
     override async load<T extends object>(recvCT?: ContentType | string): Promise<T> {
         return this._requireValidStatus(await this._query('GET', {}, undefined, undefined, recvCT));
@@ -94,7 +95,7 @@ export class HTTPURI extends URI {
      * @throws   IOError      On I/O errors or if this the HTTP response status is outside the 200-299 range.
      * @throws   ParserError  If the media type is unsupported or if the parser fails to serialize the payload or parse
      *                        the response.
-     * @returns               The HTTP response parsed as `recvCT` *into an object*, including [[MetaData]].
+     * @returns               The HTTP response parsed as `recvCT` *into an object*, including {@link MetaData}.
      */
     override async save<T extends object, D = unknown>(data: D, sendCT?: ContentType | string, recvCT?: ContentType | string): Promise<T> {
         return this._requireValidStatus(await this._query('PUT', {}, data, sendCT, recvCT));
@@ -111,7 +112,7 @@ export class HTTPURI extends URI {
      * @throws   IOError      On I/O errors or if this the HTTP response status is outside the 200-299 range.
      * @throws   ParserError  If the media type is unsupported or if the parser fails to serialize the payload or parse
      *                        the response.
-     * @returns               The HTTP response parsed as `recvCT` *into an object*, including [[MetaData]].
+     * @returns               The HTTP response parsed as `recvCT` *into an object*, including {@link MetaData}.
      */
     override async append<T extends object, D = unknown>(data: D, sendCT?: ContentType | string, recvCT?: ContentType | string): Promise<T> {
         return this._requireValidStatus(await this._query('POST', {}, data, sendCT, recvCT));
@@ -128,7 +129,7 @@ export class HTTPURI extends URI {
      * @throws   IOError      On I/O errors or if this the HTTP response status is outside the 200-299 range.
      * @throws   ParserError  If the media type is unsupported or if the parser fails to serialize the payload or parse
      *                        the response.
-     * @returns               The HTTP response parsed as `recvCT` *into an object*, including [[MetaData]].
+     * @returns               The HTTP response parsed as `recvCT` *into an object*, including {@link MetaData}.
      */
     override async modify<T extends object, D = unknown>(data: D, sendCT?: ContentType | string, recvCT?: ContentType | string): Promise<T> {
         return this._requireValidStatus(await this._query('PATCH', {}, data, sendCT, recvCT));
@@ -141,7 +142,7 @@ export class HTTPURI extends URI {
      * @param    recvCT       Override the default response parser. Defaults to the `content-type` response header.
      * @throws   IOError      On I/O errors or if this the HTTP response status is outside the 200-299 range.
      * @throws   ParserError  If the media type is unsupported or if the parser fails to parse the response.
-     * @returns               The HTTP response parsed as `recvCT` *into an object*, including [[MetaData]].
+     * @returns               The HTTP response parsed as `recvCT` *into an object*, including {@link MetaData}.
      */
     override async remove<T extends object>(recvCT?: ContentType | string): Promise<T> {
         return this._requireValidStatus(await this._query('DELETE', {}, undefined, undefined, recvCT));
@@ -153,14 +154,14 @@ export class HTTPURI extends URI {
      * @template T            The actual type returned.
      * @template D            The type of the patch data.
      * @param    method       The (case-sensitive) HTTP method to issue.
-     * @param    headers      Custom headers to send, in addition to those specified via [[HeadersSelector]].
+     * @param    headers      Custom headers to send, in addition to those specified via {@link HeadersSelector}.
      * @param    data         The data/payload to send.
      * @param    sendCT       Override the default data serializer.
      * @param    recvCT       Override the default response parser. Defaults to the `content-type` response header.
      * @throws   IOError      On I/O errors or if this the HTTP response status is outside the 200-299 range.
      * @throws   ParserError  If the media type is unsupported or if the parser fails to serialize the payload or parse
      *                        the response.
-     * @returns               The HTTP response parsed as `recvCT` *into an object*, including [[MetaData]].
+     * @returns               The HTTP response parsed as `recvCT` *into an object*, including {@link MetaData}.
      */
     override async query<T extends object, D = unknown>(method: string, headers?: StringParams | null, data?: D, sendCT?: ContentType | string, recvCT?: ContentType | string): Promise<T> {
         if (typeof method !== 'string') {

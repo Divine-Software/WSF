@@ -13,8 +13,8 @@ export interface WebServiceConfig {
     console?:              Console;
 
     /**
-     * The name of the property holding the error message when a [[WebError]] is converted to a structued
-     * [[WebResponse]]. Default is `message`.
+     * The name of the property holding the error message when a {@link WebError} is converted to a structued
+     * {@link WebResponse}. Default is `message`.
      *
      * When an error is caught, it can be converted a JSON object with a single property holding the error message, and
      * the `errorMessageProperty` configuration specifies the name of that property.
@@ -29,7 +29,7 @@ export interface WebServiceConfig {
     logRequestID?:         boolean;
 
     /**
-     * Specifies the default maximum payload size [[WebRequest.body]] should accept, unless an explicit limit is
+     * Specifies the default maximum payload size {@link WebRequest.body} should accept, unless an explicit limit is
      * proveded in the call. Default is 1,000,000 bytes.
      */
     maxContentLength?:     number;
@@ -91,8 +91,8 @@ function regExpParams(match: RegExpExecArray, offset: number, count: number, pre
     return params;
 }
 /**
- * A WebService is a collection of registered [[WebResource | resources]], [[WebFilter | filters]] and an optional
- * [[WebErrorHandler | error handler]] that forms the web application.
+ * A WebService is a collection of registered {@link WebResource | resources}, {@link WebFilter | filters} and an
+ * optional {@link WebErrorHandler | error handler} that forms the web application.
  *
  * ## Concepts
  *
@@ -104,9 +104,9 @@ function regExpParams(match: RegExpExecArray, offset: number, count: number, pre
  *
  * ### Resources
  *
- * A [[WebResource]] is responsible for handling a specific location. It responds to one or more HTTP verbs and produces
- * a [[WebResponse]] once finished. A new instance of the resource class is constructed for each incoming request,
- * ensuring that no state is leaked between requests.
+ * A {@link WebResource} is responsible for handling a specific location. It responds to one or more HTTP verbs and
+ * produces a {@link WebResponse} once finished. A new instance of the resource class is constructed for each incoming
+ * request, ensuring that no state is leaked between requests.
  *
  * Only a single resource will ever match an incoming request.
  *
@@ -117,7 +117,7 @@ function regExpParams(match: RegExpExecArray, offset: number, count: number, pre
  * constructed for each incoming request.
  *
  * Multiple filters may match an incoming request. They will be processed in the same order as they were added via
- * [[addFilter]] or [[addFilters]].
+ * {@link addFilter} or {@link addFilters}.
  *
  * ### Error handler
  *
@@ -128,7 +128,7 @@ function regExpParams(match: RegExpExecArray, offset: number, count: number, pre
  */
 export class WebService<Context> {
     /**
-     * Utilitiy method to calculate an `Allow` header based on an [[WebResource]].
+     * Utilitiy method to calculate an `Allow` header based on an {@link WebResource}.
      *
      * This method checks what methods are implemented on the provided object and generates a comma-separated list of
      * allowed HTTP methods.
@@ -156,7 +156,7 @@ export class WebService<Context> {
         return methods.sort().join(', ');
     }
 
-    /** The actual [[WebServiceConfig]] used by this service. */
+    /** The actual {@link WebServiceConfig} used by this service. */
     public readonly webServiceConfig: Required<WebServiceConfig>;
 
     private _mountPoint = '/';
@@ -192,7 +192,7 @@ export class WebService<Context> {
     }
 
     /**
-     * Called by [[WebServer.mount]] when this WebService is mounted (attached to a WebServer).
+     * Called by {@link WebServer.mount} when this WebService is mounted (attached to a WebServer).
      *
      * @param mountPoint The prefix path where this WebService should be mounted.
      * @returns This WebService.
@@ -209,7 +209,7 @@ export class WebService<Context> {
     }
 
     /**
-     * Called by Called by [[WebServer.unmount]] when this WebService is unmounted.
+     * Called by Called by {@link WebServer.unmount} when this WebService is unmounted.
      *
      * @returns This WebService.
      */
@@ -224,7 +224,7 @@ export class WebService<Context> {
      * Installs a service-wide error handler.
      *
      * Whenever a resource of filter throws an exception, the error handler is invoked to handle the error. The error
-     * handler can either return a [[WebResponse]] or (re-)throw.
+     * handler can either return a {@link WebResponse} or (re-)throw.
      *
      * @param errorHandler The error handler to install, or `undefined` to restore the default behaviour.
      * @returns THis WebService.
@@ -236,9 +236,9 @@ export class WebService<Context> {
     }
 
     /**
-     * Registers a single [[WebFilter | filter]].
+     * Registers a single {@link WebFilter | filter}.
      *
-     * The filter's [[WebFilterCtor.path | path]] property defines what locations the filter is applicable to.
+     * The filter's {@link WebFilterCtor.path | path} property defines what locations the filter is applicable to.
      *
      * @param filter A filter class to register.
      * @returns This WebService.
@@ -253,9 +253,9 @@ export class WebService<Context> {
     }
 
     /**
-     * Registers multiple [[WebFilter | filters]].
+     * Registers multiple {@link WebFilter | filters}.
      *
-     * The filters' [[WebFilterCtor.path | path]] properties defines what locations each filter is applicable to.
+     * The filters' {@link WebFilterCtor.path | path} properties defines what locations each filter is applicable to.
      *
      * @param filters A sequence of filter classes to register.
      * @returns This WebService.
@@ -269,9 +269,9 @@ export class WebService<Context> {
     }
 
     /**
-     * Registers a single [[WebResource | resource]].
+     * Registers a single {@link WebResource | resource}.
      *
-     * The resource's [[WebResourceCtor.path | path]] property defines what locations the resource is applicable to.
+     * The resource's {@link WebResourceCtor.path | path} property defines what locations the resource is applicable to.
      *
      * @param resource A resouece class to register.
      * @returns This WebService.
@@ -292,9 +292,10 @@ export class WebService<Context> {
     }
 
     /**
-     * Registers multiple [[WebResource | resources]].
+     * Registers multiple {@link WebResource | resources}.
      *
-     * The resources' [[WebResourceCtor.path | path]] properties defines what locations each resource is applicable to.
+     * The resources' {@link WebResourceCtor.path | path} properties defines what locations each resource is applicable
+     * to.
      *
      * @param filters A sequence of resource classes to register.
      * @returns This WebService.
@@ -311,8 +312,8 @@ export class WebService<Context> {
      * Returns a Node.jss HTTP request handler as specified by
      * [createServer](https://nodejs.org/api/http.html#httpcreateserveroptions-requestlistener).
      *
-     * The request handler will construct a [[WebRequest]] and then invoke [[dispatchRequest]]. The response will then
-     * be serialized and sent to the client.
+     * The request handler will construct a {@link WebRequest} and then invoke {@link dispatchRequest}. The response
+     * will then be serialized and sent to the client.
      *
      * @returns A Node.js HTTP request handler for this WebService.
      */
@@ -366,8 +367,8 @@ export class WebService<Context> {
     }
 
     /**
-     * Dispatches a request to the intended [[WebResource | resource]] and also applies all matching [[WebFilter |
-     * filters]].
+     * Dispatches a request to the intended {@link WebResource | resource} and also applies all matching {@link
+     * WebFilter | filters}.
      *
      * Errors will also be handled, so this method does not normally throw.
      *

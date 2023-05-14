@@ -1,14 +1,14 @@
 import { AuthenticationInfo, Authorization, ServerAuthorization, WWWAuthenticate } from '@divine/headers';
 import { AuthScheme, AuthSchemeError, AuthSchemeRequest, Credentials } from '../auth-schemes';
 
-/** A helper implementation of [[Credentials]] for Bearer tokens. */
+/** A helper implementation of {@link Credentials} for Bearer tokens. */
 export class BearerCredentials implements Credentials {
     identity: string;
 
     /**
      * Constructs a new BearerCredentials/Credentials object.
      *
-     * @param token  The Bearer token, to be stored in [[identity]].
+     * @param token  The Bearer token, to be stored in {@link identity}.
      */
     constructor(token: string) {
         this.identity = token;

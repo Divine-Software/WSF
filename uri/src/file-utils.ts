@@ -3,8 +3,8 @@ import { ContentType } from '@divine/headers';
 import { extension, lookup } from 'mime-types';
 import path from 'path';
 
-/**
- * A template literal tag function that applies [[percentEncode]] to all arguments
+/**{@link
+ *} template literal tag function that applies {@link percentEncode} to all arguments
  *
  * @param strings  The template string array.
  * @param values   The values to be encoded.
@@ -15,7 +15,7 @@ export function uri(strings: TemplateStringsArray, ...values: unknown[]): string
 }
 
 /**
- * Normalizes a file path and then applies [[percentEncode]] to each individual path components.
+ * Normalizes a file path and then applies {@link percentEncode} to each individual path components.
  *
  * @param filepath The file path to encode.
  * @param type     Indictes how the file path should be normalized.
