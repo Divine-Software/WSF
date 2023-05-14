@@ -1,5 +1,17 @@
 # @divine/web-service
 
+## 0.4.5
+
+### Patch Changes
+
+- b071400: Resources can now return AsyncIterable for SSE streams (just like RPC services).
+- 8f552c4: Bumped all deps except Parse5.
+- 49fe23d: Don't use HTTP keep-alive on text/event-stream responses. Use 'no-store' to disable caching.
+- Updated dependencies [8f552c4]
+  - @divine/commons@0.4.4
+  - @divine/headers@2.0.3
+  - @divine/uri@0.4.6
+
 ## 0.4.4
 
 ### Patch Changes

@@ -1,5 +1,11 @@
 # @divine/commons
 
+## 0.4.4
+
+### Patch Changes
+
+- 8f552c4: Bumped all deps except Parse5.
+
 ## 0.4.3
 
 ### Patch Changes

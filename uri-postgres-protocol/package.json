@@ -1,6 +1,6 @@
 {
   "name": "@divine/uri-postgres-protocol",
-  "version": "0.4.2",
+  "version": "0.4.3",
   "description": "Adds support for PostgreSQL to @divine/uri",
   "author": "Martin Blom <martin@blom.org>",
   "license": "Apache-2.0",
@@ -22,7 +22,7 @@
     "collectCoverage": true
   },
   "peerDependencies": {
-    "@divine/uri": "workspace:~0.4.4"
+    "@divine/uri": "workspace:~0.4.6"
   },
   "dependencies": {
     "@divine/commons": "workspace:~",

@@ -1,5 +1,17 @@
 # @divine/uri-tds-protocol
 
+## 0.5.0
+
+### Minor Changes
+
+- 8f552c4: Bumped all deps except Parse5.
+
+### Patch Changes
+
+- Updated dependencies [8f552c4]
+  - @divine/commons@0.4.4
+  - @divine/uri@0.4.6
+
 ## 0.4.3
 
 ### Patch Changes

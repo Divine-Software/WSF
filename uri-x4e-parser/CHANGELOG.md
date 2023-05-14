@@ -1,5 +1,14 @@
 # @divine/uri-x4e-parser
 
+## 0.4.4
+
+### Patch Changes
+
+- 8f552c4: Bumped all deps except Parse5.
+- Updated dependencies [8f552c4]
+  - @divine/uri@0.4.6
+  - @divine/x4e@0.4.4
+
 ## 0.4.3
 
 ### Patch Changes

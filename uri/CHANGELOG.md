@@ -1,5 +1,14 @@
 # @divine/uri
 
+## 0.4.6
+
+### Patch Changes
+
+- 8f552c4: Bumped all deps except Parse5.
+- Updated dependencies [8f552c4]
+  - @divine/commons@0.4.4
+  - @divine/headers@2.0.3
+
 ## 0.4.5
 
 ### Patch Changes

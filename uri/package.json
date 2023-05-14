@@ -1,6 +1,6 @@
 {
   "name": "@divine/uri",
-  "version": "0.4.5",
+  "version": "0.4.6",
   "description": "The Divine URI class for accessing and manipulating local and remote resources",
   "author": "Martin Blom <martin@blom.org>",
   "license": "Apache-2.0",
@@ -34,7 +34,7 @@
     "yaml": "^2.2.2"
   },
   "peerDependencies": {
-    "@divine/headers": "workspace:^2.0.2",
+    "@divine/headers": "workspace:^2.0.3",
     "chokidar": "^3.5.2"
   },
   "peerDependenciesMeta": {

@@ -1,5 +1,11 @@
 # @divine/headers
 
+## 2.0.3
+
+### Patch Changes
+
+- 8f552c4: Bumped all deps except Parse5.
+
 ## 2.0.2
 
 ### Patch Changes
