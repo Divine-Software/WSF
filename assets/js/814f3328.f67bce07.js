@@ -1,1 +1,0 @@
-"use strict";(self.webpackChunkwebsite=self.webpackChunkwebsite||[]).push([[2535],{5641:function(e){e.exports=JSON.parse('{"title":"Recent posts","items":[{"title":"Welcome Back!","permalink":"/WSF/blog/2022/02/20/new-docs-site"}]}')}}]);
