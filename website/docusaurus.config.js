@@ -25,6 +25,11 @@ const config = {
         defaultMode: 'light',
         respectPrefersColorScheme: true,
       },
+      docs: {
+        sidebar: {
+          hideable: true
+        }
+      },
       navbar: {
         title: 'Divine WSF',
         logo: {
@@ -52,7 +57,6 @@ const config = {
         ],
         hideOnScroll: false,
       },
-      hideableSidebar: true,
       footer: {
         style: 'dark',
         links: [
@@ -123,16 +127,17 @@ const config = {
   plugins: [
     [
       'docusaurus-plugin-typedoc', {
-        entryPointStrategy: "packages",
+        entryPointStrategy: "legacy-packages",
         entryPoints: yaml.parse(readFileSync('../pnpm-workspace.yaml').toString()).packages.map((pkg) => `../${pkg}`),
         excludePrivate: true,
         excludeInternal: true,
+        excludeExternals: true,
         tsconfig: '../tsconfig.json',
         watch: typeof process !== 'undefined' && process.env.TYPEDOC_WATCH === 'true',
         readme: 'none',
         sidebar: {
           categoryLabel: 'Framework APIs',
-          fullNames: false,
+          fullNames: true,
           position: 10,
           sidebarFile: null,
         },

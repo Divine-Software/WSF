@@ -5,7 +5,7 @@ import { Client, ClientConfig, FieldDef, Query, QueryArrayConfig, types } from '
 import { URL } from 'url';
 import { PostgresSQLState as SQLState } from './postgres-errors';
 
-// @ts-expect-error: Argument of type '1016' is not assignable to parameter of type 'TypeId'.ts(2345)
+// @ts-ignore-error: Argument of type '1016' is not assignable to parameter of type 'TypeId'.ts(2345)
 const parseBigIntArray = types.getTypeParser(1016);
 const deadlocks = [ SQLState.SERIALIZATION_FAILURE, SQLState.DEADLOCK_DETECTED ] as string[];
 const listenFields: FieldDef[] = [
