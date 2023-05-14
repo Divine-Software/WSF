@@ -73,14 +73,16 @@ Type prefix | Parameter source                   | Example Input                
 
 ## Generating Responses
 
-To return a response with a *200 – OK* status code, well, just return it. This works for values of type `Buffer` and
-byte streams a.k.a. `AsyncIterable<Buffer>` (*application/octet-stream*), plain old objects and arrays
-(*application/json*), `string`, `number`, `bigint`, `boolean` and `Date` (*text/plain*), and [XML] objects, including
-those constructed via the [html] tagged template literal or via TSX (*application/xml* or *text/html*, based on the XML
-namespace).
+To return a response with a *200 – OK* status code, well, just return it. This works for values of type `Buffer`, `URI`
+and Node.js `ReadableStream` instances (*application/octet-stream*), plain old objects and arrays (*application/json*),
+`string`, `number`, `bigint`, `boolean` and `Date` (*text/plain*), and [XML] objects, including those constructed via
+the [html] tagged template literal or via TSX (*application/xml* or *text/html*, based on the XML namespace).
+
+Anything that is `AsyncIterable` (but not `ReadableStream`) will be sent as [SSE/server-sent
+events](https://developer.mozilla.org/en-US/docs/Web/API/Server-sent_events/) (*text/event-stream*).
 
 If you need to specify the status code or add response headers (including the `content-type`), wrap the response in a
-[WebResponse] object.
+[WebResponse] or [EventStreamResponse] object yourself.
 
 :::note
 
@@ -96,6 +98,7 @@ In the future, the WSF will automatically negotiate the media type based on the 
       use [default], you need to process `OPTIONS` manually since there is no way for the WSF to know what methods you
       handle.
 
+[EventStreamResponse]:  ../api/classes/divine_web_service.EventStreamResponse.md
 [WebArguments]:         ../api/classes/divine_web_service.WebArguments.md
 [WebError]:             ../api/classes/divine_web_service.WebError.md
 [WebFilter]:            ../api/interfaces/divine_web_service.WebFilter.md

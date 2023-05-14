@@ -110,12 +110,12 @@ export interface WebResource {
      *
      * @param args The request arguments.
      */
-    init    ?(args: WebArguments): Promise<void>;
+    init?(args: WebArguments): Promise<void>;
 
     /**
      * Invoked when the request has been fully processed. Useful for clean-up tasks.
      */
-    close   ?(): Promise<void>;
+    close?(): Promise<void>;
 
     /**
      * Invoked when the client issues a `HEAD` request.
@@ -125,7 +125,7 @@ export interface WebResource {
      * @param args The request arguments.
      * @returns The response. The response body will be discarded, but all other parts of the response applies.
      */
-    HEAD    ?(args: WebArguments): Promise<WebResponses>;
+    HEAD?(args: WebArguments): Promise<WebResponses>;
 
     /**
      * Invoked when the client issues a `GET` request.
@@ -136,7 +136,7 @@ export interface WebResource {
      * @returns The response; a {@link WebResponse} object or just the response payload from which a successful
      * WebResponse will be constructed.
      */
-    GET     ?(args: WebArguments): Promise<WebResponses>;
+    GET?(args: WebArguments): Promise<WebResponses>;
 
     /**
      * Invoked when the client issues a `PUT` request.
@@ -145,7 +145,7 @@ export interface WebResource {
      * @returns The response; a {@link WebResponse} object or just the response payload from which a successful
      * WebResponse will be constructed.
      */
-    PUT     ?(args: WebArguments): Promise<WebResponses>;
+    PUT?(args: WebArguments): Promise<WebResponses>;
 
     /**
      * Invoked when the client issues a `POST` request.
@@ -154,7 +154,7 @@ export interface WebResource {
      * @returns The response; a {@link WebResponse} object or just the response payload from which a successful
      * WebResponse will be constructed.
      */
-    POST    ?(args: WebArguments): Promise<WebResponses>;
+    POST?(args: WebArguments): Promise<WebResponses>;
 
     /**
      * Invoked when the client issues a `PATCH` request.
@@ -163,7 +163,7 @@ export interface WebResource {
      * @returns The response; a {@link WebResponse} object or just the response payload from which a successful
      * WebResponse will be constructed.
      */
-    PATCH   ?(args: WebArguments): Promise<WebResponses>;
+    PATCH?(args: WebArguments): Promise<WebResponses>;
 
     /**
      * Invoked when the client issues a `DELETE` request.
@@ -172,7 +172,7 @@ export interface WebResource {
      * @returns The response; a {@link WebResponse} object or just the response payload from which a successful
      * WebResponse will be constructed.
      */
-    DELETE  ?(args: WebArguments): Promise<WebResponses>;
+    DELETE?(args: WebArguments): Promise<WebResponses>;
 
     /**
      * Invoked when the client issues a `OPTIONS` request.
@@ -184,7 +184,7 @@ export interface WebResource {
      * @returns The response; a {@link WebResponse} object or just the response payload from which a successful
      * WebResponse will be constructed.
      */
-    OPTIONS ?(args: WebArguments): Promise<WebResponses>;
+    OPTIONS?(args: WebArguments): Promise<WebResponses>;
 
     /**
      * Invoked when the client issues any request that was not handled by {@link HEAD}, {@link GET}, {@link PUT},
@@ -198,7 +198,7 @@ export interface WebResource {
      * @returns The response; a {@link WebResponse} object or just the response payload from which a successful
      * WebResponse will be constructed.
      */
-    default ?(args: WebArguments): Promise<WebResponses>;
+    default?(args: WebArguments): Promise<WebResponses>;
 
     /**
      * A resource-specific error handler. Will be invoked whenever one of the other methods (expcect {@link close})
@@ -206,7 +206,7 @@ export interface WebResource {
      *
      * @param err
      */
-    catch   ?(err: Error): WebResponse | Promise<WebResponse>;
+    catch?(err: Error): WebResponse | Promise<WebResponse>;
 }
 
 /**

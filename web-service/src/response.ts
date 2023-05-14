@@ -1,6 +1,6 @@
-import { isReadableStream } from '@divine/commons';
+import { BasicTypes, isReadableStream } from '@divine/commons';
 import { ContentDisposition, ContentType, WWWAuthenticate } from '@divine/headers';
-import { Parser } from '@divine/uri';
+import { Parser, URI } from '@divine/uri';
 import { Readable } from 'stream';
 import { URL } from 'url';
 import { WebError, WebStatus } from './error';
@@ -333,4 +333,4 @@ export interface WebResponseHeaders {
 }
 
 /** A union of all types a {@link WebResource} method may return. */
-export type WebResponses = null | WebResponse | NodeJS.ReadableStream | Buffer | string | number | bigint | boolean | Date | object;
+export type WebResponses = WebResponse | BasicTypes | Date | URI | NodeJS.ReadableStream | Buffer | AsyncIterable<BasicTypes | undefined> ;

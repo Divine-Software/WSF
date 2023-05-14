@@ -1,8 +1,9 @@
-import { isReadableStream, StringParams } from '@divine/commons';
+import { isAsyncIterable, isReadableStream, StringParams } from '@divine/commons';
 import { AuthSchemeError } from '@divine/uri';
 import { IncomingMessage, ServerResponse } from 'http';
 import { pipeline } from 'stream';
 import { WebError, WebStatus } from './error';
+import { EventStreamResponse } from './helpers';
 import { WebRequest } from './request';
 import { WebArguments, WebErrorHandler, WebFilterCtor, WebResource, WebResourceCtor } from './resource';
 import { WebResponse, WebResponses } from './response';
@@ -450,7 +451,13 @@ export class WebService<Context> {
                     ? await new active.ctor(this.context, params!).filter(nextflt, params!, resource)
                     : await resourceHandler();
 
-                return result instanceof WebResponse ? result : new WebResponse(result !== null ? WebStatus.OK : WebStatus.NO_CONTENT, result);
+                if (result instanceof WebResponse) {
+                    return result;
+                } else if (isAsyncIterable(result) && !isReadableStream(result)) {
+                    return new EventStreamResponse(result);
+                } else {
+                    return new WebResponse(result !== null ? WebStatus.OK : WebStatus.NO_CONTENT, result);
+                }
             }
             catch (err) {
                 try {

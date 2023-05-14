@@ -1,6 +1,8 @@
 import { StringParams } from '@divine/commons';
 import { WebArguments, WebResponse, WebService, WebStatus } from '../src';
 import { fakedReq } from './test-utils';
+import { Readable } from 'stream';
+import { Parser } from '@divine/uri';
 
 describe('the WebService dispatcher', () => {
     const ws = new WebService('context')
@@ -69,6 +71,11 @@ describe('the WebService dispatcher', () => {
 });
 
 describe(`a WebService's resources`, () => {
+    async function *stream() {
+        yield "A";
+        yield "B";
+    }
+
     const ws = new WebService('context')
         .addResource(class {
             static path = /GET\/(?<obj_id>\d)/;
@@ -91,6 +98,8 @@ describe(`a WebService's resources`, () => {
                     case 3: return { value: 3 };
                     case 4: return new WebResponse(WebStatus.ACCEPTED, null);
                     case 5: return new WebResponse(WebStatus.ACCEPTED, 'five', { etag: 'V'}).setHeader('Custom-Header', 'v');
+                    case 6: return stream();
+                    case 7: return Readable.from(stream());
                     default: return 'default';
                 }
             }
@@ -165,5 +174,21 @@ describe(`a WebService's resources`, () => {
         expect((await ws.dispatchRequest(fakedReq('GET', '/GET/)'))).status).toBe(WebStatus.NOT_FOUND);
         expect((await ws.dispatchRequest(fakedReq('GET', '/GET/A'))).status).toBe(WebStatus.NOT_FOUND);
         expect((await ws.dispatchRequest(fakedReq('GET', '/GET/10'))).status).toBe(WebStatus.NOT_FOUND);
+    });
+
+    it('returns AsyncIterable as SSE', async () => {
+        expect.assertions(4);
+
+        const r = await ws.dispatchRequest(fakedReq('GET', '/GET/6'));
+        expect(r.body).toBeInstanceOf(Readable);
+        expect((await Parser.serializeToBuffer(r.body))[0].toString()).toBe('data: A\n\ndata: B\n\n');
+    });
+
+    it('returns ReadableStream as-is', async () => {
+        expect.assertions(4);
+
+        const r = await ws.dispatchRequest(fakedReq('GET', '/GET/7'));
+        expect(r.body).toBeInstanceOf(Readable);
+        expect((await Parser.serializeToBuffer(r.body))[0].toString()).toBe('AB');
     });
 });

@@ -658,7 +658,7 @@ export abstract class DBResult extends Array<unknown[]> {
      * each row is just an array of values).
      *
      * This method is used by {@link DatabaseURI.watch} if the event contains only a single row, which is usually the
-     * case.q
+     * case.
      *
      * @template T          The actual record type.
      * @param    fields     What to set `[FIELDS]` to. Defaults to `[ this ]`.
