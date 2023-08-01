@@ -73,7 +73,11 @@ export abstract class ContentHeader {
         for (const param of Object.values(this.params)) {
             const safe = param!.value.replace(/[^\u0020-\u007e]/g, '_');
 
-            params += `;${param!.name}="${safe.replace(/\\/g, '\\\\').replace(/"/g, '\\"')}"`;
+            if (/^[a-zA-Z0-9!#$%&'*+.^_`|~-]+$/.test(safe)) { // "any VCHAR, except delimiters"
+                params += `;${param!.name}=${safe}`;
+            } else {
+                params += `;${param!.name}="${safe.replace(/\\/g, '\\\\').replace(/"/g, '\\"')}"`;
+            }
 
             if (safe !== param!.value) {
                 params += `;${param!.name}*=utf-8''${percentEncode(param!.value!)}`;

@@ -18,7 +18,7 @@ describe('the Parser class', () => {
 
         [ result, ct ] = Parser.serialize(buffer.toString(), "application/x-custom; charset=UTF-16");
         expect(result).toStrictEqual(Buffer.from(buffer.toString(), "utf16le"));
-        expect(ct.toString()).toBe("application/x-custom;charset=\"UTF-16\"");
+        expect(ct.toString()).toBe("application/x-custom;charset=UTF-16");
     });
 
     it('passes ReadableStream right through', async () => {

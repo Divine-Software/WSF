@@ -124,7 +124,7 @@ describe('the MultiPartParser class', () => {
         expect(decoded[FIELDS]![2].value).toBeInstanceOf(Buffer);
 
         const [ encoded1 ] = await Parser.serializeToBuffer(decoded, ct);
-        expect(`preamble${encoded1}epilogue`).toBe(multipart.replace('Content-Type', 'content-type'));
+        expect(`preamble${encoded1}epilogue`).toBe(multipart.replace('Content-Type', 'content-type').replace('"present"', 'present'));
 
         const [ encoded2 ] = await Parser.serializeToBuffer(decoded[FIELDS], ct);
         expect(encoded2.toString()).toBe(encoded1.toString());
