@@ -216,6 +216,12 @@ export class URI extends URL implements AsyncIterable<Buffer> {
     /** This URI's protocol. Unlike in URL, this property may not be changed/updated. */
     override readonly protocol!: string;
 
+    /** This URI's username. Unlike in URL, this property is always empty and may not be changed/updated. Use selectors instead. */
+    override readonly username!: '';
+
+    /** This URI's password. Unlike in URL, this property is always empty and may not be changed/updated. Use selectors instead. */
+    override readonly password!: '';
+
     /**
      * Constructs a new URI subclass. The URI constructor is a bit unusual, as it will always return an URI subclass and
      * never a plain URI object.
@@ -254,6 +260,14 @@ export class URI extends URL implements AsyncIterable<Buffer> {
 
         if (arguments.length === 1 && this.constructor !== URI && url instanceof URI && url.constructor === URI) {
             this.selectors = url.selectors;
+
+            // Make readonly props actually read-only
+            Object.defineProperty(this, 'href',     { get: () => super.href     });
+            Object.defineProperty(this, 'origin',   { get: () => super.origin   });
+            Object.defineProperty(this, 'protocol', { get: () => super.protocol });
+            Object.defineProperty(this, 'username', { get: () => super.username });
+            Object.defineProperty(this, 'password', { get: () => super.password });
+
             return;
         }
 
