@@ -31,6 +31,8 @@ export class EncoderError extends IOError {
  * `x-gzip`           | {@link ZlibEncoder}
  */
 export abstract class Encoder {
+    readonly type: string
+
     /**
      * Registers a new encoder. All subclasses must register their encoding type support with this method.
      *
@@ -111,8 +113,8 @@ export abstract class Encoder {
      *
      * @param type The encoding format this encoder object was instanciated for.
      */
-    protected constructor(readonly type: string) {
-        this.type = this.type.toLowerCase();
+    constructor(type: string) {
+        this.type = type.toLowerCase();
     }
 
     /**

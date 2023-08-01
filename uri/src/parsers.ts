@@ -75,6 +75,8 @@ export class ParserError extends IOError {
  *
  */
 export abstract class Parser {
+    readonly contentType: ContentType;
+
     /**
      * Registers a new parser/serializer. All subclasses must register their MIME media type support with this method.
      *
@@ -211,7 +213,9 @@ export abstract class Parser {
      *
      * @param contentType The media type this parser object was instanciated for.
      */
-    protected constructor(readonly contentType: ContentType) { }
+    constructor(contentType: ContentType | string) {
+        this.contentType = ContentType.create(contentType);
+    }
 
     /**
      * Parses a stream and returns the result as a parser-specific representation.
