@@ -1,4 +1,4 @@
-import { DBQuery, q } from '../../src';
+import { q } from '../../src';
 
 describe('query', () => {
     const withValues = (value: unknown) => {

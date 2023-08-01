@@ -124,6 +124,7 @@ export class IOError extends URIError {
  * URI scheme/protocol | URI class
  * --------------------|---------------
  * `cache:`            | {@link CacheURI}
+ * `data:`             | {@link DataURI}
  * `file:`             | {@link FileURI}
  * `http:`             | {@link HTTPURI}
  * `https:`            | {@link HTTPURI}
@@ -548,6 +549,10 @@ export class URI extends URL implements AsyncIterable<Buffer> {
      */
     async *[Symbol.asyncIterator](): AsyncIterator<Buffer> & Metadata {
         return yield* await this.load<AsyncIterable<Buffer>>('application/vnd.esxx.octet-stream');
+    }
+
+    protected set _href(href: string) {
+        super.href = href;
     }
 
     protected async _getAuthorization(req: AuthSchemeRequest, payload?: Buffer | AsyncIterable<Buffer>, challenges?: WWWAuthenticate[]): Promise<Authorization | undefined> {

@@ -12,6 +12,7 @@ export * from './parsers/json';
 export * from './parsers/toml';
 export * from './parsers/yaml';
 export * from './protocols/cache';
+export * from './protocols/data';
 export * from './protocols/database';
 export * from './protocols/file';
 export * from './protocols/http';
@@ -25,6 +26,7 @@ import './auth-schemes/bearer';
 
 // Register all built-in protocols
 import './protocols/cache';
+import './protocols/data';
 import './protocols/file';
 import './protocols/http';
 
