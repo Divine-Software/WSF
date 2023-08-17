@@ -1,7 +1,7 @@
 import { BasicTypes, Params, SizeLimitedReadableStream } from '@divine/commons';
 import { ContentType } from '@divine/headers';
 import { AuthSchemeRequest, FINALIZE, Finalizable, Parser, ParserError } from '@divine/uri';
-import { createId } from '@paralleldrive/cuid2';
+import cuid from 'cuid';
 import { IncomingHttpHeaders, IncomingMessage } from 'http';
 import { TLSSocket } from 'tls';
 import { UAParser } from 'ua-parser-js';
@@ -84,7 +84,7 @@ export class WebRequest implements AuthSchemeRequest {
         this.method        = String((config.trustMethodOverride ? this.header('x-http-method-override', '', false) : '') || incomingMethod);
         this.url           = new URL(`${scheme}://${server}${incomingMessage.url}`);
         this.userAgent     = new UAParser(incomingMessage.headers['user-agent']).getResult() as any;
-        this.id            = incomingReqID && REQUEST_ID.test(incomingReqID) ? incomingReqID : createId();
+        this.id            = incomingReqID && REQUEST_ID.test(incomingReqID) ? incomingReqID : cuid();
         this.log           = config.logRequestID ? decorateConsole(config.console, `#${this.id}`) : config.console;
 
         this._maxContentLength = config.maxContentLength;
