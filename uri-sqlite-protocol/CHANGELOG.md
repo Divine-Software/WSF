@@ -1,5 +1,15 @@
 # @divine/uri-sqlite-protocol
 
+## 0.4.4
+
+### Patch Changes
+
+- 3b145fc: Fix for URI.href being readonly now.
+- Updated dependencies [e6c56ed]
+- Updated dependencies [a9c9f7b]
+- Updated dependencies [7b23f38]
+  - @divine/uri@0.4.7
+
 ## 0.4.3
 
 ### Patch Changes

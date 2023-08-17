@@ -1,5 +1,17 @@
 # @divine/web-service
 
+## 0.4.6
+
+### Patch Changes
+
+- da2ec7e: Revert upgrade to CUID2 (it requires NodeJS 16)
+- Updated dependencies [e6c56ed]
+- Updated dependencies [53cbbf1]
+- Updated dependencies [a9c9f7b]
+- Updated dependencies [7b23f38]
+  - @divine/uri@0.4.7
+  - @divine/headers@2.0.4
+
 ## 0.4.5
 
 ### Patch Changes

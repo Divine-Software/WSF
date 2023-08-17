@@ -1,5 +1,15 @@
 # @divine/uri
 
+## 0.4.7
+
+### Patch Changes
+
+- e6c56ed: Normalize Encoder.type and Parser.contentType.
+- a9c9f7b: Made href, origin, protocol, username, password in URI read-only for real.
+- 7b23f38: Added support for the data: URI protocol.
+- Updated dependencies [53cbbf1]
+  - @divine/headers@2.0.4
+
 ## 0.4.6
 
 ### Patch Changes

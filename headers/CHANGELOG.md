@@ -1,5 +1,11 @@
 # @divine/headers
 
+## 2.0.4
+
+### Patch Changes
+
+- 53cbbf1: Don't quote content-header parameters unless required.
+
 ## 2.0.3
 
 ### Patch Changes
