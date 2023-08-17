@@ -1,5 +1,9 @@
 lockfileVersion: '6.0'
 
+settings:
+  autoInstallPeers: true
+  excludeLinksFromLockfile: false
+
 onlyBuiltDependencies:
   - core-js
   - core-js-pure
@@ -222,7 +226,7 @@ packages:
       json5: 2.2.3
       lodash: 4.17.21
       resolve: 1.22.2
-      semver: 5.7.1
+      semver: 5.7.2
       source-map: 0.5.7
     transitivePeerDependencies:
       - supports-color
@@ -2420,7 +2424,7 @@ packages:
       detab: 2.0.4
       hast-util-raw: 6.0.1
       lodash.uniq: 4.5.0
-      mdast-util-to-hast: github.com/Divine-Software/mdast-util-to-hast/0e709bd254f07bad424d74a1d98e727d1d7926e4
+      mdast-util-to-hast: git@github.com+Divine-Software/mdast-util-to-hast/0e709bd254f07bad424d74a1d98e727d1d7926e4
       remark-footnotes: 2.0.0
       remark-mdx: 1.6.22
       remark-parse: 8.0.3
@@ -7301,8 +7305,8 @@ packages:
       semver: 6.3.0
     dev: false
 
-  /semver@5.7.1:
-    resolution: {integrity: sha512-sauaDf/PZdVgrLTNYHRtpXa1iRiKcaebiKQ1BJdpQlWH2lCvexQdX55snPFyK7QzpudqbCI0qXFfOasHdyNDGQ==}
+  /semver@5.7.2:
+    resolution: {integrity: sha512-cBznnQ9KjJqU67B52RMC65CMarK2600WFnbkcaiwWq3xy/5haFJlshgnpjovMVJ+Hff49d8GEn0b87C5pDQ10g==}
     hasBin: true
     dev: false
 
@@ -8499,8 +8503,8 @@ packages:
     resolution: {integrity: sha512-V50KMwwzqJV0NpZIZFwfOD5/lyny3WlSzRiXgA0G7VUnRlqttta1L6UQIHzd6EuBY/cHGfwTIck7w1yH6Q5zUw==}
     dev: false
 
-  github.com/Divine-Software/mdast-util-to-hast/0e709bd254f07bad424d74a1d98e727d1d7926e4:
-    resolution: {tarball: https://codeload.github.com/Divine-Software/mdast-util-to-hast/tar.gz/0e709bd254f07bad424d74a1d98e727d1d7926e4}
+  git@github.com+Divine-Software/mdast-util-to-hast/0e709bd254f07bad424d74a1d98e727d1d7926e4:
+    resolution: {commit: 0e709bd254f07bad424d74a1d98e727d1d7926e4, repo: git@github.com:Divine-Software/mdast-util-to-hast.git, type: git}
     name: mdast-util-to-hast
     version: 10.2.0
     dependencies:
