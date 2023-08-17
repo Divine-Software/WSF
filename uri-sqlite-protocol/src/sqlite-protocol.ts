@@ -9,7 +9,7 @@ export class SQLiteURI extends DatabaseURI {
 
         // Make pathname absolute, just lite the file: protocol
         const file = new URI(this.href.replace(/[^:]*:([^?#]*).*/, 'file:$1'));
-        (this as any).href = `${this.protocol}//${file.host}${file.pathname}${this.search}${this.hash}`
+        this._href = `${this.protocol}//${file.host}${file.pathname}${this.search}${this.hash}`;
     }
 
     protected async _createDBConnectionPool(params: DBParamsSelector): Promise<DBDriver.DBConnectionPool> {
