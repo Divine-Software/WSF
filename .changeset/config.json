@@ -1,11 +1,11 @@
 {
-  "$schema": "https://unpkg.com/@changesets/config@1.7.0/schema.json",
+  "$schema": "https://unpkg.com/@changesets/config@2.3.1/schema.json",
   "changelog": "@changesets/cli/changelog",
-  "commit": true,
+  "commit": "./commit.js",
   "fixed": [],
   "linked": [],
   "access": "restricted",
   "baseBranch": "master",
-  "updateInternalDependencies": "patch",
+  "updateInternalDependencies": "minor",
   "ignore": [ "@divine/uri-image-parser" ]
 }
