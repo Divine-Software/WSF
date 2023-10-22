@@ -7,6 +7,7 @@ import { EventStreamResponse } from './helpers';
 import { WebRequest } from './request';
 import { WebArguments, WebErrorHandler, WebFilterCtor, WebResource, WebResourceCtor } from './resource';
 import { WebResponse, WebResponses } from './response';
+import { WebServer } from './server';
 
 /** The WebService configuration properties. */
 export interface WebServiceConfig {
@@ -160,6 +161,12 @@ export class WebService<Context> {
     /** The actual {@link WebServiceConfig} used by this service. */
     public readonly webServiceConfig: Required<WebServiceConfig>;
 
+    /** The {@link WebServer} where this service is currently mounted, or `null`. */
+    public get webServer(): WebServer | null {
+        return this._webServer;
+    }
+
+    private _webServer: WebServer | null = null;
     private _mountPoint = '/';
     private _errorHandler?: WebErrorHandler<Context>;
     private _filters: Array<FilterDescriptor<Context>> = [];
@@ -196,13 +203,17 @@ export class WebService<Context> {
      * Called by {@link WebServer.mount} when this WebService is mounted (attached to a WebServer).
      *
      * @param mountPoint The prefix path where this WebService should be mounted.
+     * @param webServer  The WebServer this WebService should be mounted on.
      * @returns This WebService.
      */
-    protected _mount(mountPoint: string): this {
+    protected _mount(mountPoint: string, webServer: WebServer): this {
         if (!mountPoint.startsWith('/') || !mountPoint.endsWith('/')) {
             throw new TypeError(`Mount-point must both start and end with a slash; '${mountPoint}' does not`);
+        } else if (this._webServer !== null) {
+            throw new RangeError(`This WebService is already mounted on ${this.webServer}`);
         }
 
+        this._webServer = webServer;
         this._mountPoint = mountPoint;
         this._resourcePattern = undefined;
 
@@ -212,9 +223,15 @@ export class WebService<Context> {
     /**
      * Called by Called by {@link WebServer.unmount} when this WebService is unmounted.
      *
+     * @param webServer  The WebServer this WebService is currently mounted on.
      * @returns This WebService.
      */
-    protected _unmount(): this {
+    protected _unmount(webServer: WebServer): this {
+        if (webServer !== this._webServer) {
+            throw new RangeError(`This WebService is mounted on ${this._webServer}, not ${webServer}`);
+        }
+
+        this._webServer = null;
         this._mountPoint = '/';
         this._resourcePattern = undefined;
 

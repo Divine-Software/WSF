@@ -58,14 +58,14 @@ export class WebServer {
      * By default, all requests are routed to the default {@link WebService} which was provided when the
      * {@link constructor} was invoced, but it's possible to mount additional {@link WebService} instances as well,
      * forming a multi-application server. In this case, the default {@link WebService} could be used for only a
-     * landing/front page and global error handlers for missing pages.
+     * landing/front page and global fallback handlers for missing pages.
      *
      * @param mountPoint The path prefix where the service should be available. Must both begin and end with a forward
      *                   slash.
      * @param service    The {@link WebService} to mount.
      */
     mount(mountPoint: string, service: WebService<any>): this {
-        this._services.push(service['_mount'](mountPoint));
+        this._services.push(service['_mount'](mountPoint, this));
         this._mountPathPattern = undefined;
 
         return this;
@@ -74,14 +74,14 @@ export class WebServer {
     /**
      * Unmounts/removes a secondary {@link WebService}.
      *
-     * @param serviceOrMountPoint Either a {@link WebService}.
+     * @param serviceOrMountPoint Either a {@link WebService} instance or a mount point.
      */
     unmount(serviceOrMountPoint: WebService<any> | string): this {
         const service = typeof serviceOrMountPoint === 'string'
             ? this._services.find((s) => s.webServiceMountPoint === serviceOrMountPoint)
             : serviceOrMountPoint;
 
-        service?.['_unmount']();
+        service?.['_unmount'](this);
         this._services = this._services.filter((s) => s !== service);
         this._mountPathPattern = undefined;
 
