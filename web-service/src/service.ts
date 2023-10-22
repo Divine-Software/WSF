@@ -8,6 +8,7 @@ import { WebRequest } from './request';
 import { WebArguments, WebErrorHandler, WebFilterCtor, WebResource, WebResourceCtor } from './resource';
 import { WebResponse, WebResponses } from './response';
 import { WebServer } from './server';
+import { Http2ServerRequest, Http2ServerResponse } from 'http2';
 
 /** The WebService configuration properties. */
 export interface WebServiceConfig {
@@ -335,8 +336,8 @@ export class WebService<Context> {
      *
      * @returns A Node.js HTTP request handler for this WebService.
      */
-    requestEventHandler(): (req: IncomingMessage, res: ServerResponse) => Promise<void> {
-        return async (req: IncomingMessage, res: ServerResponse) => {
+    requestEventHandler(): (req: IncomingMessage | Http2ServerRequest, res: ServerResponse | Http2ServerResponse) => Promise<void> {
+        return async (req: IncomingMessage | Http2ServerRequest, res: ServerResponse | Http2ServerResponse) => {
             try {
                 const webreq = new WebRequest(req, this.webServiceConfig);
 
@@ -350,13 +351,13 @@ export class WebService<Context> {
                     res.writeHead(rawres.status, rawres.headers);
 
                     if (isReadableStream(rawres.body)) {
-                        res.flushHeaders();
+                        (res as ServerResponse).flushHeaders?.();
                         webreq.log.info(`Send ${webres} to ${webreq.remoteUserAgent}`);
                     }
 
                     await new Promise<void>((resolve, reject) => {
                         if (rawres.body instanceof Buffer) {
-                            res.write(rawres.body, (err) => err ? reject(err) : resolve());
+                            (res as ServerResponse).write(rawres.body, (err) => err ? reject(err) : resolve());
                         }
                         else if (rawres.body) {
                             pipeline(rawres.body, res, (err) => err ? reject(err) : resolve());

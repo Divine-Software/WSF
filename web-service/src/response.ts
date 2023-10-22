@@ -133,7 +133,7 @@ export class WebResponse {
     toString(): string {
         const ct = this.headers['content-type']?.toString().replace(/;.*/, '');
 
-        return `[WebResponse: ${this.status} ${WebStatus[this.status] || this.status} ${ct ?? '-'}]`;
+        return `[${this.constructor.name}: ${this.status} ${WebStatus[this.status] || this.status} ${ct ?? '-'}]`;
     }
 }
 

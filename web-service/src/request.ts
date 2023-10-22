@@ -3,6 +3,7 @@ import { ContentType } from '@divine/headers';
 import { AuthSchemeRequest, FINALIZE, Finalizable, Parser, ParserError } from '@divine/uri';
 import cuid from 'cuid';
 import { IncomingHttpHeaders, IncomingMessage } from 'http';
+import { Http2ServerRequest } from 'http2';
 import { TLSSocket } from 'tls';
 import { UAParser } from 'ua-parser-js';
 import { URL } from 'url';
@@ -71,7 +72,7 @@ export class WebRequest implements AuthSchemeRequest {
      * @param incomingMessage The wrapped Node.js incoming message.
      * @param config          WebService configuration specifiying how `incomingMessage` should be parsed.
      */
-    constructor(public incomingMessage: IncomingMessage, config: Required<WebServiceConfig>) {
+    constructor(public incomingMessage: IncomingMessage | Http2ServerRequest, config: Required<WebServiceConfig>) {
         const incomingScheme = incomingMessage.socket instanceof TLSSocket ? 'https' : 'http';
         const incomingServer = incomingMessage.headers.host ?? `${incomingMessage.socket.localAddress}:${incomingMessage.socket.localPort}`;
         const incomingRemote = incomingMessage.socket.remoteAddress;
@@ -250,6 +251,6 @@ export class WebRequest implements AuthSchemeRequest {
     toString(): string {
         const ct = this.incomingMessage.headers['content-type']?.replace(/;.*/, '');
 
-        return `[WebRequest: ${this.method} ${this.url.href} ${ct ?? '-'}]`;
+        return `[${this.constructor.name}: ${this.method} ${this.url.href} ${ct ?? '-'}]`;
     }
 }
