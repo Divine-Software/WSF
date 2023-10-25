@@ -175,7 +175,7 @@ export interface EventAttributes {
  * @template T The type of events to transmit.
  */
 export class EventStreamResponse<T = unknown> extends WebResponse {
-    private static async *_eventStream(source: AsyncIterable<any>, dataType?: ContentType | string, keepaliveTimeout?: number): AsyncGenerator<EventStreamEvent | undefined> {
+    private static async *_eventStream(source: AsyncIterable<any>, dataType?: ContentType | string, keepaliveTimeout?: number, signal?: { aborted: boolean }): AsyncGenerator<EventStreamEvent | undefined> {
         const serialize = async (event: unknown): Promise<string> => {
             const [serialized] = await Parser.serializeToBuffer(event, dataType);
 
@@ -191,6 +191,10 @@ export class EventStreamResponse<T = unknown> extends WebResponse {
                 }
                 else {
                     yield { id: event[EVENT_ID], event: event[EVENT_TYPE], retry: event[EVENT_RETRY], data: await serialize(event) };
+                }
+
+                if (signal?.aborted) {
+                    return;
                 }
             }
         }
@@ -226,9 +230,10 @@ export class EventStreamResponse<T = unknown> extends WebResponse {
      * @param dataType         The format of the individual events. Default is JSON.
      * @param headers          Custom response headers to send.
      * @param keepaliveTimeout How often, in milliseconds, to automatically send comments/keep-alive lines.
+     * @param signal           An optional `AbortSignal`—or any object with an `aborted` property, really—to stop the stream.
      */
-    constructor(source: AsyncIterable<T | T & EventAttributes | undefined | null>, dataType?: ContentType | string, headers?: WebResponseHeaders, keepaliveTimeout?: number) {
-        super(WebStatus.OK, EventStreamResponse._eventStream(source, dataType, keepaliveTimeout), {
+    constructor(source: AsyncIterable<T | T & EventAttributes | undefined | null>, dataType?: ContentType | string, headers?: WebResponseHeaders, keepaliveTimeout?: number, signal?: { aborted: boolean }) {
+        super(WebStatus.OK, EventStreamResponse._eventStream(source, dataType, keepaliveTimeout, signal), {
             'content-type':      'text/event-stream',
             'connection':        'close',
             'cache-control':     'no-store',

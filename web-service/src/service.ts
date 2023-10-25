@@ -339,7 +339,7 @@ export class WebService<Context> {
     requestEventHandler(): (req: IncomingMessage | Http2ServerRequest, res: ServerResponse | Http2ServerResponse) => Promise<void> {
         return async (req: IncomingMessage | Http2ServerRequest, res: ServerResponse | Http2ServerResponse) => {
             try {
-                const webreq = new WebRequest(req, this.webServiceConfig);
+                const webreq = new WebRequest(this, req, this.webServiceConfig);
 
                 webreq.log.info(`Rec'd ${webreq} from ${webreq.remoteUserAgent}`);
 
@@ -347,6 +347,12 @@ export class WebService<Context> {
 
                 try {
                     const rawres = await webres.serialize(webreq, this.webServiceConfig);
+
+                    if ('stream' in res) { // HTTP/2
+                        for (const forbidden of [ "connection", "keep-alive", "proxy-connection", "transfer-encoding",  "upgrade" ]) {
+                            delete rawres.headers[forbidden];
+                        }
+                    }
 
                     res.writeHead(rawres.status, rawres.headers);
 
@@ -472,7 +478,9 @@ export class WebService<Context> {
                 if (result instanceof WebResponse) {
                     return result;
                 } else if (isAsyncIterable(result) && !isReadableStream(result)) {
-                    return new EventStreamResponse(result);
+                    return new EventStreamResponse(result, undefined, undefined, undefined, {
+                        get aborted() { return webreq.closing || webreq.aborted; },
+                    });
                 } else {
                     return new WebResponse(result !== null ? WebStatus.OK : WebStatus.NO_CONTENT, result);
                 }

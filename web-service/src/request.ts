@@ -3,13 +3,14 @@ import { ContentType } from '@divine/headers';
 import { AuthSchemeRequest, FINALIZE, Finalizable, Parser, ParserError } from '@divine/uri';
 import cuid from 'cuid';
 import { IncomingHttpHeaders, IncomingMessage } from 'http';
-import { Http2ServerRequest } from 'http2';
+import { Http2ServerRequest, Http2Session } from 'http2';
+import { Socket } from 'net';
 import { TLSSocket } from 'tls';
 import { UAParser } from 'ua-parser-js';
 import { URL } from 'url';
 import { WebError, WebStatus } from './error';
-import { decorateConsole } from './private/utils';
-import { WebServiceConfig } from './service';
+import { CONNECTION_CLOSING, WithConnectionClosing, decorateConsole } from './private/utils';
+import { WebService, WebServiceConfig } from './service';
 
 /** Information about the remote client that issued the {@link WebRequest}. */
 export interface UserAgent {
@@ -69,10 +70,11 @@ export class WebRequest implements AuthSchemeRequest {
     /**
      * Parses the Node.js request based on configuration.
      *
+     * @param webService      The WebService instance that received this request.
      * @param incomingMessage The wrapped Node.js incoming message.
      * @param config          WebService configuration specifiying how `incomingMessage` should be parsed.
      */
-    constructor(public incomingMessage: IncomingMessage | Http2ServerRequest, config: Required<WebServiceConfig>) {
+    constructor(public readonly webService: WebService<any>, public readonly incomingMessage: IncomingMessage | Http2ServerRequest, config: Required<WebServiceConfig>) {
         const incomingScheme = incomingMessage.socket instanceof TLSSocket ? 'https' : 'http';
         const incomingServer = incomingMessage.headers.host ?? `${incomingMessage.socket.localAddress}:${incomingMessage.socket.localPort}`;
         const incomingRemote = incomingMessage.socket.remoteAddress;
@@ -109,6 +111,20 @@ export class WebRequest implements AuthSchemeRequest {
     /** All headers in a format compatible with the `AuthSchemeRequest` interface. */
     get headers(): Array<[string, string]> {
         return Object.entries(this.incomingMessage.headers).map(([name, value]) => [name, Array.isArray(value) ? value.join(', ') : value!]);
+    }
+
+    /** `true` when the server is shutting down and waiting for connections to terminate. */
+    get closing(): boolean {
+        const stream: WithConnectionClosing<Socket | TLSSocket | Http2Session> | undefined = 'stream' in this.incomingMessage
+            ? this.incomingMessage.stream.session
+            : this.incomingMessage.socket;
+
+        return stream && (stream[CONNECTION_CLOSING] === true || 'closed' in stream && stream.closed === true);
+    }
+
+    /** `true` when the server has been shut down and the request has been aborted. */
+    get aborted(): boolean {
+        return this.incomingMessage.aborted;
     }
 
     /**

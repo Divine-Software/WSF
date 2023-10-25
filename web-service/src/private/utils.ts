@@ -17,3 +17,9 @@ export function decorateConsole(console: Console, tag: string): Console {
         }
     });
 }
+
+export const CONNECTION_CLOSING = Symbol('CONNECTION_CLOSING');
+
+export type WithConnectionClosing<T> = T & {
+    [CONNECTION_CLOSING]?: boolean;
+}

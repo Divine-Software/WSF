@@ -2,7 +2,7 @@ import { IncomingMessage, IncomingHttpHeaders } from 'http';
 import { WebRequest } from '../src/request';
 
 export function fakedReq(method: string, url: string, headers?: IncomingHttpHeaders, payload?: Buffer) {
-    return new WebRequest({
+    return new WebRequest(null!, {
         method, url,
         headers: {
             host: 'localhost',

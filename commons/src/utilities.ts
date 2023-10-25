@@ -20,6 +20,16 @@ export function setProp<T extends object, K extends keyof T>(object: T, prop: K,
     return object;
 }
 
+export function getOrSetEntry<K, V>(map: Map<K, V>, key: K, value: V): V {
+    const result = map.get(key);
+
+    if (result !== undefined) {
+        return result;
+    } else {
+        return map.set(key, value), value;
+    }
+}
+
 export function isDOMNode(obj: unknown): boolean {
     return !!obj && typeof (obj as any).nodeType === 'number'; /* FIXME */
 }
