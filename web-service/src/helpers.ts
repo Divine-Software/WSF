@@ -148,17 +148,23 @@ export abstract class CORSFilter implements WebFilter {
     }
 }
 
-/** A symbol in {@link EventAttributes} representing the event's `id` field */
-export const EVENT_ID    = Symbol('EVENT_ID');
+/** A symbol in {@link EventAttributes} representing the media type of the event's `data` field. */
+export const EVENT_FORMAT = Symbol('EVENT_FORMAT');
 
-/** A symbol in {@link EventAttributes} representing the event's `event` field */
-export const EVENT_TYPE  = Symbol('EVENT_TYPE');
+/** A symbol in {@link EventAttributes} representing the event's `id` field. */
+export const EVENT_ID = Symbol('EVENT_ID');
 
-/** A symbol in {@link EventAttributes} representing the event's `retry` field */
+/** A symbol in {@link EventAttributes} representing the event's `event` field. */
+export const EVENT_TYPE = Symbol('EVENT_TYPE');
+
+/** A symbol in {@link EventAttributes} representing the event's `retry` field. */
 export const EVENT_RETRY = Symbol('EVENT_RETRY');
 
 /** Metadata to be transmitted along with a single event by the {@link EventStreamResponse} helper class. */
 export interface EventAttributes {
+    /** The media type of the event payload. */
+    [EVENT_FORMAT]?: ContentType | string;
+
     /** Used to update the client's last event ID value. */
     [EVENT_ID]?:    string;
 
@@ -176,8 +182,8 @@ export interface EventAttributes {
  */
 export class EventStreamResponse<T = unknown> extends WebResponse {
     private static async *_eventStream(source: AsyncIterable<any>, dataType?: ContentType | string, keepaliveTimeout?: number, signal?: { aborted: boolean }): AsyncGenerator<EventStreamEvent | undefined> {
-        const serialize = async (event: unknown): Promise<string> => {
-            const [serialized] = await Parser.serializeToBuffer(event, dataType);
+        const serialize = async (event: any): Promise<string> => {
+            const [serialized] = await Parser.serializeToBuffer(event, event[EVENT_FORMAT] ?? dataType);
 
             return serialized.toString(); // SSE is always UTF-8
         };
@@ -219,15 +225,17 @@ export class EventStreamResponse<T = unknown> extends WebResponse {
      * Converts an `AsyncIterable` into a *Server-Sent Event* response stream.
      *
      * Each object yielded by the `source` generator will be serialized and converted to an SSE event. Symbols from the
-     * {@link EventAttributes} interface may be added to transmit event metadata. `null` or `undefined` values will
-     * result in a comment event. If no value is emitted for `keepaliveTimeout` milliseconds, a comment line will be
-     * sent automatically, in order to signal to the client that the server is still alive and the connection is open.
+     * {@link EventAttributes} interface may be added to transmit event metadata or override the default serialization
+     * format. `null` or `undefined` values will result in a comment event.
+     *
+     * If no value is emitted for `keepaliveTimeout` milliseconds, a comment line will be sent automatically, in order
+     * to signal to the client that the server is still alive and the connection is open.
      *
      * Exceptions from the generator will be serialized and sent as events of type `error`.
      *
      * @template T             The type of events to transmit.
      * @param source           The `AsyncIterable` which yields events to transmit.
-     * @param dataType         The format of the individual events. Default is JSON.
+     * @param dataType         The default format of the individual events.
      * @param headers          Custom response headers to send.
      * @param keepaliveTimeout How often, in milliseconds, to automatically send comments/keep-alive lines.
      * @param signal           An optional `AbortSignal`—or any object with an `aborted` property, really—to stop the stream.
