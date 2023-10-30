@@ -1,5 +1,13 @@
 # @divine/uri-postgres-protocol
 
+## 0.4.4
+
+### Patch Changes
+
+- Updated dependencies [537fa7b]
+  - @divine/commons@0.5.0
+  - @divine/uri@0.4.8
+
 ## 0.4.3
 
 ### Patch Changes

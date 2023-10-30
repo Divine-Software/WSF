@@ -1,5 +1,20 @@
 # @divine/web-service
 
+## 0.5.0
+
+### Minor Changes
+
+- 8e73121: WebService now links back to the WebServer where it's mounted.
+- 47dbe79: Multi-protocol (HTTPS/HTTP2) and multi-port (WebServerProxy) support.
+- 0eccaef: Added EVENT_FORMAT to EventAttributes, to override the serialization format.
+- 537fa7b: Graceful shutdown and SSE support with HTTP/2.
+
+### Patch Changes
+
+- Updated dependencies [537fa7b]
+  - @divine/commons@0.5.0
+  - @divine/uri@0.4.8
+
 ## 0.4.6
 
 ### Patch Changes

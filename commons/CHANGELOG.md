@@ -1,5 +1,11 @@
 # @divine/commons
 
+## 0.5.0
+
+### Minor Changes
+
+- 537fa7b: Graceful shutdown and SSE support with HTTP/2.
+
 ## 0.4.4
 
 ### Patch Changes
