@@ -1,5 +1,6 @@
 import Database from 'better-sqlite3';
 import { parentPort } from 'worker_threads';
+import type { SQLiteConnectOptions } from './sqlite-protocol';
 
 export interface ErrorResult {
     type:    'error';
@@ -10,7 +11,7 @@ export interface ErrorResult {
 export interface OpenDatabaseMessage {
     type:   'open';
     dbPath: string;
-    params: Omit<Database.Options, 'verbose'>;
+    params: SQLiteConnectOptions;
 }
 
 export interface OpenDatabaseResult {
@@ -64,7 +65,7 @@ parentPort?.on('message', (message: SQLiteWorkerMessage) => {
             }
 
             database = new Database(message.dbPath, message.params)
-                .defaultSafeIntegers(true);
+                .defaultSafeIntegers(message.params.defaultSafeIntegers ?? true);
 
             sendResult({ type: message.type })
         }

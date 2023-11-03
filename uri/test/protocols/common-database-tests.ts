@@ -106,7 +106,7 @@ export function describeCommonDBTest(def: CommonDBTestParams): void {
                 expect(res[0].serial).toBe(columns.serial);
             expect(res[0].uuid      ).toBe(columns.uuid);
             expect(res[0].int       ).toBe(def.enableDT.int ? columns.int : BigInt(columns.int!));
-            expect(res[0].bigint    ).toBe(columns.bigint);
+            expect(res[0].bigint    ).toBe(def.enableDT.bigint ? columns.bigint : Number(columns.bigint));
             expect(res[0].real      ).toBeCloseTo(columns.real!, 1);
             expect(res[0].double    ).toBeCloseTo(columns.double!, 3);
             expect(res[0].decimal   ).toBe(columns.decimal);

@@ -3,6 +3,7 @@ import { SqliteError } from 'better-sqlite3';
 import { basename, extname } from 'path';
 import { Worker } from 'worker_threads';
 import { SQLiteStatus } from './sqlite-errors';
+import type { SQLiteConnectOptions } from './sqlite-protocol';
 import type { ExecuteQueryResult, SQLiteWorkerMessage, SQLiteWorkerResult } from './sqlite-worker';
 
 export class SQLiteConnectionPool extends DBDriver.DBConnectionPool {
@@ -30,7 +31,7 @@ class SQLiteDatabaseConnection implements DBDriver.DBConnection {
     private _tlevel = 0;
     private _savepoint = 0;
 
-    constructor(private _dbURI: DatabaseURI, private _options?: object) {
+    constructor(private _dbURI: DatabaseURI, private _options?: SQLiteConnectOptions) {
         this._dbPath = decodeURIComponent(_dbURI.pathname);
         this._dbName = basename(this._dbPath, extname(this._dbPath));
         this._worker = new Worker(require.resolve('./sqlite-worker'))

@@ -760,7 +760,7 @@ function withDBMetadata<T extends object>(meta: DBMetadata, value: object): T & 
  * table to access. The *table* value may actually be a forward slash-separated table path, so it's possible to specify
  * catalog and schema as well (similar to how the dot is used in SQL).
  *
- * The remaining parts of the expression is optional (well, depeneding on what operation you're trying to perform).
+ * The remaining parts of the expression are optional (well, depeneding on what operation you're trying to perform).
  *
  * The {@link save} operation may, depending on the actual database, require the primary key in order to work. The name
  * of the primary key optionally follows the table name, enclosed by square brackets. *keys* may be a comma-separated
