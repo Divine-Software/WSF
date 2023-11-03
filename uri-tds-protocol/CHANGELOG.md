@@ -1,5 +1,13 @@
 # @divine/uri-tds-protocol
 
+## 0.5.2
+
+### Patch Changes
+
+- 5d0ecd5: Use empty object instead of Params for URIParams and connectOptions.
+- Updated dependencies [5d0ecd5]
+  - @divine/uri@0.4.9
+
 ## 0.5.1
 
 ### Patch Changes

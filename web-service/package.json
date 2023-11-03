@@ -29,7 +29,7 @@
   },
   "peerDependencies": {
     "@divine/headers": "workspace:^2.0.4",
-    "@divine/uri": "workspace:~0.4.8"
+    "@divine/uri": "workspace:~0.4.9"
   },
   "devDependencies": {
     "@divine/headers": "workspace:^",

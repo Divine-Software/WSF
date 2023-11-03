@@ -1,5 +1,11 @@
 # @divine/uri
 
+## 0.4.9
+
+### Patch Changes
+
+- 5d0ecd5: Use empty object instead of Params for URIParams and connectOptions.
+
 ## 0.4.8
 
 ### Patch Changes
