@@ -1,4 +1,4 @@
-import { as, AsyncIteratorAdapter, Params } from '@divine/commons';
+import { as, AsyncIteratorAdapter } from '@divine/commons';
 import { DatabaseURI, DBColumnInfo, DBDriver, DBError, DBQuery, DBResult, DBTransactionParams, PasswordCredentials, q } from '@divine/uri';
 import assert from 'assert';
 import { Client, ClientConfig, FieldDef, Query, QueryArrayConfig, types } from 'pg';
@@ -27,7 +27,7 @@ class PGDatabaseConnection implements DBDriver.DBConnection {
     private _tlevel = 0;
     private _savepoint = 0;
 
-    constructor(private _dbURI: DatabaseURI, private _options?: Params, private _creds?: PasswordCredentials) {
+    constructor(private _dbURI: DatabaseURI, private _options?: object, private _creds?: PasswordCredentials) {
     }
 
     get state() {

@@ -253,7 +253,7 @@ export interface DBParams extends URIParams {
     maxConnections?: number;
 
     /** Custom options to send to the database when openeing a connection. Depends on the database driver. */
-    connectOptions?: Params,
+    connectOptions?: object;
 
     /** SSL/TLS parameters. */
     tls?: SecureContextOptions & {

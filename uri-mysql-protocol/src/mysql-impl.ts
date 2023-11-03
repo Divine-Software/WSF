@@ -1,4 +1,3 @@
-import { Params } from '@divine/commons';
 import { DatabaseURI, DBDriver, DBError, DBQuery, DBResult, DBTransactionParams, PasswordCredentials, q } from '@divine/uri';
 import assert from 'assert';
 import { Connection, ConnectionOptions, createConnection, FieldPacket, OkPacket, ResultSetHeader, RowDataPacket } from 'mysql2/promise';
@@ -18,7 +17,7 @@ class MyDatabaseConnection implements DBDriver.DBConnection {
     private _tlevel = 0;
     private _savepoint = 0;
 
-    constructor(private _dbURI: DatabaseURI, private _options?: Params, private _creds?: PasswordCredentials) {
+    constructor(private _dbURI: DatabaseURI, private _options?: object, private _creds?: PasswordCredentials) {
     }
 
     get state() {

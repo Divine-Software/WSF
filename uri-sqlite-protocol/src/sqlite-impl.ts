@@ -1,4 +1,3 @@
-import { Params } from '@divine/commons';
 import { DatabaseURI, DBColumnInfo, DBDriver, DBError, DBQuery, DBResult, DBTransactionParams, q } from '@divine/uri';
 import { SqliteError } from 'better-sqlite3';
 import { basename, extname } from 'path';
@@ -31,7 +30,7 @@ class SQLiteDatabaseConnection implements DBDriver.DBConnection {
     private _tlevel = 0;
     private _savepoint = 0;
 
-    constructor(private _dbURI: DatabaseURI, private _options?: Params) {
+    constructor(private _dbURI: DatabaseURI, private _options?: object) {
         this._dbPath = decodeURIComponent(_dbURI.pathname);
         this._dbName = basename(this._dbPath, extname(this._dbPath));
         this._worker = new Worker(require.resolve('./sqlite-worker'))

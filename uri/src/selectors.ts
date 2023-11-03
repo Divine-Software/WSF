@@ -1,4 +1,4 @@
-import { Params, StringParams } from '@divine/commons';
+import { StringParams } from '@divine/commons';
 import { WWWAuthenticate } from '@divine/headers';
 import { URL } from 'url';
 import { AuthScheme, Credentials, CredentialsProvider } from './auth-schemes';
@@ -59,7 +59,7 @@ export function isHeadersSelector(selector: any): selector is HeadersSelector {
 }
 
 /** General URI configuration parameters.  */
-export interface URIParams extends Params {
+export interface URIParams {
     /** A Console to use for debug logging. */
     console?: Console;
 }
