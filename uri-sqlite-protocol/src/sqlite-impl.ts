@@ -208,12 +208,12 @@ export class SQLiteResult extends DBResult {
             })) ?? [], rs.rows ?? [], rs.changes ?? rs.rows?.length, rs.lastInsertRowid);
 
         // Convert Uint8Array back to Buffer
-        for (let c = 0; c < this.columns.length; ++c) {
-            const { data_type } = this.columns[c];
-
-            if (data_type === 'BLOB') {
-                this.forEach((row) => row[c] = row[c] === null ? null : Buffer.from(row[c] as any));
-            }
+        for (const row of this) {
+            row.forEach((column, index) => {
+                if (column instanceof Uint8Array) {
+                    row[index] = Buffer.from(column);
+                }
+            })
         }
     }
 
