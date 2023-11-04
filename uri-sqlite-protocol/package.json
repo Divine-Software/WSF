@@ -1,6 +1,6 @@
 {
   "name": "@divine/uri-sqlite-protocol",
-  "version": "0.5.0",
+  "version": "0.5.1",
   "description": "Adds support for SQLite to @divine/uri",
   "author": "Martin Blom <martin@blom.org>",
   "license": "Apache-2.0",

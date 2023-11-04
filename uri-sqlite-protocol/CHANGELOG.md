@@ -1,5 +1,11 @@
 # @divine/uri-sqlite-protocol
 
+## 0.5.1
+
+### Patch Changes
+
+- 093e544: Convert all Uint8Array to Buffer, even if data_type is not exactly 'BLOB'
+
 ## 0.5.0
 
 ### Minor Changes
