@@ -21,6 +21,20 @@ export class WebError extends Error {
         super(message);
     }
 
+    /**
+     * Adds a custom header to the list of headers to return.
+     *
+     * @param name  The name of the header to return (case-insensitive).
+     * @param value The header value.
+     * @returns     This WebError.
+     */
+    setHeader(name: keyof WebResponseHeaders | string, value: string | number | boolean | string[] | undefined): this {
+        (this.headers as any)[name.toLowerCase()] = value;
+
+        return this;
+    }
+
+
     /** Converts this WebError to a string. */
     override toString(): string {
         return `[${this.constructor.name}: ${this.status} ${WebStatus[this.status] || '<Unknown>'} ${this.message}]`;
