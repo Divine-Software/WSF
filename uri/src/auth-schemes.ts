@@ -28,16 +28,17 @@ export interface AuthSchemeRequest {
 }
 
 /** An IOError subclass thrown by the {@link AuthScheme} class. */
-export class AuthSchemeError extends IOError {
+export class AuthSchemeError<D extends object = object> extends IOError<D> {
     /**
      * Constructs a new AuthSchemeError exception.
      *
+     * @template D       The type of the `data` propery.
      * @param message    The error message.
      * @param challenge  An optional challenge in case the client should retry the operation.
      * @param cause      If this error was caused by another exception, pass it here to link it.
      * @param data       Custom, per-exception information associated with the exception.
      */
-    constructor(message: string, public challenge?: WWWAuthenticate, cause?: Error, data?: object & Metadata) {
+    constructor(message: string, public challenge?: WWWAuthenticate, cause?: Error, data?: D & Metadata) {
         super(message, cause, data);
     }
 }

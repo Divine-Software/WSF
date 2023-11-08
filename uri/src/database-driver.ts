@@ -220,7 +220,7 @@ export class DBReference {
         }
     }
 
-    protected _makeIOError(message: string, err?: Error): IOError {
+    protected _makeIOError(message: string, err?: Error): IOError<DatabaseURI> {
         return new IOError(message, err, this._dbURI);
     }
 

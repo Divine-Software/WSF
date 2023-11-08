@@ -82,7 +82,7 @@ export interface DirectoryEntry {
 /**
  * A general I/O error exception. Base class for all exceptions in this module.
  */
-export class IOError extends URIError {
+export class IOError<D extends object = object> extends URIError {
     /** The Error that caused this exception to be thrown. */
     public cause?: Error;
 
@@ -93,7 +93,7 @@ export class IOError extends URIError {
      * @param cause    If this error was caused by another exception, pass it here to link it.
      * @param data     Custom, per-exception information associated with the exception.
      */
-    constructor(message: string, cause?: Error | unknown, public data?: object & Metadata) {
+    constructor(message: string, cause?: Error | unknown, public data?: D & Metadata) {
         super(cause instanceof Error ? `${message}: ${cause.message}` : message);
         this.cause = cause instanceof Error ? cause : cause !== undefined ? new Error(String(cause)) : undefined;
     }

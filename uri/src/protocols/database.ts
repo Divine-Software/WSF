@@ -350,10 +350,11 @@ export interface DBColumnInfo {
 }
 
 /** An IOError subclass thrown by the {@link DatabaseURI} class and its subclasses. */
-export class DBError extends IOError {
+export class DBError<D extends object = object> extends IOError<D> {
     /**
      * Constructs a new DBError exception.
      *
+     * @template D     The type of the `data` propery.
      * @param status   A database-specific status code. Will be empty if the DB does not use custom status codes (like
      *                 the *PostgreSQL* driver does).
      * @param state    The 5 character long *SQLSTATE* variable associated with this exception (for SQL databases at
@@ -363,7 +364,7 @@ export class DBError extends IOError {
      * @param cause    If this error was caused by another exception, pass it here to link it.
      * @param data     Custom, per-exception information associated with the exception.
      */
-    constructor(public status: string, public state: string, message: string, cause?: Error, data?: object & Metadata) {
+    constructor(public status: string, public state: string, message: string, cause?: Error, data?: D & Metadata) {
         super(message, cause, data);
     }
 

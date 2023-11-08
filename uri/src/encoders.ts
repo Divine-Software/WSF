@@ -4,7 +4,7 @@ import { createBrotliCompress, createBrotliDecompress, createDeflate, createGunz
 import { IOError } from './uri';
 
 /** An IOError subclass thrown by the {@link Encoder} class. */
-export class EncoderError extends IOError {
+export class EncoderError<D extends object = object> extends IOError<D> {
 }
 
 /**

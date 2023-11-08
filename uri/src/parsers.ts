@@ -38,7 +38,7 @@ export function toPrimitive(value: any): BasicTypes | symbol | undefined {
 }
 
 /** An IOError subclass thrown by the {@link Parser} class. */
-export class ParserError extends IOError {
+export class ParserError<D extends object = object> extends IOError<D> {
 }
 
 /**
