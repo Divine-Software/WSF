@@ -21,6 +21,7 @@ export function fakedReq(method: string, url: string, headers?: IncomingHttpHead
     } as IncomingMessage, {
         console,
         errorMessageProperty: 'message',
+        slowRequestThreshold: 1_000,
         logRequestID:         true,
         maxContentLength:     1_000_000,
         trustRequestID:       null,

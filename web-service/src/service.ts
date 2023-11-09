@@ -15,6 +15,9 @@ export interface WebServiceConfig {
     /** Where logs should be sent. Default is the global `console` object. */
     console?:              Console;
 
+    /** The threshold, in milliseconds, for when a request will be considered "slow". Default is 1000 ms. */
+    slowRequestThreshold?: number;
+
     /**
      * The name of the property holding the error message when a {@link WebError} is converted to a structued
      * {@link WebResponse}. Default is `message`.
@@ -182,6 +185,7 @@ export class WebService<Context> {
     constructor(public context: Context, config?: WebServiceConfig) {
         this.webServiceConfig = {
             console:              console,
+            slowRequestThreshold: 1_000,
             maxContentLength:     1_000_000,
             errorMessageProperty: 'message',
             logRequestID:         true,
@@ -340,12 +344,15 @@ export class WebService<Context> {
         return async (req: IncomingMessage | Http2ServerRequest, res: ServerResponse | Http2ServerResponse) => {
             try {
                 const webreq = new WebRequest(this, req, this.webServiceConfig);
-
-                webreq.log.info(`Rec'd ${webreq} from ${webreq.remoteUserAgent}`);
+                webreq.log.info(`Begin ${webreq} from ${webreq.remoteUserAgent}`);
 
                 const webres = await this.dispatchRequest(webreq);
 
                 try {
+                    if (webres.timestamp - webreq.timestamp > this.webServiceConfig.slowRequestThreshold) {
+                        webreq.log.warn(`Slow: ${webreq} from ${webreq.remoteUserAgent} <${webres.timestamp - webreq.timestamp} ms>`);
+                    }
+
                     const rawres = await webres.serialize(webreq, this.webServiceConfig);
 
                     if ('stream' in res) { // HTTP/2
@@ -358,7 +365,7 @@ export class WebService<Context> {
 
                     if (isReadableStream(rawres.body)) {
                         (res as ServerResponse).flushHeaders?.();
-                        webreq.log.info(`Send ${webres} to ${webreq.remoteUserAgent}`);
+                        webreq.log.info(`Send ${webres} to ${webreq.remoteUserAgent} <${webres.timestamp - webreq.timestamp} ms>`);
                     }
 
                     await new Promise<void>((resolve, reject) => {
@@ -373,7 +380,7 @@ export class WebService<Context> {
                         }
                     });
 
-                    webreq.log.info(`Sent ${webres} to ${webreq.remoteUserAgent}`);
+                    webreq.log.info(`Sent ${webres} to ${webreq.remoteUserAgent} <${webres.timestamp - webreq.timestamp}+${Date.now() - webres.timestamp} ms>`);
                 }
                 catch (err) {
                     webreq.log.warn(`${webres} could not be sent to ${webreq.remoteUserAgent}: ${err}`);

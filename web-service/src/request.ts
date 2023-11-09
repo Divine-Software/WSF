@@ -47,6 +47,9 @@ export class WebRequest implements AuthSchemeRequest {
     /** A reconstructed URL for this request */
     public readonly url: URL;
 
+    /** When this request was created. */
+    public readonly timestamp = Date.now();
+
     /** The IP address from which the request was issued. */
     public readonly remoteAddress: string;
 

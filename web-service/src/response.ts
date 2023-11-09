@@ -21,6 +21,9 @@ export class WebResponse {
     /** The response body. */
     public body: Buffer | NodeJS.ReadableStream | null;
 
+    /** When this response was created. */
+    public readonly timestamp = Date.now();
+
     /**
      * Constructs a new response object.
      *
