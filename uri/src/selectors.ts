@@ -61,7 +61,7 @@ export function isHeadersSelector(selector: any): selector is HeadersSelector {
 /** General URI configuration parameters.  */
 export interface URIParams {
     /** A Console to use for debug logging. */
-    console?: Console;
+    console?: Partial<Console>;
 }
 
 /** Provides configuration parameters for {@link URI} and its subclasses. */

@@ -224,6 +224,8 @@ export class HTTPURI extends URI {
         const params  = this._getBestSelector<HTTPParamsSelector>(this.selectors.params)?.params ?? {};
         const options = { agent: params.agent, timeout: params.timeout };
         const request = async (method: string, url: string) => {
+            const reqDesc = `URI ${this}: ${method} ${url === this.href ? '#' : url}`;
+            const started = Date.now();
             const request =
                 url.startsWith('http:')  ?  requestHTTP(url, { method, headers, ...options }) :
                 url.startsWith('https:') ? requestHTTPS(url, { method, headers, ...options, ...params.tls }) :
@@ -233,9 +235,19 @@ export class HTTPURI extends URI {
                 throw new TypeError(`URI ${this}: Unexpected protocol: ${this.protocol}`);
             }
 
+            params.console?.debug?.(`${reqDesc} ▲ ${JSON.stringify(headers)}`);
+
             const result = new Promise<T & Metadata>((resolve, reject) => {
                 request.on('response', async (response) => {
                     try {
+                        params.console?.debug?.(`${reqDesc} ▼ ${JSON.stringify(response.headers)}`);
+
+                        if (response.statusCode ?? 1000 < 400) {
+                            params.console?.info?.(`${reqDesc} ► ${response.statusCode} ${response.statusMessage} <${Date.now() - started} ms>`);
+                        } else {
+                            params.console?.warn?.(`${reqDesc} ► ${response.statusCode} ${response.statusMessage} <${Date.now() - started} ms>`);
+                        }
+
                         const result: T & Metadata = method === 'HEAD' || response.statusCode === 204 /* No Content */ ? Object(VOID) :
                             await Parser.parse(Encoder.decode(response, response.headers['content-encoding'] ?? []),
                                                ContentType.create(recvCT, response.headers['content-type']));
@@ -251,7 +263,10 @@ export class HTTPURI extends URI {
                     }
                 })
                 .on('error', (err) => reject(this._makeIOError(err)));
-            });
+            }).catch((err) => {
+                params.console?.error?.(`${reqDesc} ► ${err} <${Date.now() - started} ms>`);
+                throw err;
+            })
 
             if (body) {
                 await copyStream(Readable.from(body), request);
