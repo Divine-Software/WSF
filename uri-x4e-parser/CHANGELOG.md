@@ -1,5 +1,13 @@
 # @divine/uri-x4e-parser
 
+## 1.0.0
+
+### Patch Changes
+
+- Updated dependencies [2ac21e8]
+- Updated dependencies [d9cdf40]
+  - @divine/uri@0.5.0
+
 ## 0.4.4
 
 ### Patch Changes

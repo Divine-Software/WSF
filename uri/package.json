@@ -1,6 +1,6 @@
 {
   "name": "@divine/uri",
-  "version": "0.4.9",
+  "version": "0.5.0",
   "description": "The Divine URI class for accessing and manipulating local and remote resources",
   "author": "Martin Blom <martin@blom.org>",
   "license": "Apache-2.0",

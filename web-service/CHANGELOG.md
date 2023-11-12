@@ -1,5 +1,18 @@
 # @divine/web-service
 
+## 1.0.0
+
+### Minor Changes
+
+- 364572a: Added WebError.setHeader(), like in WebResponse.
+- a3ce388: Log request times, warn when requests are slow.
+
+### Patch Changes
+
+- Updated dependencies [2ac21e8]
+- Updated dependencies [d9cdf40]
+  - @divine/uri@0.5.0
+
 ## 0.5.0
 
 ### Minor Changes

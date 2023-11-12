@@ -1,5 +1,13 @@
 # @divine/uri-tds-protocol
 
+## 1.0.0
+
+### Patch Changes
+
+- Updated dependencies [2ac21e8]
+- Updated dependencies [d9cdf40]
+  - @divine/uri@0.5.0
+
 ## 0.5.2
 
 ### Patch Changes

@@ -1,5 +1,15 @@
 # @divine/uri
 
+## 0.5.0
+
+### Minor Changes
+
+- 2ac21e8: HTTPURI now logs requests using URIParams.console.
+
+### Patch Changes
+
+- d9cdf40: IOError and its subclasses are now generic.
+
 ## 0.4.9
 
 ### Patch Changes
