@@ -234,7 +234,7 @@ export function describeCommonDBTest(def: CommonDBTestParams): void {
         });
 
         it('handles transactions', async () => {
-            expect.assertions(10);
+            expect.assertions(11);
 
             await expect(db.query(async () => {
                 await db.$`#dt`.append({ text: '🦮 1.1' });
@@ -242,8 +242,10 @@ export function describeCommonDBTest(def: CommonDBTestParams): void {
                 const t1a = await db.$`#dt(text);scalar?(eq,text,🦮 1.1)`.load();
                 expect(t1a.valueOf()).toBe('🦮 1.1');
 
-                throw new Error('Force failure');
-            })).rejects.toThrow('Force failure');
+                throw new SyntaxError('Force failure');
+            })).rejects.toThrow(SyntaxError);
+
+            await expect(db.query(null!)).rejects.toThrow('Invalid query() arguments'); // Should throw async
 
             // Transaction #1 should be rolled back completely
             const t1b = await db.$`#dt(text);scalar?(eq,text,🦮 1.1)`.load();

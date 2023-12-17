@@ -1182,26 +1182,20 @@ export abstract class DatabaseURI extends URI {
      */
     override query<T>(cb: DBCallback<T>): Promise<T>;
     override async query<T>(first: DBQuery | TemplateStringsArray | string | DBTransactionParams | DBCallback<T>, ...rest: unknown[]): Promise<unknown & Metadata & WithFields<DBResult>> {
-        return this._session(async (conn) => {
-            if (first instanceof DBQuery && rest.every((r) => r instanceof DBQuery)) {
-                return toObjects(await conn.query(first, ...rest as DBQuery[]));
-            }
-            else if (isTemplateStringsLike(first)) {
-                return toObjects(await conn.query(q(first, ...rest)));
-            }
-            else if (typeof first === 'string' && rest.length === 1 && rest[0] !== null && typeof rest[0] === 'object') {
-                return toObjects(await conn.query(q(first, rest[0] as Params)));
-            }
-            else if (isDatabaseTransactionParams(first) && rest.length === 1 && isDBCallback<T & Metadata & WithFields<DBResult>>(rest[0])) {
-                return conn.transaction(first, rest[0])
-            }
-            else if (isDBCallback<T & Metadata & WithFields<DBResult>>(first) && rest.length === 0) {
-                return conn.transaction({}, first);
-            }
-            else {
-                throw new TypeError(`Invalid query() arguments`);
-            }
-        });
+        if (first instanceof DBQuery && rest.every((r) => r instanceof DBQuery)) {
+            return this._session(async (conn) => toObjects(await conn.query(first, ...rest as DBQuery[])));
+        } else if (isTemplateStringsLike(first)) {
+            return this._session(async (conn) => toObjects(await conn.query(q(first, ...rest))));
+        } else if (typeof first === 'string' && rest.length === 1 && rest[0] !== null && typeof rest[0] === 'object') {
+            return this._session(async (conn) => toObjects(await conn.query(q(first, rest[0] as Params))));
+        } else if (isDatabaseTransactionParams(first) && rest.length === 1 && isDBCallback<T & Metadata & WithFields<DBResult>>(rest[0])) {
+            const cb = rest[0];
+            return this._session(async (conn) => conn.transaction(first, cb), false /* Do not wrap CB exceptions */);
+        } else if (isDBCallback<T & Metadata & WithFields<DBResult>>(first) && rest.length === 0) {
+            return this._session(async (conn) => conn.transaction({}, first), false /* Do not wrap CB exceptions */);
+        } else {
+            throw new TypeError(`Invalid query() arguments`);
+        }
     }
 
     /**
@@ -1307,7 +1301,7 @@ export abstract class DatabaseURI extends URI {
         }
     }
 
-    private async _session<T>(cb: (connection: DBConnection) => Promise<T>): Promise<T> {
+    private async _session<T>(cb: (connection: DBConnection) => Promise<T>, makeIOError = true): Promise<T> {
         try {
             let states = this._getBestSelector<DBSessionSelector>(this.selectors.session)?.states;
 
@@ -1324,7 +1318,7 @@ export abstract class DatabaseURI extends URI {
             return await states.database!.session(cb);
         }
         catch (err) {
-            throw this._makeIOError(err);
+            throw makeIOError ? this._makeIOError(err) : err;
         }
     }
 }
