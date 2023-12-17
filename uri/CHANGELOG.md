@@ -1,5 +1,11 @@
 # @divine/uri
 
+## 0.5.1
+
+### Patch Changes
+
+- 38d8001: DatabaseURI.query should propagate DB exceptions as-is.
+
 ## 0.5.0
 
 ### Minor Changes
