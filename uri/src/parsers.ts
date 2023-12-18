@@ -13,8 +13,9 @@ import { Finalizable, IOError, NULL, URI, VOID } from './uri';
  *
  * {@link toPrimitive} can be used to reverse this operation.
  *
- * @param value The value to convert to an object.
- * @returns     The value converted to an object.
+ * @template T     The actual type returned.
+ * @param    value The value to convert to an object.
+ * @returns        The value converted to an object.
  */
 export function toObject<T extends object>(value: unknown): T {
     return value === undefined       ? Object(VOID) :
@@ -26,10 +27,11 @@ export function toObject<T extends object>(value: unknown): T {
 /**
  * Converts an object created by {@link toObject} back into the original value.
  *
- * @param value  The object that should be converted back to its original value.
- * @returns      The original value.
+ * @template T      The actual type returned.
+ * @param    value  The object that should be converted back to its original value.
+ * @returns         The original value.
  */
-export function toPrimitive(value: any): BasicTypes | symbol | undefined {
+export function toPrimitive<T extends BasicTypes | symbol | undefined>(value: any): T {
     if (value !== null && value !== undefined) {
         value = value.valueOf();
     }
