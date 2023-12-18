@@ -1,5 +1,12 @@
 # @divine/uri
 
+## 0.6.0
+
+### Minor Changes
+
+- 8ba8bcf: Loading scope 'one' or 'scalar' from empty RS now throws.
+- 080ffb0: Parameterized toPrimitive().
+
 ## 0.5.1
 
 ### Patch Changes

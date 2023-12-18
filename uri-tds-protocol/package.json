@@ -22,7 +22,7 @@
     "collectCoverage": true
   },
   "peerDependencies": {
-    "@divine/uri": "workspace:~0.5.1"
+    "@divine/uri": "workspace:~0.6.0"
   },
   "dependencies": {
     "@divine/commons": "workspace:~",
