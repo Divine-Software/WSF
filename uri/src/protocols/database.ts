@@ -984,7 +984,7 @@ export abstract class DatabaseURI extends URI {
 
             if (dbRef.scope === 'scalar' || dbRef.scope === 'one') {
                 if (result.length === 0) {
-                    return withDBMetadata(result, Object(VOID));
+                    throw new IOError(`Scope '${dbRef.scope}' used with a empty result set`, undefined, result);
                 }
                 else if (result.length === 1) {
                     return dbRef.scope === 'scalar'
@@ -992,7 +992,7 @@ export abstract class DatabaseURI extends URI {
                         : withDBMetadata<T>(result, result[0]);
                 }
                 else {
-                    throw new IOError(`Scope ${dbRef.scope} used with a multi-row result set`, undefined, result[FIELDS][0]);
+                    throw new IOError(`Scope '${dbRef.scope}' used with a multi-row result set`, undefined, result);
                 }
             }
             else {

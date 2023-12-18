@@ -1,7 +1,7 @@
 /* eslint-disable jest/no-standalone-expect */
 /* eslint-disable jest/no-conditional-expect */
 /* eslint-disable jest/no-export */
-import { DatabaseURI, DBQuery, FIELDS, q, URI, VOID } from '../../src';
+import { DatabaseURI, DBError, DBQuery, FIELDS, IOError, q, URI } from '../../src';
 
 export interface CommonDBTestParams {
     name:        string;
@@ -234,7 +234,7 @@ export function describeCommonDBTest(def: CommonDBTestParams): void {
         });
 
         it('handles transactions', async () => {
-            expect.assertions(11);
+            expect.assertions(14);
 
             await expect(db.query(async () => {
                 await db.$`#dt`.append({ text: '🦮 1.1' });
@@ -248,8 +248,12 @@ export function describeCommonDBTest(def: CommonDBTestParams): void {
             await expect(db.query(null!)).rejects.toThrow('Invalid query() arguments'); // Should throw async
 
             // Transaction #1 should be rolled back completely
-            const t1b = await db.$`#dt(text);scalar?(eq,text,🦮 1.1)`.load();
-            expect(t1b.valueOf()).toBe(VOID);
+            const t1b = db.$`#dt(text);scalar?(eq,text,🦮 1.1)`.load();
+
+            await expect(t1b).rejects.toThrow(`Scope 'scalar' used with a empty result set`);
+            await expect(t1b).rejects.toBeInstanceOf(IOError);
+            await expect(t1b).rejects.not.toBeInstanceOf(DBError);
+            expect(await t1b.catch((e: IOError<unknown[]>) => e.data?.length)).toBe(0);
 
             const t2a = await db.query(async () => {
                 await db.$`#dt`.append({ text: '🦮 2.1' });
