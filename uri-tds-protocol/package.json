@@ -4,6 +4,7 @@
   "description": "Adds support for Microsoft SQL Server to @divine/uri",
   "author": "Martin Blom <martin@blom.org>",
   "license": "Apache-2.0",
+  "homepage": "https://divine-software.github.io/WSF/",
   "repository": "https://github.com/Divine-Software/WSF.git",
   "bugs": "https://github.com/Divine-Software/WSF/issues",
   "main": "build/src/index.js",
