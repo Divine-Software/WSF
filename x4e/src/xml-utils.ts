@@ -1,4 +1,10 @@
-import { DOMParser, XMLSerializer } from '@xmldom/xmldom';
+import { Attr, Comment, Document, DocumentFragment, DocumentType, DOMParser, Element, Node, NodeList, ProcessingInstruction, Text, XMLSerializer } from '@xmldom/xmldom';
+
+export interface NodeListOf<TNode extends Node> extends NodeList {
+    item(index: number): TNode;
+    forEach(callbackfn: (value: TNode, key: number, parent: NodeListOf<TNode>) => void, thisArg?: any): void;
+    [index: number]: TNode;
+}
 
 export const NS_DEFAULT   = '';
 export const NS_XHTML     = 'http://www.w3.org/1999/xhtml';

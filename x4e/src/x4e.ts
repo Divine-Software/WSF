@@ -1,7 +1,8 @@
+import { Node } from '@xmldom/xmldom';
 import { ToXMLList, X4EList } from './private/x4e-list';
 import { ToXML, X4E } from './private/x4e-node';
 import type { ConvertableTypes } from './private/x4e-utils';
-import type { XML as _XML, XMLConstructor, XMLList as _XMLList, XMLListConstructor } from './x4e-types';
+import type { XML as _XML, XMLList as _XMLList, XMLConstructor, XMLListConstructor } from './x4e-types';
 
 // § 13.4.1 / 13.4.2 (X4E: Explicit default namespace)
 export type XML<TNode extends Node> = _XML<TNode>;

@@ -1,4 +1,4 @@
-import { DOMImplementation } from '@xmldom/xmldom';
+import { DOMImplementation, Node } from '@xmldom/xmldom';
 import { XML, XMLList } from './x4e';
 import { NS_XHTML } from './xml-utils';
 
@@ -50,6 +50,7 @@ function isElementClassCtor<T extends JSX_Attributes>(func: JSX_ElementClassCtor
     return func.prototype?.constructor === func;
 }
 
+// @ts-expect-error: Argument of type 'null' is not assignable to parameter of type 'string'.ts(2345)
 const jsxDoc = new DOMImplementation().createDocument(null, null, null);
 
 const JSX_FRAGMENT = Symbol('fragment');

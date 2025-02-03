@@ -1,7 +1,20 @@
-import { DOMImplementation } from '@xmldom/xmldom';
+import { Comment, Document, DocumentFragment, DocumentType, DOMImplementation, Element, Node, NodeList, Text } from '@xmldom/xmldom';
 import type * as AST from 'parse5';
 import { parse, parseFragment, serialize } from 'parse5';
 import { isAttribute, isComment, isDocument, isDocumentFragment, isDocumentType, isElement, isText } from './xml-utils';
+
+interface XMLTreeAdapterTypeMap {
+    node: Node;
+    parentNode: Node;
+    childNode: Node;
+    document: Document;
+    documentFragment: DocumentFragment;
+    element: Element;
+    commentNode: Comment;
+    textNode: Text;
+    template: Node;
+    documentType: DocumentType;
+}
 
 export {
     escapeXML as escapeHTML,
@@ -9,11 +22,11 @@ export {
 } from './xml-utils';
 
 export function parseHTMLFromString(document: string): Document {
-    return parse(document, { treeAdapter: new XMLTreeAdapter() }) as unknown as Document;
+    return parse<XMLTreeAdapterTypeMap>(document, { treeAdapter: new XMLTreeAdapter() });
 }
 
 export function parseHTMLFragmentFromString(fragment: string): DocumentFragment {
-    return parseFragment(fragment, { treeAdapter: new XMLTreeAdapter() }) as unknown as DocumentFragment;
+    return parseFragment<XMLTreeAdapterTypeMap>(fragment, { treeAdapter: new XMLTreeAdapter() });
 }
 
 export function serializeHTMLToString(node: Node): string {
@@ -21,7 +34,7 @@ export function serializeHTMLToString(node: Node): string {
         node = node.parentNode;
     }
     else if (!isDocument(node) && !isDocumentFragment(node) && !isAttribute(node)) {
-        // Hackelihack
+        // Hackelihack: Make a parent that is parsable by XMLTreeAdapter.getChildNodes()
         const documentElement = node;
 
         node = {
@@ -29,13 +42,13 @@ export function serializeHTMLToString(node: Node): string {
                 length: 1,
                 item:   () => documentElement,
             }
-        } as unknown as Document;
+        } as unknown as Node;
     }
 
-    return serialize(node as any, { treeAdapter: new XMLTreeAdapter() });
+    return serialize<XMLTreeAdapterTypeMap>(node, { treeAdapter: new XMLTreeAdapter() });
 }
 
-class XMLTreeAdapter implements AST.TreeAdapter {
+class XMLTreeAdapter implements AST.TreeAdapter<XMLTreeAdapterTypeMap> {
     private _root: Document;
     private _created  = false;
     private _template = Symbol('template');
@@ -43,6 +56,7 @@ class XMLTreeAdapter implements AST.TreeAdapter {
     private _location = Symbol('location');
 
     constructor() {
+        // @ts-expect-error: Argument of type 'null' is not assignable to parameter of type 'string'.ts(2345)
         this._root = new DOMImplementation().createDocument(null, null, null);
     }
 
@@ -60,7 +74,7 @@ class XMLTreeAdapter implements AST.TreeAdapter {
         return this._root.createDocumentFragment();
     }
 
-    createElement(tagName: string, namespaceURI: string, attrs: AST.Attribute[]): Element {
+    createElement(tagName: string, namespaceURI: AST.html.NS, attrs: AST.Token.Attribute[]): Element {
         const element = this._root.createElementNS(namespaceURI, tagName);
 
         for (const attr of attrs) {
@@ -77,6 +91,10 @@ class XMLTreeAdapter implements AST.TreeAdapter {
 
     createCommentNode(data: string): Comment {
         return this._root.createComment(data);
+    }
+
+    createTextNode(value: string): Text {
+        return this._root.createTextNode(value);
     }
 
     appendChild(parentNode: Node, newNode: Node): void {
@@ -99,23 +117,23 @@ class XMLTreeAdapter implements AST.TreeAdapter {
         console.log('setDocumentType not supported', name, publicId, systemId);
     }
 
-    setDocumentMode(document: Document, mode: AST.DocumentMode): void {
+    setDocumentMode(document: Document, mode: AST.html.DOCUMENT_MODE): void {
         (document as any)[this._docMode] = mode;
     }
 
-    getDocumentMode(document: Document): AST.DocumentMode {
+    getDocumentMode(document: Document): AST.html.DOCUMENT_MODE {
         return (document as any)[this._docMode];
     }
 
-    getNodeSourceCodeLocation(node: Node): AST.Location | AST.ElementLocation {
+    getNodeSourceCodeLocation(node: Node): AST.Token.ElementLocation | undefined | null {
         return (node as any)[this._location];
     }
 
-    setNodeSourceCodeLocation(node: Node, location: AST.Location | AST.ElementLocation): void {
+    setNodeSourceCodeLocation(node: Node, location: AST.Token.ElementLocation | null): void {
         (node as any)[this._location] = location;
     }
 
-    updateNodeSourceCodeLocation(node: Node, location: AST.EndLocation): void {
+    updateNodeSourceCodeLocation(node: Node, location: Partial<AST.Token.ElementLocation>): void {
         Object.assign((node as any)[this._location], location);
     }
 
@@ -133,7 +151,7 @@ class XMLTreeAdapter implements AST.TreeAdapter {
         parentNode.insertBefore(this._root.createTextNode(text), referenceNode); // FIXME: Optimize
     }
 
-    adoptAttributes(recipient: Element, attrs: AST.Attribute[]): void {
+    adoptAttributes(recipient: Element, attrs: AST.Token.Attribute[]): void {
         for (const attr of attrs) {
             if (attr.namespace) {
                 if (!recipient.hasAttributeNS(attr.namespace, attr.name)) {
@@ -153,10 +171,10 @@ class XMLTreeAdapter implements AST.TreeAdapter {
     }
 
     getChildNodes(node: Node): Node[] {
-        const nodes = [];
+        const nodes: Node[] = [];
 
         for (let i = 0; i < node.childNodes.length; ++i) {
-            nodes.push(node.childNodes.item(i));
+            nodes.push(node.childNodes.item(i)!);
         }
 
         return nodes;
@@ -166,7 +184,7 @@ class XMLTreeAdapter implements AST.TreeAdapter {
         return node.parentNode!;
     }
 
-    getAttrList(element: Element): AST.Attribute[] {
+    getAttrList(element: Element): AST.Token.Attribute[] {
         const attrs = [];
 
         for (let i = 0; i < element.attributes.length; ++i) {
@@ -186,8 +204,8 @@ class XMLTreeAdapter implements AST.TreeAdapter {
         return element.tagName;
     }
 
-    getNamespaceURI(element: Element): string {
-        return element.namespaceURI!;
+    getNamespaceURI(element: Element): AST.html.NS {
+        return element.namespaceURI as AST.html.NS;
     }
 
     getTextNodeContent(textNode: Text): string {
@@ -210,19 +228,19 @@ class XMLTreeAdapter implements AST.TreeAdapter {
         return doctypeNode.systemId;
     }
 
-    isTextNode(node: Node): boolean {
+    isTextNode(node: Node): node is Text {
         return isText(node);
     }
 
-    isCommentNode(node: Node): boolean {
+    isCommentNode(node: Node): node is Comment {
         return isComment(node);
     }
 
-    isDocumentTypeNode(node: Node): boolean {
+    isDocumentTypeNode(node: Node): node is DocumentType {
         return isDocumentType(node);
     }
 
-    isElementNode(node: Node): boolean {
+    isElementNode(node: Node): node is Element {
         return isElement(node);
     }
 }

@@ -1,5 +1,6 @@
 import { Parser, StringParser } from '@divine/uri';
 import { isDOMNode, parseXMLFromString, serializeXMLToString, XML } from '@divine/x4e';
+import { Element, Node } from '@xmldom/xmldom';
 
 /**
  * The `application/xml`, `text/xml` and `application/*+xml` parser uses [xmldom](https://github.com/xmldom/xmldom) to

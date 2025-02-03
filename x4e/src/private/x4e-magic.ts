@@ -1,3 +1,4 @@
+import { Node } from '@xmldom/xmldom';
 import { inspect } from 'util';
 import type { XML, XMLList } from '../x4e-types';
 import { X4EList } from './x4e-list';

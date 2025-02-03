@@ -1,5 +1,6 @@
 import { Parser, StringParser } from '@divine/uri';
 import { isDOMNode, parseHTMLFromString, serializeHTMLToString, XML } from '@divine/x4e';
+import { Element, Node } from '@xmldom/xmldom';
 
 /**
  * The `text/html` parser uses [parse5](https://github.com/inikulin/parse5) to convert HTML documents to and from

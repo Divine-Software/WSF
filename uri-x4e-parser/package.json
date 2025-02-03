@@ -27,13 +27,13 @@
     "@divine/x4e": "workspace:~0.4.4"
   },
   "dependencies": {
+    "@types/xmldom": "~0.1.34",
     "tslib": "^2.5.0"
   },
   "devDependencies": {
     "@divine/uri": "workspace:~",
     "@divine/x4e": "workspace:~",
-    "@types/node": "^12.20.55",
-    "@types/xmldom": "~0.1.31"
+    "@types/node": "^12.20.55"
   },
   "engines": {
     "node": ">= 12.17.0"

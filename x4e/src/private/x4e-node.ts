@@ -1,9 +1,12 @@
+import { Attr, Comment, Document, DocumentFragment, Element, Node, ProcessingInstruction, Text } from '@xmldom/xmldom';
 import { inspect } from 'util';
 import type { XML, XMLList } from '../x4e-types';
-import { isComment, isDOMNode, isElement, isProcessingInstruction, isText } from '../xml-utils';
+import { isComment, isDOMNode, isElement, isProcessingInstruction, isText, NodeListOf } from '../xml-utils';
 import { X4EList } from './x4e-list';
 import { asXML, asXMLList, CallMethod, X4EProxyTarget } from './x4e-magic';
-import { Call, ConvertableTypes, domNodeList, ElementLike, filerChildNodes, Get, getChildElementsByTagName, GetOwnProperty, HasProperty, isInteger, nodeHasSimpleContent, nodesAreEqual, nodesAreSame, nodeToString, nodeToXMLString, nodeTypes, OwnPropertyKeys, parseXMLFragment, Value } from './x4e-utils';
+import { Call, ConvertableTypes, domNodeList, filerChildNodes, Get, getChildElementsByTagName, GetOwnProperty, HasProperty, isInteger, nodeHasSimpleContent, nodesAreEqual, nodesAreSame, nodeToString, nodeToXMLString, nodeTypes, OwnPropertyKeys, parseXMLFragment, Value } from './x4e-utils';
+
+type ElementLike = Omit<Partial<Element>, 'nodeType'>;
 
 function singleNode<TNode extends Node>(x4e: X4E<TNode>, func: string): TNode & ElementLike {
     const values = x4e[Value];
@@ -325,7 +328,7 @@ export function ToXML(value: ConvertableTypes, defaultNamespace: string, deepCop
         const parent = parseXMLFragment(String(value), defaultNamespace);
 
         if (parent.childNodes.length === 0) {
-            value = parent.ownerDocument.createTextNode('');
+            value = parent.ownerDocument!.createTextNode('');
         }
         else if (parent.childNodes.length === 1) {
             value = parent.childNodes[0];

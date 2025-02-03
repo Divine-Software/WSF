@@ -1,5 +1,6 @@
+import { Element, Node } from '@xmldom/xmldom';
 import type { XML, XMLList } from '../x4e-types';
-import { escapeXML, isAttribute, isComment, isElement, isEqualNode, isProcessingInstruction, isText, parseXMLFromString } from '../xml-utils';
+import { escapeXML, isAttribute, isComment, isElement, isEqualNode, isProcessingInstruction, isText, NodeListOf, parseXMLFromString } from '../xml-utils';
 
 export const Call            = Symbol('Call');
 export const Get             = Symbol('Get');
@@ -29,7 +30,7 @@ export const nodeTypes = [
 
 export function parseXMLFragment(fragment: string, defaultNamespace: string): Element {
     try {
-        return parseXMLFromString(`<parent xmlns="${escapeXML(defaultNamespace)}">${fragment}</parent>`).documentElement;
+        return parseXMLFromString(`<parent xmlns="${escapeXML(defaultNamespace)}">${fragment}</parent>`).documentElement!;
     }
     catch (err: any) {
         throw new SyntaxError(err.message ?? String(err));
@@ -49,7 +50,7 @@ export function filerChildNodes<TNode extends Node = Node>(parent: Node, filter:
 
     for (let node = parent.firstChild, index = 0; node; node = node.nextSibling, ++index) {
         if (filter(node, index, parent)) {
-            elements.push(node as unknown as TNode);
+            elements.push(node as TNode);
         }
     }
 
@@ -165,25 +166,4 @@ export function nodesAreSame(n1: Node, n2: Node): boolean {
 
 export function listsAreSame(l1: Node[], l2: Node[]): boolean {
     return l1.length == l2.length && l1.every((n1, idx) => nodesAreSame(n1, l2[idx]));
-}
-
-export interface ElementLike {
-    readonly localName?: string;
-    readonly namespaceURI?: string | null;
-    readonly prefix?: string | null;
-    readonly tagName?: string;
-    attributes?: NamedNodeMap;
-
-    hasAttribute?(qualifiedName: string): boolean;
-    hasAttributeNS?(namespace: string | null, localName: string): boolean;
-    hasAttributes?(): boolean;
-
-    getAttribute?(qualifiedName: string): string | null;
-    getAttributeNS?(namespace: string | null, localName: string): string | null;
-    getAttributeNames?(): string[];
-    getAttributeNode?(qualifiedName: string): Attr | null;
-    getAttributeNodeNS?(namespace: string | null, localName: string): Attr | null;
-
-    getElementsByTagName?(qualifiedName: string): ArrayLike<Element>;
-    getElementsByTagNameNS?(namespaceURI: string, localName: string): ArrayLike<Element>;
 }

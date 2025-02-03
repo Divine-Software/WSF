@@ -1,3 +1,4 @@
+import { Element, Node } from '@xmldom/xmldom';
 import { escapeHTMLAttribute, parseHTMLFragmentFromString, parseHTMLFromString } from './html-utils';
 import { XML, XMLList } from './x4e';
 import { escapeXMLAttribute, NS_DEFAULT, NS_XHTML } from './xml-utils';

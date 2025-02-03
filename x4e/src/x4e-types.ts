@@ -1,6 +1,7 @@
 /* eslint-disable @typescript-eslint/adjacent-overload-signatures */
 /* eslint-disable @typescript-eslint/ban-types */
 
+import { Element, Node, Text } from '@xmldom/xmldom';
 import type { X4EList } from './private/x4e-list';
 import type { X4E } from './private/x4e-node';
 import type { ConvertableTypes } from './private/x4e-utils';

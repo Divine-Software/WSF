@@ -1,3 +1,4 @@
+import { Node } from '@xmldom/xmldom';
 import { inspect } from 'util';
 import type { XML, XMLList } from '../x4e-types';
 import { isDOMNode, isElement } from '../xml-utils';
@@ -11,7 +12,7 @@ export class X4EList<TNode extends Node> extends X4E<TNode> {
     }
 
     // § 9.2.1.1 (X4E: attributes optional)
-    [Get](name: string | number, allowAttributes: boolean): Node | Node[] | undefined {
+    override [Get](name: string | number, allowAttributes: boolean): Node | Node[] | undefined {
         if (isInteger(name)) {
             return this[Value][name];
         }
@@ -21,7 +22,7 @@ export class X4EList<TNode extends Node> extends X4E<TNode> {
     }
 
     // § 12.2 The for-in Statement
-    [GetOwnProperty](p: string): PropertyDescriptor | undefined {
+    override [GetOwnProperty](p: string): PropertyDescriptor | undefined {
         const node = isInteger(p) && this[Value][p];
 
         return node
@@ -30,7 +31,7 @@ export class X4EList<TNode extends Node> extends X4E<TNode> {
     }
 
     // § 12.3 The for-each-in Statement (X4E: for-of)
-    *[Symbol.iterator](): Generator<XML<TNode>> {
+    override *[Symbol.iterator](): Generator<XML<TNode>> {
         for (const node of this[Value]) {
             yield asXML(node);
         }

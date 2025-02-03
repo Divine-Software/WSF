@@ -1,6 +1,7 @@
 /** @jsx     jsx4XML.element */
 /** @jsxFrag jsx4XML.fragment */
 
+import { Node } from '@xmldom/xmldom';
 import { jsx4XML, XMLList } from '../src';
 
 describe('jsx', () => {
