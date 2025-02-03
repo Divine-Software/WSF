@@ -1,4 +1,4 @@
-import { AsyncIteratorAdapter, copyStream, throwError, toReadableStream } from '@divine/commons';
+import { asError, AsyncIteratorAdapter, copyStream, isOneOf, throwError, toReadableStream } from '@divine/commons';
 import { ContentType } from '@divine/headers';
 import { R_OK } from 'constants';
 import { createReadStream, createWriteStream, promises as fs } from 'fs';
@@ -253,9 +253,11 @@ export class FileURI extends URI {
             atomic:        false,
             ignoreInitial: true,
         }).on('all', (type, path) => {
-            adapter.next({ type: fileWatchEventType[type], uri: FileURI.create(path, this) });
+            if (isOneOf(type, [ 'add', 'addDir', 'change', 'unlink', 'unlinkDir' ])) {
+                adapter.next({ type: fileWatchEventType[type], uri: FileURI.create(path, this) });
+            }
         }).on('error', (err) => {
-            adapter.throw(err)
+            adapter.throw(asError(err))
         });
 
         try {

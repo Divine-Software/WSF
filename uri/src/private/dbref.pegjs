@@ -1,8 +1,3 @@
-{{
-    /* eslint-disable */
-    // @ts-nocheck
-}}
-
 dbreference = table:table keys:('[' keys ']')? columns:('(' columns ')')? scope:(';' scope)? filter:('?' filter )? params:params?
               { return { table, keys: keys?.[1], columns: columns?.[1], scope: scope?.[1], filter: filter?.[1], params: params } }
 
@@ -19,9 +14,9 @@ expr_bool   = '(' op:$('and' / 'or') value:expr+ ')'               { return { op
 expr_not    = '(' op:$'not' value:expr ')'                         { return { op, value } }
 expr_ops    = 'lt' / 'le' / 'eq' / 'ne' / 'ge' / 'gt'
 
-table_path  = head:word tail:('/' word)*                           { return [ head, ...tail.map((t: string[]) => t[1]) ] }
-column_list = head:word tail:(',' word)*                           { return [ head, ...tail.map((t: string[]) => t[1]) ] }
-param_list  = params:('&' param)+                                  { return Object.fromEntries(params.map((t: object[]) => t[1])) }
+table_path  = head:word tail:('/' word)*                           { return [ head, ...tail.map(t => t[1]) ] }
+column_list = head:word tail:(',' word)*                           { return [ head, ...tail.map(t => t[1]) ] }
+param_list  = params:('&' param)+                                  { return Object.fromEntries(params.map(t => t[1])) }
 
 param       = key:param_key '=' value:word                         { return [ key, value ] }
 param_key   = 'offset' / 'count' / 'sort' / 'lock'

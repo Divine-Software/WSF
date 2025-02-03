@@ -29,14 +29,14 @@
     "dicer": "~0.3.1",
     "iconv-lite": "~0.6.3",
     "mime-types": "^2.1.35",
-    "papaparse": "^5.4.1",
-    "tslib": "^2.5.0",
+    "papaparse": "^5.5.2",
+    "tslib": "^2.8.1",
     "xdg-portable": "^10.6.0",
-    "yaml": "^2.2.2"
+    "yaml": "^2.7.0"
   },
   "peerDependencies": {
     "@divine/headers": "workspace:^2.0.4",
-    "chokidar": "^3.5.2"
+    "chokidar": "^4.0.3"
   },
   "peerDependenciesMeta": {
     "chokidar": {
@@ -45,13 +45,13 @@
   },
   "devDependencies": {
     "@divine/headers": "workspace:^",
-    "@types/dicer": "~0.2.2",
-    "@types/mime-types": "^2.1.1",
-    "@types/node": "^12.20.55",
-    "@types/papaparse": "^5.3.7",
-    "chokidar": "^3.5.3",
-    "peggy": "^3.0.2",
-    "ts-pegjs": "^4.1.0"
+    "@types/dicer": "~0.2.4",
+    "@types/mime-types": "^2.1.4",
+    "@types/node": "^16",
+    "@types/papaparse": "^5.3.15",
+    "chokidar": "^4.0.3",
+    "peggy": "^4.2.0",
+    "ts-pegjs": "^4.2.1"
   },
   "engines": {
     "node": ">= 12.17.0"
