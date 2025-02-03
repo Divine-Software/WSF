@@ -26,7 +26,7 @@
     "@divine/commons": "workspace:~",
     "cuid": "^3.0.0",
     "tslib": "^2.5.0",
-    "ua-parser-js": "^1.0.35"
+    "ua-parser-js": "^1.0.40"
   },
   "peerDependencies": {
     "@divine/headers": "workspace:^2.0.4",
@@ -36,7 +36,7 @@
     "@divine/headers": "workspace:^",
     "@divine/uri": "workspace:~",
     "@types/node": "^12.20.55",
-    "@types/ua-parser-js": "~0.7.36"
+    "@types/ua-parser-js": "~0.7.39"
   },
   "engines": {
     "node": ">= 12.17.0"

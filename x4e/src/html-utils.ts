@@ -1,4 +1,4 @@
-import { Comment, Document, DocumentFragment, DocumentType, DOMImplementation, Element, Node, NodeList, Text } from '@xmldom/xmldom';
+import { Comment, Document, DocumentFragment, DocumentType, DOMImplementation, Element, Node, Text } from '@xmldom/xmldom';
 import type * as AST from 'parse5';
 import { parse, parseFragment, serialize } from 'parse5';
 import { isAttribute, isComment, isDocument, isDocumentFragment, isDocumentType, isElement, isText } from './xml-utils';
