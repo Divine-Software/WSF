@@ -27,13 +27,12 @@
   },
   "dependencies": {
     "@divine/commons": "workspace:~",
-    "tedious": "^16.0.0",
+    "tedious": "^18.6.1",
     "tslib": "^2.5.0"
   },
   "devDependencies": {
     "@divine/uri": "workspace:~",
-    "@types/node": "^12.20.55",
-    "@types/tedious": "^4.0.9"
+    "@types/node": "^12.20.55"
   },
   "engines": {
     "node": ">= 16"

@@ -1,16 +1,19 @@
+/// <reference lib="es2022" /> // ErrorOptions referenced by 'tedious'
+/// <reference lib="dom" />    // AbortSignal referenced by 'tedious'
 import { DatabaseURI, DBColumnInfo, DBDriver, DBError, DBQuery, DBResult, DBTransactionParams, PasswordCredentials, q } from '@divine/uri';
 import assert from 'assert';
-import { ColumnMetaData, Connection, ConnectionOptions, ISOLATION_LEVEL, Request, TYPES } from 'tedious';
+import { Connection, ConnectionOptions, ISOLATION_LEVEL, Request, TYPES } from 'tedious';
+import { type ColumnMetadata } from 'tedious/lib/token/colmetadata-token-parser';
 import { SQLServerSQLState as SQLState } from './tds-errors';
 
 const txOptions = /^ISOLATION LEVEL (READ UNCOMMITTED|READ COMMITTED|REPEATABLE READ|SNAPSHOT|SERIALIZABLE)$/;
 
-const ISOLATION_LEVELS: Record<string, ISOLATION_LEVEL | undefined> = {
-    'READ UNCOMMITTED': ISOLATION_LEVEL.READ_UNCOMMITTED,
-    'READ COMMITTED':   ISOLATION_LEVEL.READ_COMMITTED,
-    'REPEATABLE READ':  ISOLATION_LEVEL.REPEATABLE_READ,
-    'SNAPSHOT':         ISOLATION_LEVEL.SNAPSHOT,
-    'SERIALIZABLE':     ISOLATION_LEVEL.SERIALIZABLE,
+const ISOLATION_LEVELS: Record<string, typeof ISOLATION_LEVEL[string] | undefined> = {
+    'READ UNCOMMITTED': ISOLATION_LEVEL['READ_UNCOMMITTED'],
+    'READ COMMITTED':   ISOLATION_LEVEL['READ_COMMITTED'],
+    'REPEATABLE READ':  ISOLATION_LEVEL['REPEATABLE_READ'],
+    'SNAPSHOT':         ISOLATION_LEVEL['SNAPSHOT'],
+    'SERIALIZABLE':     ISOLATION_LEVEL['SERIALIZABLE'],
 }
 
 export class TDSConnectionPool extends DBDriver.DBConnectionPool {
@@ -81,13 +84,13 @@ class TDSDatabaseConnection implements DBDriver.DBConnection {
 
         for (const query of queries) {
             try {
-                let columns: ColumnMetaData[] = []
+                let columns: ColumnMetadata[] | Record<string, ColumnMetadata> = []
                 const  rows: unknown[][] = [];
 
-                const rowCount = await new Promise<number>((resolve, reject) => {
+                const rowCount = await new Promise<number | undefined>((resolve, reject) => {
                     const request = new Request(query.toString((_v, i) => `@${i}`), (err, rowCount) => err ? reject(err) : resolve(rowCount))
                         .on('columnMetadata', (ci) => columns = ci)
-                        .on('row', (row) => rows.push(row.map((c) => c.value)))
+                        .on('row', (row: { value: unknown }[]) => rows.push(row.map((c) => c.value)))
 
                     for (const [i, _v] of query.params.entries()) {
                         const v =
@@ -134,7 +137,7 @@ class TDSDatabaseConnection implements DBDriver.DBConnection {
         }
     }
 
-    private _toIsolationLevel(options?: DBQuery): ISOLATION_LEVEL {
+    private _toIsolationLevel(options?: DBQuery): typeof ISOLATION_LEVEL[string] {
         const expr = options?.toString().trim().toUpperCase();
 
         if (expr) {
@@ -148,7 +151,7 @@ class TDSDatabaseConnection implements DBDriver.DBConnection {
             return result;
         }
         else {
-            return ISOLATION_LEVEL.NO_CHANGE;
+            return ISOLATION_LEVEL['NO_CHANGE'];
         }
     }
 
@@ -170,14 +173,12 @@ class TDSDatabaseConnection implements DBDriver.DBConnection {
 
                     try {
                         const result = await cb(retry);
-                        // @ts-expect-error: trxName is a param
-                        await new Promise<void>((resolve, reject) => this._client.commitTransaction((err) => err ? reject(err) : resolve(), trxName))
+                        await new Promise<void>((resolve, reject) => this._client!.commitTransaction((err) => err ? reject(err) : resolve(), trxName))
                         return result;
                     }
                     catch (err) {
                         try {
-                            // @ts-expect-error: trxName is a param
-                            await new Promise<void>((resolve, reject) => this._client.rollbackTransaction((err) => err ? reject(err) : resolve()), trxName);
+                            await new Promise<void>((resolve, reject) => this._client!.rollbackTransaction((err) => err ? reject(err) : resolve(), trxName));
                         }
                         catch (err: any) {
                             if (err.number !== 3903) { // "The ROLLBACK TRANSACTION request has no corresponding BEGIN TRANSACTION"
@@ -230,7 +231,7 @@ class TDSDatabaseConnection implements DBDriver.DBConnection {
 //     }
 
 export class TDSResult extends DBResult {
-    constructor(db: DatabaseURI, private _ci: ColumnMetaData[], rows: unknown[][], rowCount: number) {
+    constructor(db: DatabaseURI, private _ci: ColumnMetadata[], rows: unknown[][], rowCount?: number) {
         super(db, _ci.map((ci) => ({
                 label:   ci.colName,
                 type_id: (ci.type as any).id,
