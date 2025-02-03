@@ -7,12 +7,16 @@ export function as<T>(value: T): T {
     return value;
 }
 
-export function isOneOf<T extends string | number, V extends T[]>(value: T | undefined, of: V): boolean {
+export function isOneOf<T extends string | number, V extends T[]>(value: T | undefined, of: V): value is V[number] {
     return value !== undefined && of.includes(value);
 }
 
 export function throwError(err: Error): never {
     throw err;
+}
+
+export function asError(err: unknown): Error {
+    return err instanceof Error ? err : new Error(String(err));
 }
 
 export function setProp<T extends object, K extends keyof T>(object: T, prop: K, value: T[K]): T {
