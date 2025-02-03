@@ -5,7 +5,6 @@ import { Client, ClientConfig, FieldDef, Query, QueryArrayConfig, types } from '
 import { URL } from 'url';
 import { PostgresSQLState as SQLState } from './postgres-errors';
 
-// @ts-expect-error: Argument of type '1016' is not assignable to parameter of type 'TypeId'.ts(2345)
 const parseBigIntArray = types.getTypeParser(1016);
 const deadlocks = [ SQLState.SERIALIZATION_FAILURE, SQLState.DEADLOCK_DETECTED ] as string[];
 const listenFields: FieldDef[] = [
@@ -43,10 +42,11 @@ class PGDatabaseConnection implements DBDriver.DBConnection {
         this._client = new Client({
             connectionString: dbURL.href,
             types: {
+                // @ts-expect-error: Target signature provides too few arguments. Expected 2 or more, but got 1.ts(2322)
                 getTypeParser: (id, format) =>
-                    id === 20   ? BigInt : // @ts-expect-error: id 1016 is unknown
-                    id === 1016 ? (value: string) => parseBigIntArray(value).map(BigInt) :
-                    types.getTypeParser(id, format)
+                    id === 20   ? BigInt :
+                    id === 1016 ? (value: string) => (parseBigIntArray(value) as any).map(BigInt) :
+                    types.getTypeParser(id, format as 'text' & 'binary'),
             },
             ...this._options as ClientConfig
         });
@@ -79,7 +79,7 @@ class PGDatabaseConnection implements DBDriver.DBConnection {
                     rowMode: 'array',
                 });
 
-                result.push(new PGResult(this._dbURI, rs.fields, rs.rows, rs.rowCount));
+                result.push(new PGResult(this._dbURI, rs.fields, rs.rows, rs.rowCount ?? undefined));
             }
             catch (err: any) {
                 throw typeof err.code === 'string' ? new DBError('', err.code, 'Query failed', err, query) : err;
