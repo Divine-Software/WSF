@@ -3,8 +3,8 @@ import { ContentType } from '@divine/headers';
 import { extension, lookup } from 'mime-types';
 import path from 'path';
 
-/**{@link
- *} template literal tag function that applies {@link percentEncode} to all arguments
+/**
+ * A template literal tag function that applies {@link percentEncode} to all arguments
  *
  * @param strings  The template string array.
  * @param values   The values to be encoded.
@@ -83,6 +83,7 @@ export function guessFileExtension(contentType: ContentType | string, invent: tr
  *                          `undefined` if the file extension is unknown.
  */
 export function guessFileExtension(contentType: ContentType | string, invent?: boolean, knownExtension?: string): string | undefined;
+// eslint-disable-next-line jsdoc/require-jsdoc
 export function guessFileExtension(contentType: ContentType | string, invent?: boolean, knownExtension?: string): string | undefined {
     const ct = ContentType.create(contentType);
 

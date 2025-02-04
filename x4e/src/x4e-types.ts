@@ -1,5 +1,5 @@
 /* eslint-disable @typescript-eslint/adjacent-overload-signatures */
-/* eslint-disable @typescript-eslint/ban-types */
+/* eslint-disable @typescript-eslint/no-unsafe-function-type */
 
 import { Element, Node, Text } from '@xmldom/xmldom';
 import type { X4EList } from './private/x4e-list';

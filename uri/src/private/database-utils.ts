@@ -1,3 +1,5 @@
+/* eslint-disable jsdoc/require-jsdoc */
+
 import { DBCallback, DBConnectionPool } from '../database-driver';
 import { DBQuery, DBTransactionParams } from '../protocols/database';
 import { SessionSelector } from '../selectors';

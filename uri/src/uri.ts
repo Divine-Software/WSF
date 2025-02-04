@@ -98,7 +98,7 @@ export class IOError<D extends object = object> extends URIError {
         this.cause = cause instanceof Error ? cause : cause !== undefined ? new Error(String(cause)) : undefined;
     }
 
-    /** Converts this IOError to a string. */
+    /** @returns This IOError represented as a string. */
     override toString(): string {
         return `[${this.constructor.name}: ${this.message}]`
     }
@@ -263,10 +263,15 @@ export class URI extends URL implements AsyncIterable<Buffer> {
             this.selectors = url.selectors;
 
             // Make readonly props actually read-only
+            // @ts-expect-error: Class field 'origin' defined by the parent class is not accessible in the child class via super.ts(2855)
             Object.defineProperty(this, 'href',     { get: () => super.href     });
+            // @ts-expect-error: Class field 'origin' defined by the parent class is not accessible in the child class via super.ts(2855)
             Object.defineProperty(this, 'origin',   { get: () => super.origin   });
+            // @ts-expect-error: Class field 'origin' defined by the parent class is not accessible in the child class via super.ts(2855)
             Object.defineProperty(this, 'protocol', { get: () => super.protocol });
+            // @ts-expect-error: Class field 'origin' defined by the parent class is not accessible in the child class via super.ts(2855)
             Object.defineProperty(this, 'username', { get: () => super.username });
+            // @ts-expect-error: Class field 'origin' defined by the parent class is not accessible in the child class via super.ts(2855)
             Object.defineProperty(this, 'password', { get: () => super.password });
 
             return;
@@ -494,7 +499,7 @@ export class URI extends URL implements AsyncIterable<Buffer> {
      *                        including {@link MetaData}.
      */
     // eslint-disable-next-line @typescript-eslint/no-unused-vars
-    async remove<T extends object>(_recvCT?: ContentType | string): Promise<T & Metadata> {
+    async remove<T extends object>(recvCT?: ContentType | string): Promise<T & Metadata> {
         throw new IOError(`URI ${this} does not support remove()`);
     }
 
@@ -546,12 +551,14 @@ export class URI extends URL implements AsyncIterable<Buffer> {
      * {@link load}({@link @divine/headers!ContentType.stream}).
      *
      * @returns An `AsyncIterator<Buffer>` stream.
+     * @yields  `Buffer` chunks of the resource.
      */
     async *[Symbol.asyncIterator](): AsyncIterator<Buffer> & Metadata {
         return yield* await this.load<AsyncIterable<Buffer>>('application/vnd.esxx.octet-stream');
     }
 
     protected set _href(href: string) {
+        // @ts-expect-error: Class field 'origin' defined by the parent class is not accessible in the child class via super.ts(2855)
         super.href = href;
     }
 

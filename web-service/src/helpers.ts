@@ -1,4 +1,5 @@
 /* eslint-disable @typescript-eslint/no-unused-vars */
+
 import { unblocked } from '@divine/commons';
 import { ContentType } from '@divine/headers';
 import { EventStreamEvent, Parser } from '@divine/uri';
@@ -104,7 +105,7 @@ export abstract class CORSFilter implements WebFilter {
     /**
      * Checks if the given request header should be allowed.
      *
-     * @param method Name of header.
+     * @param header Name of header.
      * @param params Request parameters.
      * @returns `true` if the header is allowed, else `false`.
      */
@@ -115,7 +116,7 @@ export abstract class CORSFilter implements WebFilter {
     /**
      * Checks if the given response header should be exposed to the client.
      *
-     * @param method Name of header.
+     * @param header Name of header.
      * @param params Request parameters.
      * @returns `true` if the header is exposed, else `false`.
      */
@@ -239,6 +240,7 @@ export class EventStreamResponse<T = unknown> extends WebResponse {
      * @param headers          Custom response headers to send.
      * @param keepaliveTimeout How often, in milliseconds, to automatically send comments/keep-alive lines.
      * @param signal           An optional `AbortSignal`—or any object with an `aborted` property, really—to stop the stream.
+     * @param signal.aborted   Stops the stream if true.
      */
     constructor(source: AsyncIterable<T | T & EventAttributes | undefined | null>, dataType?: ContentType | string, headers?: WebResponseHeaders, keepaliveTimeout?: number, signal?: { aborted: boolean }) {
         super(WebStatus.OK, EventStreamResponse._eventStream(source, dataType, keepaliveTimeout, signal), {

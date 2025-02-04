@@ -1,6 +1,8 @@
-/* eslint-disable jest/no-standalone-expect */
 /* eslint-disable jest/no-conditional-expect */
 /* eslint-disable jest/no-export */
+/* eslint-disable jest/no-standalone-expect */
+/* eslint-disable jsdoc/require-jsdoc */
+
 import { DatabaseURI, DBError, DBQuery, FIELDS, IOError, q, URI } from '../../src';
 
 export interface CommonDBTestParams {

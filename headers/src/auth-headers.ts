@@ -49,7 +49,7 @@ export abstract class AuthHeader {
         const groups = parsed && headerGroups(parsed);
         const scheme = groups?.scheme;
 
-        if (!scheme || !groups /* make TS/ESLint happy */) {
+        if (!scheme) {
             throw new TypeError(`Failed to parse AuthHeader '${unparsed}': Invalid format`);
         }
 

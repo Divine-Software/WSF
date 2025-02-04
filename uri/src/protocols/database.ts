@@ -6,7 +6,10 @@ import { DBCallback, DBConnection, DBConnectionPool } from '../database-driver';
 import { toObject } from '../parsers';
 import { DBSessionSelector, invalidCharacter, isDatabaseTransactionParams, isDBCallback } from '../private/database-utils';
 import { URIParams } from '../selectors';
-import { FIELDS, HEADERS, IOError, Metadata, ParamsSelector, STATUS, STATUS_TEXT, URI, VOID, WithFields } from '../uri';
+import { FIELDS, HEADERS, IOError, Metadata, ParamsSelector, STATUS, STATUS_TEXT, URI, WithFields } from '../uri';
+
+// eslint-disable-next-line @typescript-eslint/no-unused-vars
+import { type VOID } from '../uri';
 
 /**
  * Constructs a {@link DBQuery} from a template literal.
@@ -21,8 +24,8 @@ import { FIELDS, HEADERS, IOError, Metadata, ParamsSelector, STATUS, STATUS_TEXT
  * See also {@link q.quote}, {@link q.raw}, {@link q.join}, {@link q.list}, {@link q.values} and {@link q.assign} for
  * handy utility functions.
  *
- * @param  strings    The query as a template string array.
- * @param  values     The query parameters. Values may be {@link DBQuery} instances themselves, or of any type supported
+ * @param  query      The query as a template string array.
+ * @param  params     The query parameters. Values may be {@link DBQuery} instances themselves, or of any type supported
  *                    by the database.
  * @throws TypeError  If one of the parameters is `undefined`.
  * @returns           A new DBQeury object.
@@ -49,6 +52,7 @@ export function q(query: TemplateStringsArray, ...params: unknown[]): DBQuery;
  * @returns           A new DBQeury object.
  */
 export function q(query: string, params: Params): DBQuery;
+// eslint-disable-next-line jsdoc/require-jsdoc
 export function q(query: TemplateStringsArray | string, ...params: unknown[]): DBQuery {
     if (isTemplateStringsLike(query)) {
         return new DBQuery(query, params);
@@ -269,8 +273,10 @@ export interface DBParamsSelector extends ParamsSelector {
 
 /** Transaction parameters. */
 export interface DBTransactionParams { // NOTE: Don't forget to update isDatabaseTransactionParams()!
-    /** The number of times to retry the transaction in case of a deadlock. Default is
-     * {@link DBConnectionPool.defaultRetries} (8 times). */
+    /**
+     * The number of times to retry the transaction in case of a deadlock. Default is
+     * {@link DBConnectionPool.defaultRetries} (8 times).
+     */
     retries?: number;
 
     /**
@@ -368,7 +374,7 @@ export class DBError<D extends object = object> extends IOError<D> {
         super(message, cause, data);
     }
 
-    /** Converts this DBError to a string. */
+    /** @returns This DBError represented as a string. */
     override toString(): string {
         return `[${this.constructor.name}: ${this.status}/${this.state} ${this.message}]`;
     }
@@ -428,7 +434,7 @@ export class DBQuery {
         }
     }
 
-    /** The parameters as an array */
+    /** @returns The parameters as an array */
     get params(): unknown[] {
         return this._params;
     }
@@ -539,8 +545,8 @@ const booleanColInfoProps: PropTypeMap<InformationSchema, boolean> = {
  * This is an abstract class. Each database driver is expected to provide a full implementation and a concrete subclass.
  */
 export abstract class DBResult extends Array<unknown[]> {
-    /** Array functions return a new Array, not a DBResult. */
-    static get [Symbol.species](): typeof Array {
+    /** @returns Array: Functions return a new Array, not a DBResult. */
+    static override get [Symbol.species](): typeof Array {
         return Array;
     }
 
@@ -632,7 +638,7 @@ export abstract class DBResult extends Array<unknown[]> {
                       _v;
 
             if (v !== null && v !== undefined) {
-                ci[k] = v as any;
+                ci[k] = v;
             }
         }
 
@@ -1183,7 +1189,7 @@ export abstract class DatabaseURI extends URI {
     override query<T>(cb: DBCallback<T>): Promise<T>;
     override async query<T>(first: DBQuery | TemplateStringsArray | string | DBTransactionParams | DBCallback<T>, ...rest: unknown[]): Promise<unknown & Metadata & WithFields<DBResult>> {
         if (first instanceof DBQuery && rest.every((r) => r instanceof DBQuery)) {
-            return this._session(async (conn) => toObjects(await conn.query(first, ...rest as DBQuery[])));
+            return this._session(async (conn) => toObjects(await conn.query(first, ...rest)));
         } else if (isTemplateStringsLike(first)) {
             return this._session(async (conn) => toObjects(await conn.query(q(first, ...rest))));
         } else if (typeof first === 'string' && rest.length === 1 && rest[0] !== null && typeof rest[0] === 'object') {
@@ -1315,7 +1321,7 @@ export abstract class DatabaseURI extends URI {
                 states.database = await this._createDBConnectionPool(params ?? { params: {} });
             }
 
-            return await states.database!.session(cb);
+            return await states.database.session(cb);
         }
         catch (err) {
             throw makeIOError ? this._makeIOError(err) : err;

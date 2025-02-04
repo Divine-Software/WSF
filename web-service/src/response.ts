@@ -132,7 +132,7 @@ export class WebResponse {
         return response;
     }
 
-    /** Returns a short description about this response, including status and content type. */
+    /** @returns A short description about this response, including status and content type. */
     toString(): string {
         const ct = this.headers['content-type']?.toString().replace(/;.*/, '');
 

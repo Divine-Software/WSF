@@ -1,3 +1,5 @@
+/* eslint-disable jsdoc/require-jsdoc */
+
 import React from 'react';
 import clsx from 'clsx';
 import Layout from '@theme/Layout';

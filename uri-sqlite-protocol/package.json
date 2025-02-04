@@ -28,12 +28,12 @@
   "dependencies": {
     "@divine/commons": "workspace:~",
     "better-sqlite3": "^11.8.1",
-    "tslib": "^2.5.0"
+    "tslib": "catalog:"
   },
   "devDependencies": {
     "@divine/uri": "workspace:~",
     "@types/better-sqlite3": "^7.6.12",
-    "@types/node": "^12.20.55"
+    "@types/node": "catalog:"
   },
   "engines": {
     "node": ">= 12.17.0"

@@ -1,4 +1,4 @@
-import { StringParams } from '@divine/commons';
+import { asError, StringParams } from '@divine/commons';
 import { ContentDisposition, ContentType } from '@divine/headers';
 import { randomBytes } from 'crypto';
 import Dicer from 'dicer';
@@ -219,7 +219,7 @@ export class MultiPartParser extends Parser {
                                 const parsed = await Parser.parse(data, type);
 
                                 if (parsed[FINALIZE]) {
-                                    finalizers.push(parsed[FINALIZE]!);
+                                    finalizers.push(parsed[FINALIZE]);
                                 }
 
                                 value = parsed.valueOf() as string | MultiPartData;
@@ -231,7 +231,7 @@ export class MultiPartParser extends Parser {
                             resolve({ name, type, headers, value });
                         }
                         catch (err) {
-                            reject(err);
+                            reject(asError(err));
                         }
                     }));
                 })

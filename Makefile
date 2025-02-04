@@ -18,7 +18,7 @@ build::		prepare								## Build all packages
 	pnpm exec tsc --build --verbose
 
 lint:		prepare								## Lint all sources with eslint
-	-pnpm exec eslint '*/src/**/*.ts'
+	-pnpm exec eslint '*/{src,test}/**/*'
 
 test::		build lint							## Build and run all tests
 	pnpm exec jest

@@ -1,5 +1,5 @@
 import { randomBytes } from 'crypto';
-import { Base64Encoder, Encoder } from '../src';
+import { Encoder } from '../src';
 
 async function* randomChunkSize(source: Buffer) {
     for (let offset = 0; offset < source.length;) {

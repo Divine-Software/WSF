@@ -24,10 +24,10 @@
   },
   "dependencies": {
     "@divine/synchronization": "^1.2.1",
-    "tslib": "^2.5.0"
+    "tslib": "catalog:"
   },
   "devDependencies": {
-    "@types/node": "^12.20.55"
+    "@types/node": "catalog:"
   },
   "engines": {
     "node": ">= 12.17.0"

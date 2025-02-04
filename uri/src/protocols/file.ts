@@ -245,6 +245,7 @@ export class FileURI extends URI {
      *
      * @throws  IOError  On I/O errors.
      * @returns          A stream of change events.
+     * @yields           Change events.
      */
     override async* watch(): AsyncIterable<FileWatchEvent & Metadata> {
         const chokidar = await _chokidar ?? throwError(new IOError(`watch() requires chokidar as a peer dependency`));

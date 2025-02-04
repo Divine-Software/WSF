@@ -1,10 +1,12 @@
+/* eslint-disable jsdoc/require-jsdoc */
+
 import useBaseUrl from '@docusaurus/useBaseUrl';
 import React from 'react';
 import clsx from 'clsx';
 import styles from './HomepageFeatures.module.css';
 import Link from '@docusaurus/Link';
 
-type FeatureItem = {
+interface FeatureItem {
   title: string;
   image?: string;
   href?: string;

@@ -72,7 +72,7 @@ export interface CredentialsProviderOptions<C extends Credentials> {
  * A function used to provide or validate credentials for a request.
  *
  * @template C        The type of credentials that is to be provied.
- * @params   options  Information about the request how the provider should operate.
+ * @param    options  Information about the request how the provider should operate.
  *
  */
 export type CredentialsProvider<C extends Credentials> = (options: CredentialsProviderOptions<C>) => Promise<C | undefined>;

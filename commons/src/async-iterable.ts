@@ -17,7 +17,7 @@ export async function *toAsyncIterable(data: string | Buffer | AsyncIterable<Buf
         for await (const chunk of data) {
             yield chunk instanceof Buffer   ? chunk
                 : typeof chunk === 'string' ? Buffer.from(chunk)
-                : throwError(new TypeError(`Expected AsyncIterable<Buffer | string> but found AsyncIterable<${chunk}>`))
+                : throwError(new TypeError(`Expected AsyncIterable<Buffer | string> but found AsyncIterable<${String(chunk)}>`))
         }
     }
     else {

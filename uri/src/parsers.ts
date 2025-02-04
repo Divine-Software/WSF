@@ -21,7 +21,7 @@ export function toObject<T extends object>(value: unknown): T {
     return value === undefined       ? Object(VOID) :
            value === null            ? Object(NULL) :
            typeof value !== 'object' ? Object(value) :
-           value;
+           value as T;
 }
 
 /**
@@ -36,7 +36,7 @@ export function toPrimitive<T extends BasicTypes | symbol | undefined>(value: an
         value = value.valueOf();
     }
 
-    return value === NULL ? null : value === VOID ? undefined : value;
+    return value === NULL ? null! : value === VOID ? undefined! : value;
 }
 
 /** An IOError subclass thrown by the {@link Parser} class. */
@@ -112,7 +112,7 @@ export abstract class Parser {
             const result = await Parser._create(ContentType.create(contentType)).parse(toAsyncIterable(stream));
 
             // Never return primitive types or null/undefined
-            return toObject(result);
+            return await toObject(result);
         }
         catch (err) {
             throw err instanceof ParserError ? err : new ParserError(`${contentType} parser failed`, err);

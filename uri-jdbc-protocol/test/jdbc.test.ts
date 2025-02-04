@@ -1,5 +1,6 @@
 import { q, URI } from '@divine/uri';
 import { describeCommonDBTest } from '@divine/uri/build/test/protocols/common-database-tests';
+import { asError } from '@divine/commons';
 // @ts-expect-error: No .d.ts file for node-java-maven
 import mvn from 'node-java-maven';
 import { resolve } from 'path';
@@ -7,7 +8,7 @@ import { classpath } from '../src';
 
 beforeAll(async () => {
     const options = { packageJsonPath: resolve(__dirname, '../../../package.json') };
-    const results = await new Promise<any>((resolve, reject) => mvn(options, (err: any, res: any) => err ? reject(err) : resolve(res)));
+    const results = await new Promise<any>((resolve, reject) => mvn(options, (err: any, res: any) => err ? reject(asError(err)) : resolve(res)));
     classpath.push(...results.classpath);
 });
 

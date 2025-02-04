@@ -1,4 +1,3 @@
-/* eslint-disable @typescript-eslint/no-namespace */
 import { Params } from '@divine/commons';
 import { Authorization, WWWAuthenticate } from '@divine/headers';
 import { Condition } from '@divine/synchronization';
@@ -45,7 +44,7 @@ export abstract class DBConnectionPool {
 
     private _connectionReaper: NodeJS.Timeout;
     private _connectionCount = 0;
-    private _usedConnections: Set<DBConnection> = new Set();
+    private _usedConnections = new Set<DBConnection>();
     private _idleConnections: IdleConnection[] = [];
     private _idleCondition = new Condition();
 
@@ -84,7 +83,7 @@ export abstract class DBConnectionPool {
             if (--tls.ref === 0) {
                 const conn = tls.conn;
                 tls.conn = null!
-                /* async */ this._releaseConnection(conn, tls.failed);
+                /* async */ void this._releaseConnection(conn, tls.failed);
             }
         }
     }
@@ -160,7 +159,7 @@ export abstract class DBConnectionPool {
                 await conn.ping(this._params.keepalive ?? DBConnectionPool.defaultKeepalive);
                 return false; // All good, connection not closed
             }
-            catch (err) {
+            catch {
                 // Close it
             }
         }
@@ -180,6 +179,7 @@ export abstract class DBConnectionPool {
     }
 }
 
+// eslint-disable-next-line @typescript-eslint/no-namespace
 namespace DBReference {
     export type Scope  = 'scalar' | 'one' | 'unique' | 'all';
 
@@ -188,7 +188,7 @@ namespace DBReference {
         { op: 'and' | 'or', value: Filter[] } |
         { op: 'not',        value: Filter };
 
-    export type Params = {
+    export interface Params {
         offset?: string;
         count?:  string;
         sort?:   string;

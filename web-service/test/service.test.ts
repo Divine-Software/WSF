@@ -79,19 +79,19 @@ describe(`a WebService's resources`, () => {
     const ws = new WebService('context')
         .addResource(class {
             static path = /GET\/(?<obj_id>\d)/;
-            private digit: number;
+            private _digit: number;
 
             constructor(_context: string, args: WebArguments) {
                 // eslint-disable-next-line jest/no-standalone-expect
                 expect(args.string('$1') === args.string('$obj_id')).toBe(true);
-                this.digit = args.number('$1');
+                this._digit = args.number('$1');
             }
 
             async GET(args: WebArguments) {
                 // eslint-disable-next-line jest/no-standalone-expect
                 expect(args.string('$1') === args.string('$obj_id')).toBe(true);
 
-                switch (this.digit) {
+                switch (this._digit) {
                     case 0: return null;
                     case 1: return '1';
                     case 2: return [2];

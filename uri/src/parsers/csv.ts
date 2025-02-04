@@ -77,7 +77,7 @@ export class CSVParser extends Parser {
         function convertRow(row: Iterable<unknown>): Buffer {
             const line: string[] = [];
 
-            for (const column of row as Iterable<unknown>) {
+            for (const column of row) {
                 line.push(column === null || column === undefined ? '' : quote + String(column).replace(search, replace) + quote);
             }
 

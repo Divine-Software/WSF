@@ -1,8 +1,12 @@
+/* eslint-disable jsdoc/check-tag-names */
+
 /** @jsx     jsx4XML.element */
 /** @jsxFrag jsx4XML.fragment */
 
 import { Node } from '@xmldom/xmldom';
 import { jsx4XML, XMLList } from '../src';
+
+void jsx4XML;
 
 describe('jsx', () => {
     it('works', () => {
@@ -18,21 +22,21 @@ describe('jsx', () => {
             return <Button value={prop.name} />;
         }
 
-        const Button = (prop: { value: string }, context: { color: string }) => (
+        const Button = (_prop: { value: string }, _context: { color: string }) => (
             <null/>
         );
 
-        function FComponent(props: FooProp) {
+        function FComponent(_props: FooProp) {
             return <hej class="hej" className="ho" class-name='hoho' undefined={false} null="true" data-hej="fie" />;
         }
 
         class CComponent{
-            constructor(private props: { href?: string}, private children: XMLList<Node>) {
+            constructor(private _props: { href?: string}, private _children: XMLList<Node>) {
 
             }
 
             render() {
-                return <><FComponent X={1} Y={2} name={this.props.href ?? 'hej'} /><olle/>{this.children}</>;
+                return <><FComponent X={1} Y={2} name={this._props.href ?? 'hej'} /><olle/>{this._children}</>;
             }
         }
 
@@ -53,6 +57,7 @@ describe('jsx', () => {
             <deeper>{x}</deeper>
         </deep>
 
+        void f, void c, void l, void x, void y;
         // console.log(c, y, l, f);
         // console.log(x.person.name);
         // console.log(x.person[0]?.name);

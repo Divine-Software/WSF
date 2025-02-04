@@ -35,7 +35,7 @@ export class WebError extends Error {
     }
 
 
-    /** Converts this WebError to a string. */
+    /** @returns This WebError represented as a string. */
     override toString(): string {
         return `[${this.constructor.name}: ${this.status} ${WebStatus[this.status] || '<Unknown>'} ${this.message}]`;
     }

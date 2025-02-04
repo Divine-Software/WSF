@@ -1,8 +1,8 @@
+/* eslint-disable @typescript-eslint/no-namespace */
+
 import { DOMImplementation, Node } from '@xmldom/xmldom';
 import { XML, XMLList } from './x4e';
 import { NS_XHTML } from './xml-utils';
-
-/* eslint-disable @typescript-eslint/no-namespace */
 
 // § 8.3 XML Initialiser Input Elements (X4E: Not really)
 // § 11.1.5 XMLList Initialiser (X4E: Not really)

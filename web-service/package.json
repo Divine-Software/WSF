@@ -25,7 +25,7 @@
   "dependencies": {
     "@divine/commons": "workspace:~",
     "cuid": "^3.0.0",
-    "tslib": "^2.5.0",
+    "tslib": "catalog:",
     "ua-parser-js": "^1.0.40"
   },
   "peerDependencies": {
@@ -35,7 +35,7 @@
   "devDependencies": {
     "@divine/headers": "workspace:^",
     "@divine/uri": "workspace:~",
-    "@types/node": "^12.20.55",
+    "@types/node": "catalog:",
     "@types/ua-parser-js": "~0.7.39"
   },
   "engines": {

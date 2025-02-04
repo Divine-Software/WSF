@@ -171,6 +171,7 @@ function endpoints<M extends RPCMethods<M>>(endpoints: RPCEndpoints<M>): Array<[
  * @returns           A class that implements the client-side view of the RPC service API.
  */
 export function createRPCClient<M extends RPCMethods<M>>(config: RPCEndpoints<M>, clientProxy: RPCClientProxy<M>): RPCClient<M> {
+    // eslint-disable-next-line @typescript-eslint/no-extraneous-class
     return new class RPCClient {
         constructor() {
             const self = this as any;
@@ -254,6 +255,7 @@ export function createRPCService<M extends RPCMethods<M>, Context>(config: RPCEn
  *                      {@link WebService.addResources}.
  */
 export function createRPCService<M extends RPCMethods<M>>(config: RPCEndpoints<M>, impl: RPCService<M>, serviceProxy: RPCSeviceProxy<M>): Array<WebResourceCtor<unknown>>;
+// eslint-disable-next-line jsdoc/require-jsdoc
 export function createRPCService<M extends RPCMethods<M>, Context = unknown>(config: RPCEndpoints<M>, impl: RPCServiceCtor<Context, M> | RPCService<M>, serviceProxy: RPCSeviceProxy<M>): Array<WebResourceCtor<Context>> {
     return endpoints(config).map(([method, options]) =>
         class RPCResource {

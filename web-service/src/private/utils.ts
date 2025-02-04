@@ -1,3 +1,5 @@
+/* eslint-disable jsdoc/require-jsdoc */
+
 const PATCHED_CONSOLE_METHODS = [
     /* Console */    'assert', 'debug', 'dirxml', 'error', 'group', 'groupCollapsed', 'info', 'log', 'timeLog', 'trace', 'warn',
     /* SysConsole */ 'alert', 'crit', 'emerg', 'notice',

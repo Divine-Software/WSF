@@ -1,3 +1,5 @@
+/* eslint-disable jsdoc/require-jsdoc */
+
 import { Element, Node } from '@xmldom/xmldom';
 import type { XML, XMLList } from '../x4e-types';
 import { escapeXML, isAttribute, isComment, isElement, isEqualNode, isProcessingInstruction, isText, NodeListOf, parseXMLFromString } from '../xml-utils';
@@ -9,7 +11,7 @@ export const HasProperty     = Symbol('HasProperty');
 export const OwnPropertyKeys = Symbol('OwnPropertyKeys');
 export const Value           = Symbol('Value');
 
-// eslint-disable-next-line @typescript-eslint/ban-types
+// eslint-disable-next-line @typescript-eslint/no-wrapper-object-types
 export type ConvertableTypes = string | number | bigint | boolean | String | Number | BigInt | Boolean | XML<Node> | XMLList<Node> | Node;
 
 export const nodeTypes = [

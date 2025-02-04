@@ -40,27 +40,27 @@ export interface StartOptions {
 
 class WebServerBase {
     private _closing = false;
-    private _channels: Map<WithConnectionClosing<Socket | TLSSocket | http2.Http2Session>, [number]> = new Map();
+    private _channels = new Map<WithConnectionClosing<Socket | TLSSocket | http2.Http2Session>, [number]>();
 
     /** The underlying Node.js [Server](https://nodejs.org/api/http.html#class-httpserver) instance. */
     public readonly server: http.Server | https.Server | http2.Http2Server;
 
-    /** The host name or IP address the server is listening on. */
+    /** @returns The host name or IP address the server is listening on. */
     public get host(): string {
         return this.url.hostname;
     }
 
-    /** The port number the server is listening on. */
+    /** @returns The port number the server is listening on. */
     public get port(): number {
         return this.url.port ? Number(this.url.port) : this.url.protocol === 'http:' ? 80 : 443;
     }
 
-    /** Information about the actual listening port, as provided by the Node.js [Server](https://nodejs.org/api/http.html#class-httpserver). */
+    /** @returns Information about the actual listening port, as provided by the Node.js [Server](https://nodejs.org/api/http.html#class-httpserver). */
     public get addressInfo(): AddressInfo | null {
         return this.server.address() as AddressInfo | null;
     }
 
-    /** `true` when the server is shutting down and waiting for connections to terminate. */
+    /** @returns `true` when the server is shutting down and waiting for connections to terminate. */
     public get closing(): boolean {
         return this._closing;
     }
@@ -96,7 +96,7 @@ class WebServerBase {
             }
 
             ++counter[0];
-            _requestHandler(req, res).finally(() => {
+            /* async */ void _requestHandler(req, res).finally(() => {
                 if (--counter[0] === 0 && this._closing) {
                     isSession(channel) ? channel.close() : channel.end();
                 }
@@ -144,7 +144,7 @@ class WebServerBase {
 
         const handler = (_signal: NodeJS.Signals) => {
             signals.forEach((s) => process.off(s, handler));
-            this.stop(options.stopTimeout).catch((err) => console.error(err));
+            this.stop(options.stopTimeout).catch(console.error);
         };
 
         signals.forEach((s) => process.once(s, handler));

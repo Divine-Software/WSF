@@ -207,7 +207,7 @@ export class QuotedPrintableEncoder extends Encoder {
             line = line.trimEnd(); // Rule #3
             line = line.endsWith('=') ? line.substring(0, line.length - 1) : line + (crlf ? '\r\n' : ''); // Rule #5
 
-            return line.replace(/=([0-9A-Fa-f]{2})/g, (_, hex) => {
+            return line.replace(/=([0-9A-Fa-f]{2})/g, (_, hex: string) => {
                 return String.fromCharCode(parseInt(hex, 16)); // Rule #1, #2
             });
         };

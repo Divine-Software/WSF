@@ -32,7 +32,7 @@ export abstract class ContentHeader {
                         value = unescape(encoded); // Assume Latin 1
                     }
                 }
-                catch (ex) {
+                catch {
                     value = unescape(encoded); // Just try Latin 1 then
                 }
 
@@ -70,17 +70,17 @@ export abstract class ContentHeader {
     toString(): string {
         let params = '';
 
-        for (const param of Object.values(this.params)) {
-            const safe = param!.value.replace(/[^\u0020-\u007e]/g, '_');
+        for (const param of Object.values(this.params).filter(p => p !== undefined)) {
+            const safe = param.value.replace(/[^\u0020-\u007e]/g, '_');
 
             if (/^[a-zA-Z0-9!#$%&'*+.^_`|~-]+$/.test(safe)) { // "any VCHAR, except delimiters"
-                params += `;${param!.name}=${safe}`;
+                params += `;${param.name}=${safe}`;
             } else {
-                params += `;${param!.name}="${safe.replace(/\\/g, '\\\\').replace(/"/g, '\\"')}"`;
+                params += `;${param.name}="${safe.replace(/\\/g, '\\\\').replace(/"/g, '\\"')}"`;
             }
 
-            if (safe !== param!.value) {
-                params += `;${param!.name}*=utf-8''${percentEncode(param!.value!)}`;
+            if (safe !== param.value) {
+                params += `;${param.name}*=utf-8''${percentEncode(param.value)}`;
             }
         }
 

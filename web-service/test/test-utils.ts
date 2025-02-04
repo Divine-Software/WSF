@@ -1,3 +1,5 @@
+/* eslint-disable jsdoc/require-jsdoc */
+
 import { IncomingMessage, IncomingHttpHeaders } from 'http';
 import { WebRequest } from '../src/request';
 

@@ -1,3 +1,5 @@
+/* eslint-disable jsdoc/require-jsdoc */
+
 import { Attr, Comment, Document, DocumentFragment, Element, Node, ProcessingInstruction, Text } from '@xmldom/xmldom';
 import { inspect } from 'util';
 import type { XML, XMLList } from '../x4e-types';

@@ -56,8 +56,10 @@ export class WebRequest implements AuthSchemeRequest {
     /** The parsed user agent */
     public readonly userAgent: UserAgent;
 
-    /** The request ID. It's either generated or extracted from the incoming message, if
-     * {@link WebServiceConfig.trustRequestID} is configured. */
+    /**
+     * The request ID. It's either generated or extracted from the incoming message, if
+     * {@link WebServiceConfig.trustRequestID} is configured.
+     */
     public readonly id: string;
 
     /** A per-request logger. Decorated with request ID if {@link WebServiceConfig.logRequestID} is `true`. */
@@ -104,19 +106,19 @@ export class WebRequest implements AuthSchemeRequest {
         }
     }
 
-    /** A short description of the remote client, including agent name, version and remote address. */
+    /** @returns A short description of the remote client, including agent name, version and remote address. */
     get remoteUserAgent(): string {
         return this.userAgent.browser.name && this.userAgent.browser.version ?
             `${this.userAgent.browser.name}/${this.userAgent.browser.version}@${this.remoteAddress}` :
             `Unknown@${this.remoteAddress}`;
     }
 
-    /** All headers in a format compatible with the `AuthSchemeRequest` interface. */
+    /** @returns All headers in a format compatible with the `AuthSchemeRequest` interface. */
     get headers(): Array<[string, string]> {
         return Object.entries(this.incomingMessage.headers).map(([name, value]) => [name, Array.isArray(value) ? value.join(', ') : value!]);
     }
 
-    /** `true` when the server is shutting down and waiting for connections to terminate. */
+    /** @returns `true` when the server is shutting down and waiting for connections to terminate. */
     get closing(): boolean {
         const stream: WithConnectionClosing<Socket | TLSSocket | Http2Session> | undefined = 'stream' in this.incomingMessage
             ? this.incomingMessage.stream.session
@@ -125,7 +127,7 @@ export class WebRequest implements AuthSchemeRequest {
         return stream && (stream[CONNECTION_CLOSING] === true || 'closed' in stream && stream.closed === true);
     }
 
-    /** `true` when the server has been shut down and the request has been aborted. */
+    /** @returns `true` when the server has been shut down and the request has been aborted. */
     get aborted(): boolean {
         return this.incomingMessage.aborted;
     }
@@ -138,7 +140,7 @@ export class WebRequest implements AuthSchemeRequest {
      *             be thrown instead.
      * @throws     {@link WebError}({@link WebStatus.INTERNAL_SERVER_ERROR}) if the requested header is missing and no
      *             default was provided.
-     * @returns   The parameter value.
+     * @returns    The parameter value.
      */
     param(name: string, def?: BasicTypes): BasicTypes {
         let value = this.params[name];
@@ -266,7 +268,7 @@ export class WebRequest implements AuthSchemeRequest {
         await Promise.all(this._finalizers.map((finalize) => finalize()));
     }
 
-    /** Returns a short description about this request, including request method, URL and content type. */
+    /** @returns A short description about this request, including request method, URL and content type. */
     toString(): string {
         const ct = this.incomingMessage.headers['content-type']?.replace(/;.*/, '');
 

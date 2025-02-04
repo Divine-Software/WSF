@@ -23,6 +23,6 @@
     "collectCoverage": true
   },
   "dependencies": {
-    "tslib": "^2.5.0"
+    "tslib": "catalog:"
   }
 }

@@ -1,6 +1,7 @@
-import { isAsyncIterable, isReadableStream, StringParams } from '@divine/commons';
+import { asError, escapeRegExp, isAsyncIterable, isReadableStream, StringParams } from '@divine/commons';
 import { AuthSchemeError } from '@divine/uri';
 import { IncomingMessage, ServerResponse } from 'http';
+import { Http2ServerRequest, Http2ServerResponse } from 'http2';
 import { pipeline } from 'stream';
 import { WebError, WebStatus } from './error';
 import { EventStreamResponse } from './helpers';
@@ -8,7 +9,6 @@ import { WebRequest } from './request';
 import { WebArguments, WebErrorHandler, WebFilterCtor, WebResource, WebResourceCtor } from './resource';
 import { WebResponse, WebResponses } from './response';
 import { WebServer } from './server';
-import { Http2ServerRequest, Http2ServerResponse } from 'http2';
 
 /** The WebService configuration properties. */
 export interface WebServiceConfig {
@@ -179,7 +179,7 @@ export class WebService<Context> {
 
     /**
      *
-     * @param context The web service's *context*, which will provided to filter and resource constructors.
+     * @param context The web service's *context*, which will be provided to filter and resource constructors.
      * @param config  The web service configuration.
      */
     constructor(public context: Context, config?: WebServiceConfig) {
@@ -296,7 +296,7 @@ export class WebService<Context> {
      *
      * The resource's {@link WebResourceCtor.path | path} property defines what locations the resource is applicable to.
      *
-     * @param resource A resouece class to register.
+     * @param resource A resource class to register.
      * @returns This WebService.
      */
     addResource(resource: WebResourceCtor<Context>): this {
@@ -320,7 +320,7 @@ export class WebService<Context> {
      * The resources' {@link WebResourceCtor.path | path} properties defines what locations each resource is applicable
      * to.
      *
-     * @param filters A sequence of resource classes to register.
+     * @param resources A sequence of resource classes to register.
      * @returns This WebService.
      */
     addResources(resources: Iterable<WebResourceCtor<Context>>): this {
@@ -411,8 +411,8 @@ export class WebService<Context> {
         try {
             // Compile merged pattern
             if (!this._resourcePattern) {
-                this._filters.forEach((filter) => { filter.pattern = RegExp(`^${this._mountPoint}${filter.filter.path.source}`); });
-                this._resourcePattern = RegExp(`^${this._mountPoint}(?:${this._resources.filter((r) => !!r).map((r) => `(${r.pattern})`).join('|')})$`);
+                this._filters.forEach((filter) => { filter.pattern = RegExp(`^${escapeRegExp(this._mountPoint)}${filter.filter.path.source}`); });
+                this._resourcePattern = RegExp(`^${escapeRegExp(this._mountPoint)}(?:${this._resources.filter((r) => !!r).map((r) => `(${r.pattern})`).join('|')})$`);
             }
 
             // Match incoming request
@@ -420,9 +420,10 @@ export class WebService<Context> {
 
             if (match) {
                 // Find resource that matched
+                // eslint-disable-next-line @typescript-eslint/no-for-in-array
                 for (const r in this._resources) {
                     if (match[r] !== undefined) {
-                        return this._handleResource(webreq, this._resources[r], Number(r), match);
+                        return await this._handleResource(webreq, this._resources[r], Number(r), match);
                     }
                 }
             }
@@ -431,7 +432,7 @@ export class WebService<Context> {
                 throw new WebError(WebStatus.NOT_FOUND, `No resource matches the path ${webreq.url.pathname}`);
             };
 
-            return this._handleFilters(webreq, resourceNotFound, resourceNotFound);
+            return await this._handleFilters(webreq, resourceNotFound, resourceNotFound);
         }
         catch (err) {
             return await this._handleException(err, webreq);
@@ -442,7 +443,7 @@ export class WebService<Context> {
     }
 
     private async _handleError(_err: Error | unknown, errorHandler?: WebErrorHandler<Context> | ((err: Error, context: Context) => void)) {
-        const err = _err instanceof Error ? _err : new Error(String(_err));
+        const err = asError(_err);
         const handled = await errorHandler?.(err, this.context);
 
         if (handled) {
@@ -526,9 +527,11 @@ export class WebService<Context> {
                 let method = ALLOWED_METHODS.test(webreq.method) ? (rsrc as any)[webreq.method] as typeof rsrc.default : undefined;
 
                 if (!method && webreq.method === 'HEAD') {
+                    // eslint-disable-next-line @typescript-eslint/unbound-method
                     method = rsrc.GET;
                 }
 
+                // eslint-disable-next-line @typescript-eslint/unbound-method
                 method = method || rsrc.default;
 
                 if (method) {
@@ -546,7 +549,7 @@ export class WebService<Context> {
                 }
             }
             catch (err) {
-                return this._handleError(err, (err) => rsrc?.catch?.(err));
+                return await this._handleError(err, (err) => rsrc?.catch?.(err));
             }
             finally {
                 await rsrc?.close?.();

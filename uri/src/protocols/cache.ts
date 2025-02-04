@@ -11,7 +11,7 @@ const cacheDir = resolve(xdg.cache(), pkg.name, 'CacheURI', 'v1');
 const cacheAge = 3600_000 /* 1 hour */;
 
 setTimeout(() => {
-    pruneCacheDir().then(() => {
+    void pruneCacheDir().then(() => {
         setInterval(() => pruneCacheDir(), 60_000).unref();
     });
 }, 1000).unref();
@@ -77,29 +77,29 @@ export class CacheURI extends URI {
         this._file = FileURI.create(this._path);
     }
 
-    /** See {@link FileURI.info}. */
+    /** @See {@link FileURI.info}. */
     override async info<T extends DirectoryEntry>(): Promise<T & Metadata> {
         return { ...await this._delegate('info') as T, type: new ContentType(this._type) };
     }
 
     /** See {@link FileURI.load}. */
     override async load<T extends object>(recvCT?: ContentType | string): Promise<T & Metadata> {
-        return this._delegate('load', recvCT ?? this._type);
+        return await this._delegate('load', recvCT ?? this._type);
     }
 
     /** See {@link FileURI.save}. */
     override async save<T extends object, D = unknown>(data: D, sendCT?: ContentType | string, recvCT?: undefined): Promise<T & Metadata> {
-        return this._delegate('save', data, sendCT, recvCT);
+        return await this._delegate('save', data, sendCT, recvCT);
     }
 
     /** See {@link FileURI.append}. */
     override async append<T extends object, D = unknown>(data: D, sendCT?: ContentType | string, recvCT?: undefined): Promise<T & Metadata> {
-        return this._delegate('append', data, sendCT, recvCT);
+        return await this._delegate('append', data, sendCT, recvCT);
     }
 
     /** See {@link FileURI.remove}. */
     override async remove<T extends object>(recvCT?: undefined): Promise<T & Metadata> {
-        return this._delegate('remove', recvCT);
+        return await this._delegate('remove', recvCT);
     }
 
     /** See {@link FileURI.watch}. */

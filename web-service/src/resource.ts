@@ -273,7 +273,7 @@ export class WebArguments {
         ]);
     }
 
-    /** An alias/shortcut for {@link WebRequest.log}, which in turn is based on {@link WebServiceConfig.console}. */
+    /** @returns An alias/shortcut for {@link WebRequest.log}, which in turn is based on {@link WebServiceConfig.console}. */
     get log(): Console {
         return this.request.log;
     }

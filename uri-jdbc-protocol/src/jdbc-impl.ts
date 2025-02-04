@@ -66,12 +66,15 @@ class JDBCDatabaseConnection implements DBDriver.DBConnection {
             .filter(([_key, value]) => value !== null && value !== undefined)
             .reduce((props, [key, value]) => (props.setProperty(key, String(value)), props), java.newInstanceSync('java.util.Properties'));
 
-        this._client = await java.newInstance('DBConnectionBridge', this._dbURI.href, props) as any;
+        this._client = await (java.newInstance('DBConnectionBridge', this._dbURI.href, props) as unknown as Promise<DBConnectionBridge>);
     }
 
     async close() {
-        this._client?.close();
-        delete this._client;
+        try {
+            await this._client?.close();
+        } finally {
+            delete this._client;
+        }
     }
 
     async ping(timeout: number) {

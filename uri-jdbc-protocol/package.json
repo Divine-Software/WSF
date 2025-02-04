@@ -28,12 +28,12 @@
   "dependencies": {
     "@divine/commons": "workspace:~",
     "java": "~0.14.0",
-    "tslib": "^2.5.0"
+    "tslib": "catalog:"
   },
   "devDependencies": {
     "@divine/uri": "workspace:~",
     "@types/java": "~0.9.5",
-    "@types/node": "^12.20.55"
+    "@types/node": "catalog:"
   },
   "engines": {
     "node": ">= 12.17.0"
