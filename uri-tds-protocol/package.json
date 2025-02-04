@@ -23,15 +23,15 @@
     "collectCoverage": true
   },
   "peerDependencies": {
-    "@divine/uri": "workspace:~0.6.0"
+    "@divine/uri": "workspace:^1.0.0"
   },
   "dependencies": {
-    "@divine/commons": "workspace:~",
+    "@divine/commons": "workspace:^",
     "tedious": "^18.6.1",
     "tslib": "catalog:"
   },
   "devDependencies": {
-    "@divine/uri": "workspace:~",
+    "@divine/uri": "workspace:^",
     "@types/node": "catalog:"
   },
   "engines": {

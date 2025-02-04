@@ -23,15 +23,15 @@
     "collectCoverage": true
   },
   "peerDependencies": {
-    "@divine/uri": "workspace:~0.6.0"
+    "@divine/uri": "workspace:^1.0.0"
   },
   "dependencies": {
-    "@divine/commons": "workspace:~",
+    "@divine/commons": "workspace:^",
     "better-sqlite3": "^11.8.1",
     "tslib": "catalog:"
   },
   "devDependencies": {
-    "@divine/uri": "workspace:~",
+    "@divine/uri": "workspace:^",
     "@types/better-sqlite3": "^7.6.12",
     "@types/node": "catalog:"
   },

@@ -1,6 +1,6 @@
 {
   "name": "@divine/commons",
-  "version": "0.5.0",
+  "version": "1.0.0",
   "description": "The Divine Commons collection of random utilities",
   "author": "Martin Blom <martin@blom.org>",
   "license": "Apache-2.0",

@@ -1,5 +1,9 @@
 # @divine/x4e
 
+## 1.0.0
+
+- Version bump.
+
 ## 0.4.4
 
 ### Patch Changes

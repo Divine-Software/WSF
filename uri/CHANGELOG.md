@@ -1,5 +1,9 @@
 # @divine/uri
 
+## 1.0.0
+
+- Version bump.
+
 ## 0.6.0
 
 ### Minor Changes

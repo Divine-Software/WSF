@@ -23,18 +23,18 @@
     "collectCoverage": true
   },
   "dependencies": {
-    "@divine/commons": "workspace:~",
+    "@divine/commons": "workspace:^",
     "cuid": "^3.0.0",
     "tslib": "catalog:",
     "ua-parser-js": "^1.0.40"
   },
   "peerDependencies": {
     "@divine/headers": "workspace:^2.0.4",
-    "@divine/uri": "workspace:~0.6.0"
+    "@divine/uri": "workspace:^1.0.0"
   },
   "devDependencies": {
     "@divine/headers": "workspace:^",
-    "@divine/uri": "workspace:~",
+    "@divine/uri": "workspace:^",
     "@types/node": "catalog:",
     "@types/ua-parser-js": "~0.7.39"
   },

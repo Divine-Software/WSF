@@ -1,6 +1,6 @@
 {
   "name": "@divine/uri",
-  "version": "0.6.0",
+  "version": "1.0.0",
   "description": "The Divine URI class for accessing and manipulating local and remote resources",
   "author": "Martin Blom <martin@blom.org>",
   "license": "Apache-2.0",
@@ -23,7 +23,7 @@
     "collectCoverage": true
   },
   "dependencies": {
-    "@divine/commons": "workspace:~",
+    "@divine/commons": "workspace:^",
     "@divine/synchronization": "^1.2.1",
     "@iarna/toml": "^2.2.5",
     "dicer": "~0.3.1",
@@ -47,7 +47,7 @@
     "@divine/headers": "workspace:^",
     "@types/dicer": "~0.2.4",
     "@types/mime-types": "^2.1.4",
-    "@types/node": "^16",
+    "@types/node": "^16.18.126",
     "@types/papaparse": "^5.3.15",
     "chokidar": "^4.0.3",
     "peggy": "^4.2.0",
