@@ -68,10 +68,12 @@ export default [
             "@typescript-eslint/prefer-function-type": 0,
 
             // Override jsdoc
+            'jsdoc/no-multi-asterisks': [ 'warn', { allowWhitespace: true } ],
             'jsdoc/require-jsdoc': [ 'warn', { publicOnly: true } ],
             'jsdoc/tag-lines': 0,
 
             // Custom settings
+            'jest/prefer-expect-assertions': 'error',
             '@typescript-eslint/return-await': [ 'error', 'error-handling-correctness-only' ],
             '@typescript-eslint/naming-convention': ['error', {
                     selector: 'memberLike',

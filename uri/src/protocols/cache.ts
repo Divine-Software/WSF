@@ -77,7 +77,7 @@ export class CacheURI extends URI {
         this._file = FileURI.create(this._path);
     }
 
-    /** @See {@link FileURI.info}. */
+    /** See {@link FileURI.info}. */
     override async info<T extends DirectoryEntry>(): Promise<T & Metadata> {
         return { ...await this._delegate('info') as T, type: new ContentType(this._type) };
     }

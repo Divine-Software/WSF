@@ -165,7 +165,7 @@ export class WebService<Context> {
     /** The actual {@link WebServiceConfig} used by this service. */
     public readonly webServiceConfig: Required<WebServiceConfig>;
 
-    /** The {@link WebServer} where this service is currently mounted, or `null`. */
+    /** @returns The {@link WebServer} where this service is currently mounted, or `null`. */
     public get webServer(): WebServer | null {
         return this._webServer;
     }
@@ -199,7 +199,7 @@ export class WebService<Context> {
         };
     }
 
-    /** The mount point where this service is mounted. Usually just '/'. */
+    /** @returns The mount point where this service is mounted. Usually just '/'. */
     get webServiceMountPoint(): string {
         return this._mountPoint;
     }

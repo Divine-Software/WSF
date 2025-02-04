@@ -138,7 +138,7 @@ export class WebRequest implements AuthSchemeRequest {
      * @param name The name of the parameter to fetch.
      * @param def  The default value to return, in case the parameter was not found. If not specified, an exception will
      *             be thrown instead.
-     * @throws     {@link WebError}({@link WebStatus.INTERNAL_SERVER_ERROR}) if the requested header is missing and no
+     * @throws     A {@link WebError}({@link WebStatus.INTERNAL_SERVER_ERROR}) if the requested header is missing and no
      *             default was provided.
      * @returns    The parameter value.
      */
@@ -164,7 +164,7 @@ export class WebRequest implements AuthSchemeRequest {
      *                     will be thrown instead.
      * @param concatenate  Specifies wheter to concatenate multiple headers with the same name into a single
      *                     comma-separated string or not. If `false`, only the first header will be returned.
-     * @throws             {@link WebError}({@link WebStatus.BAD_REQUEST}) if the requested header is missing and no
+     * @throws             A {@link WebError}({@link WebStatus.BAD_REQUEST}) if the requested header is missing and no
      *                     default was provided.
      * @returns            The header value as a string.
      */
@@ -197,10 +197,10 @@ export class WebRequest implements AuthSchemeRequest {
      * @param contentType      What parser to use. Defaults to the `content-type` request header.
      * @param maxContentLength The maximum number of bytes to parse. Defaults to
      * {@link WebServiceConfig.maxContentLength}.
-     * @throws                 {@link WebError}({@link WebStatus.PAYLOAD_TOO_LARGE}) if the request body was larger than
-     *                         allowed.
-     * @throws                 {@link WebError}({@link WebStatus.UNSUPPORTED_MEDIA_TYPE}) if the body could not be
-     * parsed.
+     * @throws                 A {@link WebError}({@link WebStatus.PAYLOAD_TOO_LARGE}) if the request body was larger
+     *                         than allowed.
+     * @throws                 A {@link WebError}({@link WebStatus.UNSUPPORTED_MEDIA_TYPE}) if the body could not be
+     *                         parsed.
      * @returns                The parsed request entity.
      */
     async body<T extends object>(contentType?: ContentType | string, maxContentLength = this._maxContentLength): Promise<T> {

@@ -66,7 +66,9 @@ class WebServerBase {
     }
 
     /**
-     * @param url The URL this WebServer is listening on.
+     * @param url             The URL this WebServer is listening on.
+     * @param serverOptions   Server options.
+     * @param _requestHandler The request handler to delegate incoming requests to.
      */
     constructor(public readonly url: URL, serverOptions: ServerOptions, private readonly _requestHandler: RequestHandler) {
         if (url.protocol !== 'http:' && url.protocol !== 'https:' || url.search || url.hash) {
@@ -224,9 +226,16 @@ class WebServerBase {
  * A web server that listens for incoming HTTP requests on a specific port and delegates requests to one or more
  * {@link WebService} instances.
  */
-export class WebServer extends WebServerBase {
+export class WebServer<Context = any> extends WebServerBase {
     /** The default WebService (the one mounted on '/'). */
     public readonly defaultService: WebService<any>;
+
+    /**
+     * The initial WebService that was passed to the constructor. If no WebService was provided, or if the passed
+     * WebSevice was mounted on '/', this is the same as the default service, but it may be different from
+     * {@link defaultService} if a constructor-provided WebService was not mounted on '/'.
+     */
+    public readonly initialService: WebService<Context>;
 
     private _services: WebService<any>[] = [];
     private _mountPathPattern?: RegExp;
@@ -240,7 +249,7 @@ export class WebServer extends WebServerBase {
      * @param defaultService The default {@link WebService} to mount at the root path. If not provided, a default
      *                       service will be created and mounted (accessible via the {@link defaultService} property).
      */
-    constructor(host: string, port: number, defaultService?: WebService<any>);
+    constructor(host: string, port: number, defaultService?: WebService<Context>);
     /**
      * Creates a new WebServer instance, optionally mounting a {@link WebService} at the path specified by the listen
      * URL.
@@ -253,8 +262,8 @@ export class WebServer extends WebServerBase {
      *                       the path is not `/`, or if no service is specified, a default service will be created and
      *                       mounted at the root path (accessible via the {@link defaultService} property).
      */
-    constructor(url: URL, serverOptions?: ServerOptions , webService?: WebService<any>);
-    constructor(url: string | URL, serverOptions: number | ServerOptions | undefined, webService?: WebService<any>) {
+    constructor(url: URL, serverOptions?: ServerOptions , webService?: WebService<Context>);
+    constructor(url: string | URL, serverOptions: number | ServerOptions | undefined, webService?: WebService<Context>) {
         if (typeof url === 'string' && typeof serverOptions === 'number') {
             url = new URL(`http://${url}:${serverOptions}/`);
             serverOptions = undefined;
@@ -283,10 +292,11 @@ export class WebServer extends WebServerBase {
             return defaultHandler(req, res);
         });
 
-        this.defaultService = defaultService['_mount']('/', this);
+        this.defaultService = this.initialService = defaultService['_mount']('/', this);
 
         if (webService && webService !== defaultService) {
             this.mount(url.pathname, webService)
+            this.initialService = webService;
         }
     }
 
@@ -301,6 +311,7 @@ export class WebServer extends WebServerBase {
      * @param mountPoint The path prefix where the service should be available. Must both begin and end with a forward
      *                   slash.
      * @param service    The {@link WebService} to mount.
+     * @returns          This WebServer.
      */
     mount(mountPoint: string, service: WebService<any>): this {
         this._services.push(service['_mount'](mountPoint, this));
@@ -313,6 +324,7 @@ export class WebServer extends WebServerBase {
      * Unmounts/removes a secondary {@link WebService}.
      *
      * @param serviceOrMountPoint Either a {@link WebService} instance or a mount point.
+     * @returns                   This WebServer.
      */
     unmount(serviceOrMountPoint: WebService<any> | string): this {
         const service = typeof serviceOrMountPoint === 'string'
