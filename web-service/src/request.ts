@@ -63,7 +63,7 @@ export class WebRequest implements AuthSchemeRequest {
     public readonly id: string;
 
     /** A per-request logger. Decorated with request ID if {@link WebServiceConfig.logRequestID} is `true`. */
-    public readonly log: Console;
+    public readonly log: Partial<Console>;
 
     /** Custom parameters from filters etc may be stored here. */
     public readonly params: Params = {}

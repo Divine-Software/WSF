@@ -274,7 +274,7 @@ export class WebArguments {
     }
 
     /** @returns An alias/shortcut for {@link WebRequest.log}, which in turn is based on {@link WebServiceConfig.console}. */
-    get log(): Console {
+    get log(): Partial<Console> {
         return this.request.log;
     }
 

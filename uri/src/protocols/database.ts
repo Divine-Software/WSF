@@ -1036,7 +1036,7 @@ export abstract class DatabaseURI extends URI {
      * @param     _recvCT  Must not be used.
      * @throws    IOError  On I/O errors or if this URI does not have a valid *DB reference* fragment.
      * @throws    DBError  On database/query errors.
-     * @returns            A row or array of rows  (if the database supports it), with DBMetadata.
+     * @returns            A row or array of rows (if the database supports it), with DBMetadata.
      */
     override append<T extends object, D = unknown>(data: D, _sendCT?: ContentType | string, _recvCT?: ContentType | string): Promise<T & DBMetadata> {
         return this._session(async (conn) => {

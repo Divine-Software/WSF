@@ -1,7 +1,5 @@
 /// <reference lib="dom" /> Required for fetch
-import { Console } from 'console';
 import { WebArguments, WebResource, WebServer, WebService } from '../src';
-import { createWriteStream } from 'fs';
 
 describe('The WebServer', () => {
     it('should keep track of initial and default services', () => {
@@ -36,8 +34,8 @@ describe('The WebServer', () => {
         expect.assertions(2);
 
         const srv = new WebServer('localhost', 7357, new WebService(null, {
-                console: new Console(createWriteStream('/dev/null')
-            )}).addResource(class implements WebResource {
+                console: {},
+            }).addResource(class implements WebResource {
                 static path = /hello/;
 
                 async GET(args: WebArguments) {

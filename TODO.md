@@ -10,3 +10,4 @@
 * Accept handling
 * ETag handling
 * Expect handling
+* writeContinue, writeProcessing, writeEarlyHints

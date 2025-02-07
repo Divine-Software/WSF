@@ -5,7 +5,7 @@ const PATCHED_CONSOLE_METHODS = [
     /* SysConsole */ 'alert', 'crit', 'emerg', 'notice',
 ].reduce((map, fn) => (map[fn] = true, map), {} as { [fn: string]: true | undefined });
 
-export function decorateConsole(console: Console, tag: string): Console {
+export function decorateConsole(console: Partial<Console>, tag: string): Partial<Console> {
     return new Proxy(console, {
         get: (target, p: string, receiver) => {
             const value = Reflect.get(target, p, receiver);
