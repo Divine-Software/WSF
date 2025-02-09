@@ -61,7 +61,7 @@ const FeatureList: FeatureItem[] = [
 const ModuleList: FeatureItem[] = [
   {
     title: '@divine/headers',
-    href: 'docs/api/modules/divine_headers',
+    href: 'docs/api/@divine/headers/',
     description: (
       <>
         Parse and generate common HTTP headers, such as authorization and content headers. This module also works in
@@ -71,7 +71,7 @@ const ModuleList: FeatureItem[] = [
   },
   {
     title: '@divine/uri',
-    href: 'docs/api/modules/divine_uri',
+    href: 'docs/api/@divine/uri/',
     description: (
       <>
         Read, write, modify, query or watch anything that can be referenced by an URL or URI, including local files,
@@ -81,7 +81,7 @@ const ModuleList: FeatureItem[] = [
   },
   {
     title: '@divine/web-service',
-    href: 'docs/api/modules/divine_web_service',
+    href: 'docs/api/@divine/web-service/',
     description: (
       <>
         A framework for building REST and RPC Web Services, with support for event streams.
@@ -90,7 +90,7 @@ const ModuleList: FeatureItem[] = [
   },
   {
     title: '@divine/x4e',
-    href: 'docs/api/modules/divine_x4e',
+    href: 'docs/api/@divine/x4e/',
     description: (
       <>
         A powerful, E4X-like approach to HTML and XML documents, using JSX/TSX or tagged template literals.

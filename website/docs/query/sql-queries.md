@@ -61,16 +61,16 @@ for multiple queries to be executed in the same session, and in that case, the o
 result set (all which can be accessed via [FIELDS]).
 
 [database connection]: ../connect/databases.md
-[DB references]:       ../api/classes/divine_uri.DatabaseURI.md#crud-row-operations-with-db-references
-[selector]:            ../api/classes/divine_uri.URI.md#addselector
-[DBParamsSelector]:    ../api/interfaces/divine_uri.DBParamsSelector.md
-[DBResult]:            ../api/classes/divine_uri.DBResult.md
-[DBResult.columns]:    ../api/classes/divine_uri.DBResult.md#columns
-[DBResult.rowCount]:   ../api/classes/divine_uri.DBResult.md#rowcount
-[DBResult.rowKey]:     ../api/classes/divine_uri.DBResult.md#rowkey
-[FIELDS]:              ../api/modules/divine_uri.md#fields
-[WithFields]:          ../api/interfaces/divine_uri.WithFields.md
-[DBMetadata]:          ../api/interfaces/divine_uri.DBMetadata.md
-[q]:                   ../api/namespaces/divine_uri.q.md
-[close]:               ../api/classes/divine_uri.DatabaseURI.md#close
-[query]:               ../api/classes/divine_uri.DatabaseURI.md#query
+[DB references]:       ../api/@divine/uri/classes/DatabaseURI.md#crud-row-operations-with-db-references
+[selector]:            ../api/@divine/uri/classes/URI.md#addselector
+[DBParamsSelector]:    ../api/@divine/uri/interfaces/DBParamsSelector.md
+[DBResult]:            ../api/@divine/uri/classes/DBResult.md
+[DBResult.columns]:    ../api/@divine/uri/classes/DBResult.md#columns
+[DBResult.rowCount]:   ../api/@divine/uri/classes/DBResult.md#rowcount
+[DBResult.rowKey]:     ../api/@divine/uri/classes/DBResult.md#rowkey
+[FIELDS]:              ../api/@divine/uri/index.md#fields
+[WithFields]:          ../api/@divine/uri/interfaces/WithFields.md
+[DBMetadata]:          ../api/@divine/uri/interfaces/DBMetadata.md
+[q]:                   ../api/@divine/uri/namespaces/q/index.md
+[close]:               ../api/@divine/uri/classes/DatabaseURI.md#close
+[query]:               ../api/@divine/uri/classes/DatabaseURI.md#query

@@ -56,6 +56,6 @@ information.
 This, and other transaction parameters, may be configured on a per-transaction basis by providing [query] with a
 [DBTransactionParams] object before the callback function.
 
-[query]:               ../api/classes/divine_uri.DatabaseURI.md#query
-[Deadlock handling]:   ../api/classes/divine_uri.DatabaseURI.md#deadlock-handling
-[DBTransactionParams]: ../api/interfaces/divine_uri.DBTransactionParams.md
+[query]:               ../api/@divine/uri/classes/DatabaseURI.md#query
+[Deadlock handling]:   ../api/@divine/uri/classes/DatabaseURI.md#deadlock-handling
+[DBTransactionParams]: ../api/@divine/uri/interfaces/DBTransactionParams.md

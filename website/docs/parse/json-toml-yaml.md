@@ -28,8 +28,8 @@ const tomlString = (await Parser.serializeToBuffer(json, 'application/toml')).to
 [JSON]:       https://json.org/
 [TOML]:       https://toml.io/
 [YAML]:       https://eemeli.org/yaml
-[JSONParser]: ../api/classes/divine_uri.JSONParser.md
-[TOMLParser]: ../api/classes/divine_uri.TOMLParser.md
-[YAMLParser]: ../api/classes/divine_uri.YAMLParser.md
-[FIELDS]:     ../api/modules/divine_uri.md#fields
-[WithFields]: ../api/interfaces/divine_uri.WithFields.md
+[JSONParser]: ../api/@divine/uri/classes/JSONParser.md
+[TOMLParser]: ../api/@divine/uri/classes/TOMLParser.md
+[YAMLParser]: ../api/@divine/uri/classes/YAMLParser.md
+[FIELDS]:     ../api/@divine/uri/index.md#fields
+[WithFields]: ../api/@divine/uri/interfaces/WithFields.md

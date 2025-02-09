@@ -113,18 +113,18 @@ for await (const ev of dbURI.watch`listen order_channel`) {
       just on primary key conflicts. This is very dangerous and a potential security issue, so we do not support this.
 
 [ORM]:             https://en.wikipedia.org/wiki/Object%E2%80%93relational_mapping
-[URI]:             ../api/classes/divine_uri.URI.md
+[URI]:             ../api/@divine/uri/classes/URI.md
 [queries]:         ../query/query.md
 
-[Metadata]:        ../api/interfaces/divine_uri.Metadata.md
-[DBMetadata]:      ../api/interfaces/divine_uri.DBMetadata.md
-[DBResult.rowKey]: ../api/classes/divine_uri.DBResult.md#rowkey
-[DatabaseURI]:     ../api/classes/divine_uri.DatabaseURI.md
-[DB references]:   ../api/classes/divine_uri.DatabaseURI.md#crud-row-operations-with-db-references
-[load]:            ../api/classes/divine_uri.DatabaseURI.md#load
-[save]:            ../api/classes/divine_uri.DatabaseURI.md#save
-[append]:          ../api/classes/divine_uri.DatabaseURI.md#append
-[modify]:          ../api/classes/divine_uri.DatabaseURI.md#modify
-[remove]:          ../api/classes/divine_uri.DatabaseURI.md#remove
-[query]:           ../api/classes/divine_uri.DatabaseURI.md#query
-[watch]:           ../api/classes/divine_uri.DatabaseURI.md#watch
+[Metadata]:        ../api/@divine/uri/interfaces/Metadata.md
+[DBMetadata]:      ../api/@divine/uri/interfaces/DBMetadata.md
+[DBResult.rowKey]: ../api/@divine/uri/classes/DBResult.md#rowkey
+[DatabaseURI]:     ../api/@divine/uri/classes/DatabaseURI.md
+[DB references]:   ../api/@divine/uri/classes/DatabaseURI.md#crud-row-operations-with-db-references
+[load]:            ../api/@divine/uri/classes/DatabaseURI.md#load
+[save]:            ../api/@divine/uri/classes/DatabaseURI.md#save
+[append]:          ../api/@divine/uri/classes/DatabaseURI.md#append
+[modify]:          ../api/@divine/uri/classes/DatabaseURI.md#modify
+[remove]:          ../api/@divine/uri/classes/DatabaseURI.md#remove
+[query]:           ../api/@divine/uri/classes/DatabaseURI.md#query
+[watch]:           ../api/@divine/uri/classes/DatabaseURI.md#watch

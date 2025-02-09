@@ -38,12 +38,12 @@ above. In the following sections, we will instead focus on a few use cases and r
 [^1]: [E4X] might be dead, but the [@divine/x4e] module is worth checking out if you need to work with HTML or XML. It
       it heavily inspired by E4X, but redesigned for modern TypeScript/JavaScript and [TSX]/[JSX].
 
-[DatabaseURI]:         api/classes/divine_uri.DatabaseURI.md
-[URI]:                 api/classes/divine_uri.URI.md
+[DatabaseURI]:         api/@divine/uri/classes/DatabaseURI.md
+[URI]:                 api/@divine/uri/classes/URI.md
 
-[@divine/uri]:         api/modules/divine_uri.md
-[@divine/web-service]: api/modules/divine_web_service.md
-[@divine/x4e]:         api/modules/divine_x4e.md
+[@divine/uri]:         api/@divine/uri/index.md
+[@divine/web-service]: api/@divine/web-service/index.md
+[@divine/x4e]:         api/@divine/x4e/index.md
 
 [E4X]:                 https://en.wikipedia.org/wiki/ECMAScript_for_XML
 [JSX]:                 https://reactjs.org/docs/introducing-jsx.html

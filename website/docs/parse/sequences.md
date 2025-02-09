@@ -40,7 +40,7 @@ for await (const chunk of latin1 /* or latin1.load<AsyncIterator<Buffer>>(Conten
 [^3]: Notice how the [URI] class is also an `AsyncIterable<Buffer>`, which can be iterated directly.
 
 [Buffer]:            https://nodejs.org/api/buffer.html
-[BufferParser]:      ../api/classes/divine_uri.BufferParser.md
-[PassThroughParser]: ../api/classes/divine_uri.PassThroughParser.md
-[StringParser]:      ../api/classes/divine_uri.StringParser.md
-[URI]:               ../api/classes/divine_uri.URI.md
+[BufferParser]:      ../api/@divine/uri/classes/BufferParser.md
+[PassThroughParser]: ../api/@divine/uri/classes/PassThroughParser.md
+[StringParser]:      ../api/@divine/uri/classes/StringParser.md
+[URI]:               ../api/@divine/uri/classes/URI.md

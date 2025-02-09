@@ -27,15 +27,15 @@ parameters on the request via [WebRequest.setParam], or fetch a reference to the
 Filters can generate responses in the [same way](./resources.md#generating-responses) as resources do, but usually just
 pass along the return value from `next`.
 
-[WebArguments]:         ../api/classes/divine_web_service.WebArguments.md
-[WebFilter]:            ../api/interfaces/divine_web_service.WebFilter.md
-[WebFilterCtor]:        ../api/interfaces/divine_web_service.WebFilterCtor.md#constructor
-[WebResource]:          ../api/interfaces/divine_web_service.WebResource.md
-[WebResponse]:          ../api/classes/divine_web_service.WebResponse.md
-[WebService]:           ../api/classes/divine_web_service.WebService.md
+[WebArguments]:         ../api/@divine/web-service/classes/WebArguments.md
+[WebFilter]:            ../api/@divine/web-service/interfaces/WebFilter.md
+[WebFilterCtor]:        ../api/@divine/web-service/interfaces/WebFilterCtor.md#constructor
+[WebResource]:          ../api/@divine/web-service/interfaces/WebResource.md
+[WebResponse]:          ../api/@divine/web-service/classes/WebResponse.md
+[WebService]:           ../api/@divine/web-service/classes/WebService.md
 
-[WebService Context]:   ../api/classes/divine_web_service.WebService.md#context
-[WebRequest.setParam]:  ../api/classes/divine_web_service.WebRequest.md#setparam
+[WebService Context]:   ../api/@divine/web-service/classes/WebService.md#context
+[WebRequest.setParam]:  ../api/@divine/web-service/classes/WebRequest.md#setparam
 
-[filter]:               ../api/interfaces/divine_web_service.WebFilter.md#filter
-[path]:                 ../api/interfaces/divine_web_service.WebFilterCtor.md#path
+[filter]:               ../api/@divine/web-service/interfaces/WebFilter.md#filter
+[path]:                 ../api/@divine/web-service/interfaces/WebFilterCtor.md#path

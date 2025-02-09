@@ -77,16 +77,16 @@ const meta = await apiBase.$`meta`.load<MetaResponse>();
 
 [Fetch]:     https://fetch.spec.whatwg.org
 
-[URI]:       ../api/classes/divine_uri.URI.md
-[HTTPURI]:   ../api/classes/divine_uri.HTTPURI.md
-[IOError]:   ../api/classes/divine_uri.IOError.md
+[URI]:       ../api/@divine/uri/classes/URI.md
+[HTTPURI]:   ../api/@divine/uri/classes/HTTPURI.md
+[IOError]:   ../api/@divine/uri/classes/IOError.md
 
-[info]:      ../api/classes/divine_uri.HTTPURI.md#info
-[load]:      ../api/classes/divine_uri.HTTPURI.md#load
-[save]:      ../api/classes/divine_uri.HTTPURI.md#save
-[append]:    ../api/classes/divine_uri.HTTPURI.md#append
-[modify]:    ../api/classes/divine_uri.HTTPURI.md#modify
-[remove]:    ../api/classes/divine_uri.HTTPURI.md#remove
-[query]:     ../api/classes/divine_uri.HTTPURI.md#query
+[info]:      ../api/@divine/uri/classes/HTTPURI.md#info
+[load]:      ../api/@divine/uri/classes/HTTPURI.md#load
+[save]:      ../api/@divine/uri/classes/HTTPURI.md#save
+[append]:    ../api/@divine/uri/classes/HTTPURI.md#append
+[modify]:    ../api/@divine/uri/classes/HTTPURI.md#modify
+[remove]:    ../api/@divine/uri/classes/HTTPURI.md#remove
+[query]:     ../api/@divine/uri/classes/HTTPURI.md#query
 
-[selectors]: ../api/classes/divine_uri.URI.md#addselector
+[selectors]: ../api/@divine/uri/classes/URI.md#addselector

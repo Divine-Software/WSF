@@ -98,35 +98,35 @@ In the future, the WSF will automatically negotiate the media type based on the 
       use [default], you need to process `OPTIONS` manually since there is no way for the WSF to know what methods you
       handle.
 
-[EventStreamResponse]:  ../api/classes/divine_web_service.EventStreamResponse.md
-[WebArguments]:         ../api/classes/divine_web_service.WebArguments.md
-[WebError]:             ../api/classes/divine_web_service.WebError.md
-[WebFilter]:            ../api/interfaces/divine_web_service.WebFilter.md
-[WebResource]:          ../api/interfaces/divine_web_service.WebResource.md
-[WebResourceCtor]:      ../api/interfaces/divine_web_service.WebResourceCtor.md#constructor
-[WebResponse]:          ../api/classes/divine_web_service.WebResponse.md
-[WebService]:           ../api/classes/divine_web_service.WebService.md
+[EventStreamResponse]:  ../api/@divine/web-service/classes/EventStreamResponse.md
+[WebArguments]:         ../api/@divine/web-service/classes/WebArguments.md
+[WebError]:             ../api/@divine/web-service/classes/WebError.md
+[WebFilter]:            ../api/@divine/web-service/interfaces/WebFilter.md
+[WebResource]:          ../api/@divine/web-service/interfaces/WebResource.md
+[WebResourceCtor]:      ../api/@divine/web-service/interfaces/WebResourceCtor.md#constructor
+[WebResponse]:          ../api/@divine/web-service/classes/WebResponse.md
+[WebService]:           ../api/@divine/web-service/classes/WebService.md
 
-[addResource]:          ../api/classes/divine_web_service.WebService.md#addresource
-[addResources]:         ../api/classes/divine_web_service.WebService.md#addresources
-[setErrorHandler]:      ../api/classes/divine_web_service.WebService.md#seterrorhandler
-[WebService Context]:   ../api/classes/divine_web_service.WebService.md#context
-[WebRequest.setParam]:  ../api/classes/divine_web_service.WebRequest.md#setparam
-[XML]:                  ../api/modules/divine_x4e.md#xml
-[html]:                 ../api/modules/divine_x4e.md#html
+[addResource]:          ../api/@divine/web-service/classes/WebService.md#addresource
+[addResources]:         ../api/@divine/web-service/classes/WebService.md#addresources
+[setErrorHandler]:      ../api/@divine/web-service/classes/WebService.md#seterrorhandler
+[WebService Context]:   ../api/@divine/web-service/classes/WebService.md#context
+[WebRequest.setParam]:  ../api/@divine/web-service/classes/WebRequest.md#setparam
+[XML]:                  ../api/@divine/x4e/index.md#xml
+[html]:                 ../api/@divine/x4e/index.md#html
 
 [regular expression]:   https://developer.mozilla.org/en-US/docs/Web/JavaScript/Guide/Regular_Expressions
 [named capture groups]: https://developer.mozilla.org/en-US/docs/Web/JavaScript/Guide/Regular_Expressions/Groups_and_Ranges#using_named_groups
 
-[path]:                 ../api/interfaces/divine_web_service.WebResourceCtor.md#path
-[init]:                 ../api/interfaces/divine_web_service.WebResource.md#init
-[HEAD]:                 ../api/interfaces/divine_web_service.WebResource.md#head
-[GET]:                  ../api/interfaces/divine_web_service.WebResource.md#get
-[PUT]:                  ../api/interfaces/divine_web_service.WebResource.md#put
-[POST]:                 ../api/interfaces/divine_web_service.WebResource.md#post
-[PATCH]:                ../api/interfaces/divine_web_service.WebResource.md#patch
-[DELETE]:               ../api/interfaces/divine_web_service.WebResource.md#delete
-[OPTIONS]:              ../api/interfaces/divine_web_service.WebResource.md#options
-[default]:              ../api/interfaces/divine_web_service.WebResource.md#default
-[catch]:                ../api/interfaces/divine_web_service.WebResource.md#catch
-[close]:                ../api/interfaces/divine_web_service.WebResource.md#close
+[path]:                 ../api/@divine/web-service/interfaces/WebResourceCtor.md#path
+[init]:                 ../api/@divine/web-service/interfaces/WebResource.md#init
+[HEAD]:                 ../api/@divine/web-service/interfaces/WebResource.md#head
+[GET]:                  ../api/@divine/web-service/interfaces/WebResource.md#get
+[PUT]:                  ../api/@divine/web-service/interfaces/WebResource.md#put
+[POST]:                 ../api/@divine/web-service/interfaces/WebResource.md#post
+[PATCH]:                ../api/@divine/web-service/interfaces/WebResource.md#patch
+[DELETE]:               ../api/@divine/web-service/interfaces/WebResource.md#delete
+[OPTIONS]:              ../api/@divine/web-service/interfaces/WebResource.md#options
+[default]:              ../api/@divine/web-service/interfaces/WebResource.md#default
+[catch]:                ../api/@divine/web-service/interfaces/WebResource.md#catch
+[close]:                ../api/@divine/web-service/interfaces/WebResource.md#close

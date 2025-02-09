@@ -11,5 +11,5 @@ Format | Main Media Type   | Parser
 HTML   | `text/html`       | [HTMLParser]
 XML    | `application/xml` | [XMLParser]
 
-[HTMLParser]: ../api/classes/divine_uri_x4e_parser.HTMLParser.md
-[XMLParser]:  ../api/classes/divine_uri_x4e_parser.XMLParser.md
+[HTMLParser]: ../api/@divine/uri-x4e-parser/classes/HTMLParser.md
+[XMLParser]:  ../api/@divine/uri-x4e-parser/classes/XMLParser.md

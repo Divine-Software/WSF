@@ -14,5 +14,5 @@ interfaces and runtime objects, which is really neat.
 
 TBD. In the meantime, see [createRCPClient] and [createRCPService].
 
-[createRCPClient]:  ../api/modules/divine_web_service.md#createrpcclient
-[createRCPService]: ../api/modules/divine_web_service.md#createrpcservice
+[createRCPClient]:  ../api/@divine/web-service/index.md#createrpcclient
+[createRCPService]: ../api/@divine/web-service/index.md#createrpcservice

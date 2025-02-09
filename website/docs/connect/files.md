@@ -63,13 +63,13 @@ for await (const event of new URI('.').watch()) {
 
 Note that in order to watch files, the optional peer dependency [chokidar] must be available.
 
-[guessContentType]: ../api/modules/divine_uri.md#guesscontenttype
-[encodeFilePath]:   ../api/modules/divine_uri.md#encodefilepath
+[guessContentType]: ../api/@divine/uri/index.md#guesscontenttype
+[encodeFilePath]:   ../api/@divine/uri/index.md#encodefilepath
 
-[FileURI.create]:   ../api/classes/divine_uri.FileURI.md#create
-[list]:             ../api/classes/divine_uri.FileURI.md#list
-[load]:             ../api/classes/divine_uri.FileURI.md#load
-[save]:             ../api/classes/divine_uri.FileURI.md#save
-[watch]:            ../api/classes/divine_uri.FileURI.md#watch
+[FileURI.create]:   ../api/@divine/uri/classes/FileURI.md#create
+[list]:             ../api/@divine/uri/classes/FileURI.md#list
+[load]:             ../api/@divine/uri/classes/FileURI.md#load
+[save]:             ../api/@divine/uri/classes/FileURI.md#save
+[watch]:            ../api/@divine/uri/classes/FileURI.md#watch
 
 [chokidar]:         https://www.npmjs.com/package/chokidar

@@ -38,7 +38,7 @@ class HelloResource implements WebResource {
 The WSF is more tailored towards building API services than serving browsers with HTML, but as you can see, it can
 output markup just fine too — with all parameters properly escaped, naturally.
 
-[WebServer]:   ../api/classes/divine_web_service.WebServer.md
-[WebService]:  ../api/classes/divine_web_service.WebService.md
-[WebResource]: ../api/interfaces/divine_web_service.WebResource.md
-[WebFilter]:   ../api/interfaces/divine_web_service.WebFilter.md
+[WebServer]:   ../api/@divine/web-service/classes/WebServer.md
+[WebService]:  ../api/@divine/web-service/classes/WebService.md
+[WebResource]: ../api/@divine/web-service/interfaces/WebResource.md
+[WebFilter]:   ../api/@divine/web-service/interfaces/WebFilter.md

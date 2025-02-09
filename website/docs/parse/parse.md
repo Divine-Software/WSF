@@ -19,10 +19,10 @@ available encoders. Encoders are used to handle headers such as `content-encodin
 
 In the following sections, we'll discuss some of the available parsers and encoders.
 
-[URI]:               ../api/classes/divine_uri.URI.md
-[Encoder]:           ../api/classes/divine_uri.Encoder.md
-[Encoder.encode]:    ../api/classes/divine_uri.Encoder.md#encode
-[Encoder.decode]:    ../api/classes/divine_uri.Encoder.md#decode
-[Parser]:            ../api/classes/divine_uri.Parser.md
-[Parser.parse]:      ../api/classes/divine_uri.Parser.md#parse
-[Parser.serialize]:  ../api/classes/divine_uri.Parser.md#serialize
+[URI]:               ../api/@divine/uri/classes/URI.md
+[Encoder]:           ../api/@divine/uri/classes/Encoder.md
+[Encoder.encode]:    ../api/@divine/uri/classes/Encoder.md#encode
+[Encoder.decode]:    ../api/@divine/uri/classes/Encoder.md#decode
+[Parser]:            ../api/@divine/uri/classes/Parser.md
+[Parser.parse]:      ../api/@divine/uri/classes/Parser.md#parse
+[Parser.serialize]:  ../api/@divine/uri/classes/Parser.md#serialize

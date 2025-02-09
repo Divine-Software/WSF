@@ -72,12 +72,12 @@ new WebServer('localhost', 3333, new WebService(null).addResource(class implemen
 [^2]: This parser handles MIME multi-part messages as well as `multipart/form-data`, used by web forms.
 
 [enctype]:           https://developer.mozilla.org/en-US/docs/Web/API/HTMLFormElement/enctype
-[StringParser]:      ../api/classes/divine_uri.StringParser.md
-[FormParser]:        ../api/classes/divine_uri.FormParser.md
-[MessageParser]:     ../api/classes/divine_uri.MessageParser.md
-[MultiPartParser]:   ../api/classes/divine_uri.MultiPartParser.md
-[load]:              ../api/classes/divine_uri.URI.md#load
-[remove]:            ../api/classes/divine_uri.URI.md#remove
-[FIELDS]:            ../api/modules/divine_uri.md#fields
-[WithFields]:        ../api/interfaces/divine_uri.WithFields.md
-[WebArguments.body]: ../api/classes/divine_web_service.WebArguments.md#body
+[StringParser]:      ../api/@divine/uri/classes/StringParser.md
+[FormParser]:        ../api/@divine/uri/classes/FormParser.md
+[MessageParser]:     ../api/@divine/uri/classes/MessageParser.md
+[MultiPartParser]:   ../api/@divine/uri/classes/MultiPartParser.md
+[load]:              ../api/@divine/uri/classes/URI.md#load
+[remove]:            ../api/@divine/uri/classes/URI.md#remove
+[FIELDS]:            ../api/@divine/uri/index.md#fields
+[WithFields]:        ../api/@divine/uri/interfaces/WithFields.md
+[WebArguments.body]: ../api/@divine/web-service/classes/WebArguments.md#body

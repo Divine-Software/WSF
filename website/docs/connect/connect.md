@@ -25,15 +25,15 @@ The following operations are defined for [URI]s:
 [^1]:     [Uniform Resource Locator](https://en.wikipedia.org/wiki/URL)
 [^2]:     [Uniform Resource Identifier](https://en.wikipedia.org/wiki/Uniform_Resource_Identifier)
 
-[URI]:    ../api/classes/divine_uri.URI.md
+[URI]:    ../api/@divine/uri/classes/URI.md
 [URL]:    https://nodejs.org/api/url.html
 
-[info]:   ../api/classes/divine_uri.URI.md#info
-[list]:   ../api/classes/divine_uri.URI.md#list
-[load]:   ../api/classes/divine_uri.URI.md#load
-[save]:   ../api/classes/divine_uri.URI.md#save
-[append]: ../api/classes/divine_uri.URI.md#append
-[modify]: ../api/classes/divine_uri.URI.md#modify
-[remove]: ../api/classes/divine_uri.URI.md#remove
-[query]:  ../api/classes/divine_uri.URI.md#query
-[watch]:  ../api/classes/divine_uri.URI.md#watch
+[info]:   ../api/@divine/uri/classes/URI.md#info
+[list]:   ../api/@divine/uri/classes/URI.md#list
+[load]:   ../api/@divine/uri/classes/URI.md#load
+[save]:   ../api/@divine/uri/classes/URI.md#save
+[append]: ../api/@divine/uri/classes/URI.md#append
+[modify]: ../api/@divine/uri/classes/URI.md#modify
+[remove]: ../api/@divine/uri/classes/URI.md#remove
+[query]:  ../api/@divine/uri/classes/URI.md#query
+[watch]:  ../api/@divine/uri/classes/URI.md#watch
