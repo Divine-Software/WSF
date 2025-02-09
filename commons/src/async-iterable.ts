@@ -1,7 +1,7 @@
 import { Queue } from '@divine/synchronization';
 import { sleep, throwError } from './utilities';
 
-interface ExtAsyncIterableIterator<T, TReturn, TNext> extends AsyncIterator<T, TReturn, TNext> {
+export interface ExtAsyncIterableIterator<T, TReturn, TNext> extends AsyncIterator<T, TReturn, TNext> {
     [Symbol.asyncIterator](): AsyncIterator<T, TReturn, TNext>;
 }
 

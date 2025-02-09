@@ -73,161 +73,167 @@ export function q(query: TemplateStringsArray | string, ...params: unknown[]): D
 }
 
 /**
- * Constructs a {@link DBQuery} by enclosing the provied string in quotes.
- *
- * This function is used to escape SQL identifiers, like table or column names. Quotes inside the string will be encoded
- * as `""`. Example:
- *
- * ```ts
- * const table = q.quote(debit ? 'debit-table' : 'credit-table');
- * const query = q`select * from ${table} where amount > 10`;
- * ```
- *
- * @param ident  The name of a table to column to escape.
- * @returns      A (partial) DBQuery with the identified escaped.
+ * Utility functions for constructing {@link DBQuery} instances, augumenting the functionality of {@link q}.
  */
-q.quote = function quote(ident: string): DBQuery {
-    return q.raw(`"${ident.replace(/"/g, '""')}"`);
-}
-
-/**
- * Constructs a {@link DBQuery} by taking the provided raw string as-is.
- *
- * This is useful if the database does not accept a parameter at this place in the query. However, you *must be very
- * careful* not to introduce query injection vulnerabilities when using this function! Example:
- *
- * ```ts
- * const offset = q.raw(Number(100 * page));
- * const query  = q`select * from posts limit 100 offset ${offset}`;
- * ```
- *
- * @param raw  The raw query to create. Must be trused and not be user-provided, or (very) bad things will happen
- *             eventually.
- * @returns    A (partial) DBQuery with the unparsed query.
- */
-q.raw = function raw(raw: string | number | bigint): DBQuery {
-    return new DBQuery([String(raw)], []);
-}
-
-/**
- * Constructs a {@link DBQuery} by concatenating a list of subqueries and separating then with the provided delimiter.
- *
- * If the list of subqueries contains `undefined`, those elements will be filtered out. Example usage:
- *
- * ```ts
- * const users = [ 1, 3, 7 ];
- * const query = q`select * from users where ${q.join(' or ', users.map((u) => q`id = ${u}`))}`;
- *
- * assert(query.toString() === 'select * from users where id = «1» or id = «3» or id = «7»');
- * ```
- *
- * @param delimiter  The raw sequence to separate the queries with. Must be trused and not be user-provided, or (very)
- *                   bad things will happen eventually.
- * @param queries    The subqueries to concatenate. May contain `undefined` elements, which will simply be skipped.
- * @returns          A new DBQuery with all subqueries concatenated.
- */
-q.join = function join(delimiter: string, queries: (DBQuery | undefined)[]): DBQuery {
-    queries = queries.filter((q) => q !== undefined);
-
-    return new DBQuery([...queries.map((_, i) => i === 0 ? '' : delimiter), ''], queries);
-}
-
-/**
- * Constructs a {@link DBQuery} by creating a list of the provided parameters: `(elem1, elem2, ...)`.
- *
- * This utility function is suitable for SQL `IN` clauses. If the parameter list contains `undefined`, those elements
- * will be filtered out. Example:
- *
- * ```ts
- * const users = [ 1, 3, undefined, 7 ];
- * const query = q`select * from users where id in ${q.list(users)}`;
- *
- * assert(query.toString() === 'select * from users where id in («1»,«3»,«7»)');
- * ```
- *
- * @param list  The parameters to include in the list. May contain `undefined` elements, which will simply be skipped.
- * @returns     A DBQuery suitable to be used in an SQL `IN` clause.
- */
-q.list = function list(list: (BasicTypes | undefined)[]): DBQuery {
-    list = list.filter((d) => d !== undefined);
-
-    if (list.length === 0) {
-        return new DBQuery(['()'], []);
-    }
-    else {
-        return new DBQuery(['(', ...Array(list.length - 1).fill(','), ')'], list);
-    }
-}
-
-/**
- * Constructs a {@link DBQuery} to be used as part of SQL `INSERT` statements.
- *
- * Given an object (or list of objects) containing the column/value pairs, constructs either the *columns* list or the
- * *values* list (or lists), or both, depending on the `parts` argument. Examples:
- *
- * ```ts
- * // Insert columns name, language, country
- * const entry = { name: 'Martin', language: 'sv', country: 'se' };
- * const query = q`insert into locale ${q.values(entry)}`;
- *
- * assert(query.toString() === 'insert into locale ("name","language","country") values («Martin»,«sv»,«se»)');
- * ```
- *
- * ```ts
- * // Insert multiple rows, but only columns name and country
- * const multi = [ { name: 'Martin', language: 'sv', country: 'se' }, { name: 'John', language: 'en', country: 'us' } ];
- * const query = q`insert into users ${q.values(multi, ['name', 'country'])}`;
- *
- * assert(query.toString() === 'insert into users ("name","country") values («Martin»,«se»),(«John»,«us»)');
- * ```
- *
- * If any of the object's values are `undefined`, the SQL `DEFAULT` keyword will be used in its place.
- *
- * @param data    The object or objects to insert. The key represents the column name and the value is the column value.
- * @param columns Specifies what keys (columns) to fetch from the data objects. Defaults to all keys from all objects.
- * @param parts   What part of the statement to generate. Use `columns` to only generate a list of column names,
- *                `values` for a list of value tuples or `expr`, the default, for the complete subexpression.
- * @param quote   The quote function to use when escaping the column names. Defaults to {@link q.quote}.
- * @returns       A DBQuery suitable to be used in an SQL `INSERT` statement.
- */
-q.values = function values(data: Params | Params[], columns?: string[], parts: 'columns' | 'values' | 'expr' = 'expr', quote = q.quote): DBQuery {
-    const params = [ data ].flat();
-    const values = (param: any): DBQuery => {
-        return q.join(',', columns!.map((column) => q`${vDefault(param[column])}`))
+// eslint-disable-next-line @typescript-eslint/no-namespace
+export namespace q {
+    /**
+     * Constructs a {@link DBQuery} by enclosing the provied string in quotes.
+     *
+     * This function is used to escape SQL identifiers, like table or column names. Quotes inside the string will be encoded
+     * as `""`. Example:
+     *
+     * ```ts
+     * const table = q.quote(debit ? 'debit-table' : 'credit-table');
+     * const query = q`select * from ${table} where amount > 10`;
+     * ```
+     *
+     * @param ident  The name of a table to column to escape.
+     * @returns      A (partial) DBQuery with the identified escaped.
+     */
+    export function quote(ident: string): DBQuery {
+        return q.raw(`"${ident.replace(/"/g, '""')}"`);
     }
 
-    columns ??= [...new Set(params.map(Object.keys).flat())];
+    /**
+     * Constructs a {@link DBQuery} by taking the provided raw string as-is.
+     *
+     * This is useful if the database does not accept a parameter at this place in the query. However, you *must be very
+     * careful* not to introduce query injection vulnerabilities when using this function! Example:
+     *
+     * ```ts
+     * const offset = q.raw(Number(100 * page));
+     * const query  = q`select * from posts limit 100 offset ${offset}`;
+     * ```
+     *
+     * @param raw  The raw query to create. Must be trused and not be user-provided, or (very) bad things will happen
+     *             eventually.
+     * @returns    A (partial) DBQuery with the unparsed query.
+     */
+    export function raw(raw: string | number | bigint): DBQuery {
+        return new DBQuery([String(raw)], []);
+    }
 
-    return q`${ parts === 'expr' || parts === 'columns' ? q`(${ q.join(',', columns.map((column) => quote(column))) })` : q``
-            }${ parts === 'expr'                        ? q` values ` : q``
-            }${ parts === 'expr' || parts === 'values'  ? q.join(',', params.map((param) => q`(${ values(param) })`)) : q`` }`;
-}
+    /**
+     * Constructs a {@link DBQuery} by concatenating a list of subqueries and separating then with the provided delimiter.
+     *
+     * If the list of subqueries contains `undefined`, those elements will be filtered out. Example usage:
+     *
+     * ```ts
+     * const users = [ 1, 3, 7 ];
+     * const query = q`select * from users where ${q.join(' or ', users.map((u) => q`id = ${u}`))}`;
+     *
+     * assert(query.toString() === 'select * from users where id = «1» or id = «3» or id = «7»');
+     * ```
+     *
+     * @param delimiter  The raw sequence to separate the queries with. Must be trused and not be user-provided, or (very)
+     *                   bad things will happen eventually.
+     * @param queries    The subqueries to concatenate. May contain `undefined` elements, which will simply be skipped.
+     * @returns          A new DBQuery with all subqueries concatenated.
+     */
+    export function join(delimiter: string, queries: (DBQuery | undefined)[]): DBQuery {
+        queries = queries.filter((q) => q !== undefined);
 
-/**
- * Constructs a {@link DBQuery} to be used as part of SQL `UPDATE` statements.
- *
- * Given an object containing the column/value pairs, constructs an assignment expression that can be used as part of an
- * SQL `UPDATE` statement. Example:
- *
- * ```ts
- * const userID = 1337;
- * const entry = { name: 'Martin', language: 'sv', country: 'se' };
- * const query = q`update locale set ${q.assign(entry)} where id = ${userID}`;
- *
- * assert(query.toString() === 'update locale set "name" = «Martin»,"language" = «sv»,"country" = «se» where id = «1337»');
- * ```
- *
- * If any of the object's values are `undefined`, the SQL `DEFAULT` keyword will be used in its place.
- *
- * @param data    The object to assign. The key represents the column name and the value is the column value.
- * @param columns Specifies what keys (columns) to fetch from the data object. Defaults to all keys from the object.
- * @param quote   The quote function to use when escaping the column names. Defaults to {@link q.quote}.
- * @returns       A DBQuery suitable to be used in an SQL `UPDATE` statement.
- */
-q.assign = function assign(data: Params, columns?: string[], quote = q.quote): DBQuery {
-    columns ??= Object.keys(data);
+        return new DBQuery([...queries.map((_, i) => i === 0 ? '' : delimiter), ''], queries);
+    }
 
-    return q.join(',', columns.map((column) => q`${quote(column)} = ${vDefault(data[column])}`));
+    /**
+     * Constructs a {@link DBQuery} by creating a list of the provided parameters: `(elem1, elem2, ...)`.
+     *
+     * This utility function is suitable for SQL `IN` clauses. If the parameter list contains `undefined`, those elements
+     * will be filtered out. Example:
+     *
+     * ```ts
+     * const users = [ 1, 3, undefined, 7 ];
+     * const query = q`select * from users where id in ${q.list(users)}`;
+     *
+     * assert(query.toString() === 'select * from users where id in («1»,«3»,«7»)');
+     * ```
+     *
+     * @param list  The parameters to include in the list. May contain `undefined` elements, which will simply be skipped.
+     * @returns     A DBQuery suitable to be used in an SQL `IN` clause.
+     */
+    export function list(list: (BasicTypes | undefined)[]): DBQuery {
+        list = list.filter((d) => d !== undefined);
+
+        if (list.length === 0) {
+            return new DBQuery(['()'], []);
+        }
+        else {
+            return new DBQuery(['(', ...Array(list.length - 1).fill(','), ')'], list);
+        }
+    }
+
+    /**
+     * Constructs a {@link DBQuery} to be used as part of SQL `INSERT` statements.
+     *
+     * Given an object (or list of objects) containing the column/value pairs, constructs either the *columns* list or the
+     * *values* list (or lists), or both, depending on the `parts` argument. Examples:
+     *
+     * ```ts
+     * // Insert columns name, language, country
+     * const entry = { name: 'Martin', language: 'sv', country: 'se' };
+     * const query = q`insert into locale ${q.values(entry)}`;
+     *
+     * assert(query.toString() === 'insert into locale ("name","language","country") values («Martin»,«sv»,«se»)');
+     * ```
+     *
+     * ```ts
+     * // Insert multiple rows, but only columns name and country
+     * const multi = [ { name: 'Martin', language: 'sv', country: 'se' }, { name: 'John', language: 'en', country: 'us' } ];
+     * const query = q`insert into users ${q.values(multi, ['name', 'country'])}`;
+     *
+     * assert(query.toString() === 'insert into users ("name","country") values («Martin»,«se»),(«John»,«us»)');
+     * ```
+     *
+     * If any of the object's values are `undefined`, the SQL `DEFAULT` keyword will be used in its place.
+     *
+     * @param data    The object or objects to insert. The key represents the column name and the value is the column value.
+     * @param columns Specifies what keys (columns) to fetch from the data objects. Defaults to all keys from all objects.
+     * @param parts   What part of the statement to generate. Use `columns` to only generate a list of column names,
+     *                `values` for a list of value tuples or `expr`, the default, for the complete subexpression.
+     * @param quote   The quote function to use when escaping the column names. Defaults to {@link q.quote}.
+     * @returns       A DBQuery suitable to be used in an SQL `INSERT` statement.
+     */
+    export function values(data: Params | Params[], columns?: string[], parts: 'columns' | 'values' | 'expr' = 'expr', quote = q.quote): DBQuery {
+        const params = [ data ].flat();
+        const values = (param: any): DBQuery => {
+            return q.join(',', columns!.map((column) => q`${vDefault(param[column])}`))
+        }
+
+        columns ??= [...new Set(params.map(Object.keys).flat())];
+
+        return q`${ parts === 'expr' || parts === 'columns' ? q`(${ q.join(',', columns.map((column) => quote(column))) })` : q``
+                }${ parts === 'expr'                        ? q` values ` : q``
+                }${ parts === 'expr' || parts === 'values'  ? q.join(',', params.map((param) => q`(${ values(param) })`)) : q`` }`;
+    }
+
+    /**
+     * Constructs a {@link DBQuery} to be used as part of SQL `UPDATE` statements.
+     *
+     * Given an object containing the column/value pairs, constructs an assignment expression that can be used as part of an
+     * SQL `UPDATE` statement. Example:
+     *
+     * ```ts
+     * const userID = 1337;
+     * const entry = { name: 'Martin', language: 'sv', country: 'se' };
+     * const query = q`update locale set ${q.assign(entry)} where id = ${userID}`;
+     *
+     * assert(query.toString() === 'update locale set "name" = «Martin»,"language" = «sv»,"country" = «se» where id = «1337»');
+     * ```
+     *
+     * If any of the object's values are `undefined`, the SQL `DEFAULT` keyword will be used in its place.
+     *
+     * @param data    The object to assign. The key represents the column name and the value is the column value.
+     * @param columns Specifies what keys (columns) to fetch from the data object. Defaults to all keys from the object.
+     * @param quote   The quote function to use when escaping the column names. Defaults to {@link q.quote}.
+     * @returns       A DBQuery suitable to be used in an SQL `UPDATE` statement.
+     */
+    export function assign(data: Params, columns?: string[], quote = q.quote): DBQuery {
+        columns ??= Object.keys(data);
+
+        return q.join(',', columns.map((column) => q`${quote(column)} = ${vDefault(data[column])}`));
+    }
 }
 
 /** Database configuration parameters. */
