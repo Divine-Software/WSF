@@ -1,7 +1,7 @@
 all:		build
 
 prepare:
-	$(MAKE) -C .. $@
+	$(MAKE) -C ../.. $@
 
 build:		prepare
 	pnpm exec tsc --build

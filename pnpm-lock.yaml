@@ -12,6 +12,9 @@ catalogs:
     tslib:
       specifier: ^2.8.1
       version: 2.8.1
+    typescript:
+      specifier: ~5.7.3
+      version: 5.7.3
 
 importers:
 
@@ -51,7 +54,7 @@ importers:
         specifier: ~0.1.2
         version: 0.1.2
       typescript:
-        specifier: ~5.7.3
+        specifier: 'catalog:'
         version: 5.7.3
       typescript-eslint:
         specifier: ^8.23.0
@@ -369,11 +372,8 @@ importers:
         specifier: ^3.7.0
         version: 3.7.0
       '@types/node':
-        specifier: ^16.18.126
-        version: 16.18.126
-      typescript:
-        specifier: ~5.7.3
-        version: 5.7.3
+        specifier: 'catalog:'
+        version: 12.20.55
 
 packages:
 
