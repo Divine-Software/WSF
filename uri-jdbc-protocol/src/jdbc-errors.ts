@@ -1,4 +1,3 @@
-/** @ignore */
 export const enum H2Status {
     NO_DATA_AVAILABLE                                                 = '2000',
     INVALID_PARAMETER_COUNT_2                                         = '7001',
@@ -201,7 +200,6 @@ export const enum H2Status {
     GROUP_BY_NOT_IN_THE_RESULT                                        = '90157',
 }
 
-/** @ignore */
 export const enum H2SQLState {
     NO_DATA_AVAILABLE                                                 = '02000',
     INVALID_PARAMETER_COUNT_2                                         = '07001',

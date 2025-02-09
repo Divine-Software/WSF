@@ -1,5 +1,4 @@
 // From <https://sqlite.org/c3ref/c_abort.html> and <https://sqlite.org/c3ref/c_abort_rollback.html>
-/** @ignore */
 export const enum SQLiteStatus {
     SQLITE_OK                                            = "SQLITE_OK",
     SQLITE_OK_LOAD_PERMANENTLY                           = "SQLITE_OK_LOAD_PERMANENTLY",
