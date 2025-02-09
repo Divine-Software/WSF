@@ -8,17 +8,17 @@ all:	build									## Build all packages (alias for build)
 
 prepare:	$(NODE_MODULES)							## Build and install all dependencies
 
-$(NODE_MODULES):package.json */package.json pnpm-lock.yaml pnpm-workspace.yaml .npmrc
+$(NODE_MODULES):package.json modules/*/package.json website/package.json pnpm-lock.yaml pnpm-workspace.yaml .npmrc
 	pnpm install --frozen-lockfile
 	touch $(NODE_MODULES)
 
 build::		prepare								## Build all packages
-	$(MAKE) -C uri build-deps
-	$(MAKE) -C uri-jdbc-protocol build-deps
+	$(MAKE) -C modules/uri build-deps
+	$(MAKE) -C modules/uri-jdbc-protocol build-deps
 	pnpm exec tsc --build --verbose
 
 lint:		prepare								## Lint all sources with eslint
-	-pnpm exec eslint '*/{src,test}/**/*'
+	-pnpm exec eslint 'modules/*/{src,test}/**/*'
 
 test::		build lint							## Build and run all tests
 	pnpm exec jest

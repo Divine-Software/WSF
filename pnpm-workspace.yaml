@@ -2,15 +2,16 @@ catalog:
   '@types/node': ^12.20.55
   'tslib': ^2.8.1
 packages:
-  - commons
-  - headers
-  - uri-image-parser
-  - uri-jdbc-protocol
-  - uri-mysql-protocol
-  - uri-postgres-protocol
-  - uri-sqlite-protocol
-  - uri-tds-protocol
-  - uri-x4e-parser
-  - uri
-  - web-service
-  - x4e
+  - modules/commons
+  - modules/headers
+  - modules/uri-image-parser
+  - modules/uri-jdbc-protocol
+  - modules/uri-mysql-protocol
+  - modules/uri-postgres-protocol
+  - modules/uri-sqlite-protocol
+  - modules/uri-tds-protocol
+  - modules/uri-x4e-parser
+  - modules/uri
+  - modules/web-service
+  - modules/x4e
+  - website

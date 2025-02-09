@@ -1,4 +1,4 @@
-/*/build
+/modules/*/build
 /.vscode
 coverage
 node_modules

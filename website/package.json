@@ -38,13 +38,6 @@
     "@types/node": "^16.18.126",
     "typescript": "~5.7.3"
   },
-  "pnpm": {
-    "onlyBuiltDependencies": [
-      "@swc/core",
-      "core-js",
-      "core-js-pure"
-    ]
-  },
   "browserslist": {
     "production": [
       ">0.5%",

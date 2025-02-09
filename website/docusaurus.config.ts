@@ -143,7 +143,7 @@ const config: Config = {
     [
       'docusaurus-plugin-typedoc', {
         entryPointStrategy: "packages",
-        entryPoints: yamlParse(readFileSync('../pnpm-workspace.yaml').toString()).packages.map((pkg) => `../${pkg}`),
+        entryPoints: yamlParse(readFileSync('../pnpm-workspace.yaml').toString()).packages.filter(pkg => pkg.startsWith('modules/')).map(pkg => `../${pkg}`),
         excludePrivate: true,
         excludeInternal: true,
         excludeExternals: true,

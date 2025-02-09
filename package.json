@@ -10,7 +10,7 @@
   "private": true,
   "jest": {
     "projects": [
-      "<rootDir>/*/package.json"
+      "<rootDir>/modules/*/package.json"
     ],
     "collectCoverage": true
   },
@@ -41,6 +41,7 @@
   "packageManager": "pnpm@9.15.5",
   "pnpm": {
     "onlyBuiltDependencies": [
+      "@swc/core",
       "better-sqlite3",
       "canvas",
       "java"
