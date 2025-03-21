@@ -13,9 +13,9 @@ describe('The WebServer', () => {
         const srv2 = new WebServer(new URL('http://localhost:7357'), undefined, svc2);
         const srv3 = new WebServer(new URL('http://localhost:7357/mnt/'), undefined, svc3);
 
-        const ctx1: number = srv1.initialService.context;
-        const ctx2: string = srv2.initialService.context;
-        const ctx3: object = srv3.initialService.context;
+        const ctx1: number = srv1.initialService!.context;
+        const ctx2: string = srv2.initialService!.context;
+        const ctx3: object = srv3.initialService!.context;
 
         expect(srv1.initialService).toBe(svc1);
         expect(srv2.initialService).toBe(svc2);

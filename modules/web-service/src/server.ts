@@ -226,18 +226,18 @@ class WebServerBase {
  * A web server that listens for incoming HTTP requests on a specific port and delegates requests to one or more
  * {@link WebService} instances.
  */
-export class WebServer<Context = any> extends WebServerBase {
+export class WebServer<InitialService extends WebService<any> = WebService<unknown>> extends WebServerBase {
     /** The default WebService (the one mounted on '/'). */
-    public readonly defaultService: WebService<any>;
+    public readonly defaultService: WebService<unknown>;
 
     /**
-     * The initial WebService that was passed to the constructor. If no WebService was provided, or if the passed
-     * WebSevice was mounted on '/', this is the same as the default service, but it may be different from
-     * {@link defaultService} if a constructor-provided WebService was not mounted on '/'.
+     * The initial WebService that was passed to the constructor. If the passed WebSevice was mounted on '/', this is
+     * the same as the default service, but it may be different from {@link defaultService} if a constructor-provided
+     * WebService was not mounted on '/'.
      */
-    public readonly initialService: WebService<Context>;
+    public readonly initialService?: InitialService;
 
-    private _services: WebService<any>[] = [];
+    private _services: WebService<unknown>[] = [];
     private _mountPathPattern?: RegExp;
     private _requestHandlers!: RequestHandler[];
 
@@ -249,7 +249,7 @@ export class WebServer<Context = any> extends WebServerBase {
      * @param defaultService The default {@link WebService} to mount at the root path. If not provided, a default
      *                       service will be created and mounted (accessible via the {@link defaultService} property).
      */
-    constructor(host: string, port: number, defaultService?: WebService<Context>);
+    constructor(host: string, port: number, defaultService?: InitialService);
     /**
      * Creates a new WebServer instance, optionally mounting a {@link WebService} at the path specified by the listen
      * URL.
@@ -262,8 +262,8 @@ export class WebServer<Context = any> extends WebServerBase {
      *                       the path is not `/`, or if no service is specified, a default service will be created and
      *                       mounted at the root path (accessible via the {@link defaultService} property).
      */
-    constructor(url: URL, serverOptions?: ServerOptions , webService?: WebService<Context>);
-    constructor(url: string | URL, serverOptions: number | ServerOptions | undefined, webService?: WebService<Context>) {
+    constructor(url: URL, serverOptions?: ServerOptions , webService?: InitialService);
+    constructor(url: string | URL, serverOptions: number | ServerOptions | undefined, webService?: InitialService) {
         if (typeof url === 'string' && typeof serverOptions === 'number') {
             url = new URL(`http://${url}:${serverOptions}/`);
             serverOptions = undefined;
@@ -271,7 +271,7 @@ export class WebServer<Context = any> extends WebServerBase {
             throw new TypeError('Invalid arguments');
         }
 
-        const defaultService = webService && url.pathname === '/' ? webService : new WebService<any>(null);
+        const defaultService = webService && url.pathname === '/' ? webService : new WebService<unknown>(null);
         const defaultHandler = defaultService.requestEventHandler();
 
         super(url, serverOptions ?? {}, (req: IncomingMessage | Http2ServerRequest, res: ServerResponse | Http2ServerResponse) => {
@@ -292,11 +292,11 @@ export class WebServer<Context = any> extends WebServerBase {
             return defaultHandler(req, res);
         });
 
-        this.defaultService = this.initialService = defaultService['_mount']('/', this);
+        this.defaultService = defaultService['_mount']('/', this);
+        this.initialService = webService;
 
         if (webService && webService !== defaultService) {
             this.mount(url.pathname, webService)
-            this.initialService = webService;
         }
     }
 
@@ -313,7 +313,7 @@ export class WebServer<Context = any> extends WebServerBase {
      * @param service    The {@link WebService} to mount.
      * @returns          This WebServer.
      */
-    mount(mountPoint: string, service: WebService<any>): this {
+    mount(mountPoint: string, service: WebService<unknown>): this {
         this._services.push(service['_mount'](mountPoint, this));
         this._mountPathPattern = undefined;
 
@@ -326,7 +326,7 @@ export class WebServer<Context = any> extends WebServerBase {
      * @param serviceOrMountPoint Either a {@link WebService} instance or a mount point.
      * @returns                   This WebServer.
      */
-    unmount(serviceOrMountPoint: WebService<any> | string): this {
+    unmount(serviceOrMountPoint: WebService<unknown> | string): this {
         const service = typeof serviceOrMountPoint === 'string'
             ? this._services.find((s) => s.webServiceMountPoint === serviceOrMountPoint)
             : serviceOrMountPoint;
