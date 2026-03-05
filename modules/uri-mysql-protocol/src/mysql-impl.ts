@@ -1,13 +1,14 @@
 import { DatabaseURI, DBDriver, DBError, DBQuery, DBResult, DBTransactionParams, PasswordCredentials, q } from '@divine/uri';
 import assert from 'assert';
-import { Connection, ConnectionOptions, createConnection, FieldPacket, QueryResult } from 'mysql2/promise';
+import { Connection, createConnection, FieldPacket, QueryResult } from 'mysql2/promise';
 import { MariaDBStatus as Status } from './mysql-errors';
+import { MySQLParams } from './mysql-protocol';
 
 const deadlocks = [ Status.ER_LOCK_WAIT_TIMEOUT, Status.ER_LOCK_DEADLOCK ] as string[];
 
-export class MyConnectionPool extends DBDriver.DBConnectionPool {
+export class MyConnectionPool extends DBDriver.DBConnectionPool<MySQLParams> {
     protected async _createDBConnection(): Promise<DBDriver.DBConnection> {
-        return new MyDatabaseConnection(this._dbURI, this._params.connectOptions, await this._getCredentials());
+        return new MyDatabaseConnection(this._dbURI, this._params, await this._getCredentials());
     }
 }
 
@@ -17,7 +18,7 @@ class MyDatabaseConnection implements DBDriver.DBConnection {
     private _tlevel = 0;
     private _savepoint = 0;
 
-    constructor(private _dbURI: DatabaseURI, private _options?: object, private _creds?: PasswordCredentials) {
+    constructor(private _dbURI: DatabaseURI, private _params: MySQLParams, private _creds?: PasswordCredentials) {
     }
 
     get state() {
@@ -41,7 +42,7 @@ class MyDatabaseConnection implements DBDriver.DBConnection {
 
                 return next();
             },
-            ...this._options as ConnectionOptions
+            ...this._params.connectOptions,
         });
 
         this._version = (await this.query(q`select version()`))[0][0][0] as string;

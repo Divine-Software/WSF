@@ -5,18 +5,20 @@ import { SQLiteConnectionPool } from './sqlite-impl';
 export { SQLiteStatus } from './sqlite-errors';
 
 /** Connection parameters for {@link SQLiteURI}. */
-export interface SQLiteConnectOptions extends Omit<Options, 'verbose'> {
+export interface SQLiteConnectOptions extends Options {
     /**
      * Set to `false` to use `number` instead of `bigint` for integer types. Default is to use `bigint`.
      */
     defaultSafeIntegers?: boolean | undefined;
 }
 
+/** SQLite-specific DBParams. */
+export interface SQLiteParams extends DBParams {
+    connectOptions?: SQLiteConnectOptions;
+}
+
 /** Provides configuration parameters for {@link SQLiteURI}. */
-export interface SQLiteParamsSelector extends DBParamsSelector {
-    params: DBParams & {
-        connectOptions?: SQLiteConnectOptions;
-    };
+export interface SQLiteParamsSelector extends DBParamsSelector<SQLiteParams> {
 }
 
 export class SQLiteURI extends DatabaseURI {
@@ -28,7 +30,7 @@ export class SQLiteURI extends DatabaseURI {
         this._href = `${this.protocol}//${file.host}${file.pathname}${this.search}${this.hash}`;
     }
 
-    protected async _createDBConnectionPool(params: DBParamsSelector): Promise<DBDriver.DBConnectionPool> {
+    protected async _createDBConnectionPool(params: SQLiteParamsSelector): Promise<DBDriver.DBConnectionPool> {
         return new SQLiteConnectionPool(this, params);
     }
 }

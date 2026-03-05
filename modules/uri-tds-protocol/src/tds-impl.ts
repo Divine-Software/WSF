@@ -2,9 +2,10 @@
 /// <reference lib="dom" />    // AbortSignal referenced by 'tedious'
 import { DatabaseURI, DBColumnInfo, DBDriver, DBError, DBQuery, DBResult, DBTransactionParams, PasswordCredentials, q } from '@divine/uri';
 import assert from 'assert';
-import { Connection, ConnectionOptions, ISOLATION_LEVEL, Request, TYPES } from 'tedious';
+import { Connection, ISOLATION_LEVEL, Request, TYPES } from 'tedious';
 import { type ColumnMetadata } from 'tedious/lib/token/colmetadata-token-parser';
 import { SQLServerSQLState as SQLState } from './tds-errors';
+import { TDSParams } from './tds-protocol';
 
 const txOptions = /^ISOLATION LEVEL (READ UNCOMMITTED|READ COMMITTED|REPEATABLE READ|SNAPSHOT|SERIALIZABLE)$/;
 
@@ -16,9 +17,9 @@ const ISOLATION_LEVELS: Record<string, typeof ISOLATION_LEVEL[string] | undefine
     'SERIALIZABLE':     ISOLATION_LEVEL['SERIALIZABLE'],
 }
 
-export class TDSConnectionPool extends DBDriver.DBConnectionPool {
+export class TDSConnectionPool extends DBDriver.DBConnectionPool<TDSParams> {
     protected async _createDBConnection(): Promise<DBDriver.DBConnection> {
-        return new TDSDatabaseConnection(this._dbURI, this._params.connectOptions, await this._getCredentials());
+        return new TDSDatabaseConnection(this._dbURI, this._params, await this._getCredentials());
     }
 }
 
@@ -27,7 +28,7 @@ class TDSDatabaseConnection implements DBDriver.DBConnection {
     private _tlevel = 0;
     private _savepoint = 0;
 
-    constructor(private _dbURI: DatabaseURI, private _options?: object, private _creds?: PasswordCredentials) {
+    constructor(private _dbURI: DatabaseURI, private _params: TDSParams, private _creds?: PasswordCredentials) {
     }
 
     get state() {
@@ -55,7 +56,7 @@ class TDSDatabaseConnection implements DBDriver.DBConnection {
                     port:                   Number(this._dbURI.port) || undefined,
                     useUTC:                 false,
                     trustServerCertificate: true,
-                    ...this._options as ConnectionOptions
+                    ...this._params.connectOptions,
                 }
             })
             // .on('debug',   (msg) => { console.debug(msg) })

@@ -1,4 +1,4 @@
-import { DatabaseURI, DBColumnInfo, DBDriver, DBError, DBQuery, DBResult, DBTransactionParams, PasswordCredentials, q } from '@divine/uri';
+import { DatabaseURI, DBColumnInfo, DBDriver, DBError, DBParams, DBQuery, DBResult, DBTransactionParams, PasswordCredentials, q } from '@divine/uri';
 import assert from 'assert';
 import java from 'java';
 import { promisify } from 'util';
@@ -43,16 +43,16 @@ const ISOLATION_LEVELS: Record<string, number | undefined>  = {
     'SERIALIZABLE':     8,
 }
 
-export class JDBCConnectionPool extends DBDriver.DBConnectionPool {
+export class JDBCConnectionPool extends DBDriver.DBConnectionPool<DBParams> {
     protected async _createDBConnection(): Promise<DBDriver.DBConnection> {
-        return new JDBCDatabaseConnection(this._dbURI, this._params.connectOptions, await this._getCredentials());
+        return new JDBCDatabaseConnection(this._dbURI, this._params, await this._getCredentials());
     }
 }
 
 class JDBCDatabaseConnection implements DBDriver.DBConnection {
     private _client?: DBConnectionBridge;
 
-    constructor(private _dbURI: DatabaseURI, private _options?: object, private _creds?: PasswordCredentials) {
+    constructor(private _dbURI: DatabaseURI, private _params: DBParams, private _creds?: PasswordCredentials) {
     }
 
     get state() {
@@ -62,7 +62,7 @@ class JDBCDatabaseConnection implements DBDriver.DBConnection {
     async open() {
         await java.ensureJvm();
 
-        const props = Object.entries({ user: this._creds?.identity, password: this._creds?.secret, ...this._options })
+        const props = Object.entries({ user: this._creds?.identity, password: this._creds?.secret, ...this._params.connectOptions })
             .filter(([_key, value]) => value !== null && value !== undefined)
             .reduce((props, [key, value]) => (props.setProperty(key, String(value)), props), java.newInstanceSync('java.util.Properties'));
 

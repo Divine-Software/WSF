@@ -1,9 +1,10 @@
 import { as, AsyncIteratorAdapter } from '@divine/commons';
 import { DatabaseURI, DBColumnInfo, DBDriver, DBError, DBQuery, DBResult, DBTransactionParams, PasswordCredentials, q } from '@divine/uri';
 import assert from 'assert';
-import { Client, ClientConfig, FieldDef, Query, QueryArrayConfig, types } from 'pg';
+import { Client, FieldDef, Query, QueryArrayConfig, types } from 'pg';
 import { URL } from 'url';
 import { PostgresSQLState as SQLState } from './postgres-errors';
+import { PostgresParams } from './postgres-protocol';
 
 const parseBigIntArray = types.getTypeParser(1016);
 const deadlocks = [ SQLState.SERIALIZATION_FAILURE, SQLState.DEADLOCK_DETECTED ] as string[];
@@ -13,9 +14,9 @@ const listenFields: FieldDef[] = [
     { name: 'payload', tableID: 0, columnID: 0, dataTypeID: types.builtins.TEXT, dataTypeSize: -1, dataTypeModifier: -1, format: 'text' },
 ]
 
-export class PGConnectionPool extends DBDriver.DBConnectionPool {
+export class PGConnectionPool extends DBDriver.DBConnectionPool<PostgresParams> {
     protected async _createDBConnection(): Promise<DBDriver.DBConnection> {
-        return new PGDatabaseConnection(this._dbURI, this._params.connectOptions, await this._getCredentials());
+        return new PGDatabaseConnection(this._dbURI, this._params, await this._getCredentials());
     }
 }
 
@@ -26,7 +27,7 @@ class PGDatabaseConnection implements DBDriver.DBConnection {
     private _tlevel = 0;
     private _savepoint = 0;
 
-    constructor(private _dbURI: DatabaseURI, private _options?: object, private _creds?: PasswordCredentials) {
+    constructor(private _dbURI: DatabaseURI, private _params: PostgresParams, private _creds?: PasswordCredentials) {
     }
 
     get state() {
@@ -48,7 +49,7 @@ class PGDatabaseConnection implements DBDriver.DBConnection {
                     id === 1016 ? (value: string) => (parseBigIntArray(value) as any).map(BigInt) :
                     types.getTypeParser(id, format as 'text' & 'binary'),
             },
-            ...this._options as ClientConfig
+            ...this._params.connectOptions,
         });
 
         await this._client.connect();

@@ -3,12 +3,12 @@ import { SqliteError } from 'better-sqlite3';
 import { basename, extname } from 'path';
 import { Worker } from 'worker_threads';
 import { SQLiteStatus } from './sqlite-errors';
-import type { SQLiteConnectOptions } from './sqlite-protocol';
+import type { SQLiteParams } from './sqlite-protocol';
 import type { ExecuteQueryResult, SQLiteWorkerMessage, SQLiteWorkerResult } from './sqlite-worker';
 
-export class SQLiteConnectionPool extends DBDriver.DBConnectionPool {
+export class SQLiteConnectionPool extends DBDriver.DBConnectionPool<SQLiteParams> {
     protected async _createDBConnection(): Promise<DBDriver.DBConnection> {
-        return new SQLiteDatabaseConnection(this._dbURI, this._params.connectOptions);
+        return new SQLiteDatabaseConnection(this._dbURI, this._params);
     }
 }
 
@@ -31,7 +31,7 @@ class SQLiteDatabaseConnection implements DBDriver.DBConnection {
     private _tlevel = 0;
     private _savepoint = 0;
 
-    constructor(private _dbURI: DatabaseURI, private _options?: SQLiteConnectOptions) {
+    constructor(private _dbURI: DatabaseURI, private _params: SQLiteParams) {
         this._dbPath = decodeURIComponent(_dbURI.pathname);
         this._dbName = basename(this._dbPath, extname(this._dbPath));
         this._worker = new Worker(require.resolve('./sqlite-worker'))
@@ -97,7 +97,7 @@ class SQLiteDatabaseConnection implements DBDriver.DBConnection {
         await this._execute({
             type:     'open',
             dbPath:   this._dbPath,
-            params:   { ...this._options },
+            params:   { ...this._params.connectOptions },
         });
 
         this.state = 'open';

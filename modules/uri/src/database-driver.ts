@@ -32,7 +32,7 @@ interface IdleConnection {
     expires: number;
 }
 
-export abstract class DBConnectionPool {
+export abstract class DBConnectionPool<P extends DBParams = DBParams> {
     static readonly defaultRetries        = 8;
     static readonly defaultBackoff        = ((count: number): number => (2 ** count - Math.random()) * 100);
     static readonly defaultTimeout        = 60_000;
@@ -40,7 +40,7 @@ export abstract class DBConnectionPool {
     static readonly defaultKeepalive      = 10_000;
     static readonly defaultMaxConnections = 10;
 
-    protected _params: DBParams;
+    protected _params: P;
 
     private _connectionReaper: NodeJS.Timeout;
     private _connectionCount = 0;
@@ -48,7 +48,7 @@ export abstract class DBConnectionPool {
     private _idleConnections: IdleConnection[] = [];
     private _idleCondition = new Condition();
 
-    constructor(protected _dbURI: DatabaseURI, params: DBParamsSelector) {
+    constructor(protected _dbURI: DatabaseURI, params: DBParamsSelector<P>) {
         this._params = params.params;
         this._connectionReaper = setInterval(() => this._checkIdleConnections(), this._params.keepalive ?? DBConnectionPool.defaultKeepalive).unref();
     }

@@ -262,7 +262,7 @@ export interface DBParams extends URIParams {
      */
     maxConnections?: number;
 
-    /** Custom options to send to the database when openeing a connection. Depends on the database driver. */
+    /** Custom options to send to the database when opening a connection. Depends on the database driver. */
     connectOptions?: object;
 
     /** SSL/TLS parameters. */
@@ -273,8 +273,8 @@ export interface DBParams extends URIParams {
 }
 
 /** Provides configuration parameters for {@link DatabaseURI}. */
-export interface DBParamsSelector extends ParamsSelector {
-    params: DBParams;
+export interface DBParamsSelector<P extends DBParams = DBParams>  extends ParamsSelector {
+    params: P;
 }
 
 /** Transaction parameters. */
