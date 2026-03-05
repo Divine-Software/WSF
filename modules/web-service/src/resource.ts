@@ -1,5 +1,6 @@
 import { StringParams } from '@divine/commons';
 import { ContentType } from '@divine/headers';
+import { strict as assert } from 'assert';
 import { WebError, WebStatus } from './error';
 import { WebRequest } from './request';
 import { WebResponse, WebResponses } from './response';
@@ -231,13 +232,16 @@ export abstract class WebResourceBase<Context> implements WebResource {
     }
 }
 
+type ParamsKeys = `?${string}` | `@${string}` | `$${string}` | `.${string}` | `~${string}`;
+type ParamsBase = Record<ParamsKeys, string | object | null>;
+
 /**
  * A unified view all all possible arguments a filter or resource may receive when invoked.
  *
  * Arguments may come from RegExp groups in the resource/filter path, query parameters, request headers and the parsed
  * request body.
  */
-export class WebArguments {
+export class WebArguments<Params extends ParamsBase = ParamsBase> {
     /**
      * A readonly map of all arguments with their unparsed values.
      *
@@ -251,7 +255,7 @@ export class WebArguments {
      * * Custom request parameters manually set by {@link WebRequest.setParam} have a `~` prefix.
      *
      */
-    public readonly params: { [key: string]: string | object | undefined };
+    public readonly params: Partial<Params>;
 
     /**
      * Constructs a new WebArguments instance.
@@ -285,7 +289,7 @@ export class WebArguments {
      * @template T             The type this method should return.
      * @param contentType      What parser to use. Defaults to the `content-type` request header.
      * @param maxContentLength The maximum number of bytes to parse. Defaults to
-     * {@link WebServiceConfig.maxContentLength}.
+     *                         {@link WebServiceConfig.maxContentLength}.
      * @throws                 A {@link WebError}({@link WebStatus.PAYLOAD_TOO_LARGE}) if the request body was larger
      *                         than allowed.
      * @throws                 A {@link WebError}({@link WebStatus.UNSUPPORTED_MEDIA_TYPE}) if the body could not be
@@ -296,12 +300,14 @@ export class WebArguments {
         const body = await this.request.body<T>(contentType, maxContentLength);
 
         if (!Array.isArray(body)) {
+            const params = this.params as Record<string, string | object | null>;
+
             for (const [k, v] of Object.entries(body)) {
                 if (typeof v === 'string' || typeof v === 'number' || typeof v === 'boolean') {
-                    this.params['.' + k] = String(v);
+                    params['.' + k] = String(v);
                 }
                 else if (typeof v === 'object') {
-                    this.params['.' + k] = v;
+                    params['.' + k] = v;
                 }
             }
         }
@@ -315,14 +321,14 @@ export class WebArguments {
      * @param param The name of the parameter to check (must include the desired prefix).
      * @returns `true` if the parameter exists, else `false`.
      */
-    has(param: string): boolean {
+    has(param: keyof Params & ParamsKeys): boolean {
         return this._param(param, false) !== undefined;
     }
 
     /**
      * Returns the value of a parameter parsed as a boolean.
      *
-     * The values `true` and `t` are accepted as `true`, while `false` and `f` represents `false`.
+     * The values `true` and `t` are accepted as `true`, while `false` and `f` represent `false`.
      *
      * @param param The name of the parameter to fetch (must include the desired prefix).
      * @throws      A {@link WebError}({@link WebStatus.BAD_REQUEST}) if a non-body parameter is missing or cannot be
@@ -331,7 +337,7 @@ export class WebArguments {
      *              parsed.
      * @returns     The parameter parsed as a boolean.
      */
-    boolean(param: string): boolean;
+    boolean(param: keyof Params & ParamsKeys): boolean;
     /**
      * Returns the value of a parameter parsed as a boolean, or a default in case the parameter is missing.
      *
@@ -344,8 +350,8 @@ export class WebArguments {
      * @throws      A {@link WebError}({@link WebStatus.UNPROCESSABLE_ENTITY}) if a body parameter cannot be parsed.
      * @returns     The parameter parsed as a boolean, or the value of `def`.
      */
-    boolean<T extends boolean | undefined | null>(param: string, def: T): boolean | T;
-    boolean(param: string, def?: boolean | undefined | null): boolean | undefined | null {
+    boolean<T extends boolean | undefined | null>(param: keyof Params & ParamsKeys, def: T): boolean | T;
+    boolean(param: keyof Params & ParamsKeys, def?: boolean | undefined | null): boolean | undefined | null {
         const value = this._param(param, arguments.length === 1)?.toString();
 
         if (value === undefined) {
@@ -374,7 +380,7 @@ export class WebArguments {
      *              be parsed.
      * @returns     The parameter parsed as an ISO date/timestamp.
      */
-    date(param: string): Date;
+    date(param: keyof Params & ParamsKeys): Date;
     /**
      * Returns the value of a parameter parsed as an ISO date/timestamp.
      *
@@ -387,8 +393,8 @@ export class WebArguments {
      * @throws      A {@link WebError}({@link WebStatus.UNPROCESSABLE_ENTITY}) if a body parameter cannot be parsed.
      * @returns     The parameter parsed as an ISO date/timestamp, or the value of `def`.
      */
-    date<T extends Date | undefined | null>(param: string, def: T): Date | T;
-    date(param: string, def?: Date | undefined | null): Date | undefined | null {
+    date<T extends Date | undefined | null>(param: keyof Params & ParamsKeys, def: T): Date | T;
+    date(param: keyof Params & ParamsKeys, def?: Date | undefined | null): Date | undefined | null {
         const value = this._param(param, arguments.length === 1);
 
         if (value === undefined) {
@@ -425,7 +431,7 @@ export class WebArguments {
      *              parsed.
      * @returns     The parameter parsed as a number.
      */
-    number(param: string): number;
+    number(param: keyof Params & ParamsKeys): number;
     /**
      * Returns the value of a parameter parsed as a number.
      *
@@ -438,8 +444,8 @@ export class WebArguments {
      * @throws      A {@link WebError}({@link WebStatus.UNPROCESSABLE_ENTITY}) if a body parameter cannot be parsed.
      * @returns     The parameter parsed as a number, or the value of `def`.
      */
-    number<T extends number | undefined | null>(param: string, def: T): number | T;
-    number(param: string, def?: number | undefined | null): number | undefined | null {
+    number<T extends number | undefined | null>(param: keyof Params & ParamsKeys, def: T): number | T;
+    number(param: keyof Params & ParamsKeys, def?: number | undefined | null): number | undefined | null {
         const value = this._param(param, arguments.length === 1)?.toString();
 
         if (value === undefined) {
@@ -459,7 +465,8 @@ export class WebArguments {
     /**
      * Returns the value of a parameter as an object.
      *
-     * Note that only parameters coming from the request body can actually be objects.
+     * Note that only parameters coming from the request body or manually set by {@link WebRequest.setParam} can
+     * actually be objects.
      *
      * @param param The name of the parameter to fetch (must include the desired prefix).
      * @throws      A {@link WebError}({@link WebStatus.BAD_REQUEST}) if a non-body parameter is missing or cannot be
@@ -468,11 +475,12 @@ export class WebArguments {
      *              be parsed.
      * @returns     The parameter as an object.
      */
-    object<T extends object>(param: string): T;
+    object<T extends object>(param: keyof Params & ParamsKeys): T;
     /**
      * Returns the value of a parameter as an object.
      *
-     * Note that only parameters coming from the request body can actually be objects.
+     * Note that only parameters coming from the request body or manually set by {@link WebRequest.setParam} can
+     * actually be objects.
      *
      * @template T  The type of the {@link def} parameter.
      * @param param The name of the parameter to fetch (must include the desired prefix).
@@ -481,8 +489,8 @@ export class WebArguments {
      * @throws      A {@link WebError}({@link WebStatus.UNPROCESSABLE_ENTITY}) if a body parameter cannot be parsed.
      * @returns     The parameter as an object, or the value of `def`.
      */
-    object<T extends object | undefined | null>(param: string, def: T): object | T;
-    object<T extends object>(param: string, def?: T | undefined | null): T | undefined | null {
+    object<T extends object | undefined | null>(param: keyof Params & ParamsKeys, def: T): object | T;
+    object<T extends object>(param: keyof Params & ParamsKeys, def?: T | undefined | null): T | undefined | null {
         const value = this._param(param, arguments.length === 1);
 
         if (value === undefined || value === null) {
@@ -507,7 +515,7 @@ export class WebArguments {
      *              be parsed.
      * @returns     The parameter as a string.
      */
-    string(param: string): string;
+    string(param: keyof Params & ParamsKeys): string;
     /**
      * Returns the value of a parameter as a string.
      *
@@ -518,8 +526,8 @@ export class WebArguments {
      * @throws      A {@link WebError}({@link WebStatus.UNPROCESSABLE_ENTITY}) if a body parameter cannot be parsed.
      * @returns     The parameter as a string, or the value of `def`.
      */
-    string<T extends string | undefined | null>(param: string, def: T): string | T;
-    string(param: string, def?: string | undefined | null): string | undefined | null {
+    string<T extends string | undefined | null>(param: keyof Params & ParamsKeys, def: T): string | T;
+    string(param: keyof Params & ParamsKeys, def?: string | undefined | null): string | undefined | null {
         const value = this._param(param, arguments.length === 1);
 
         if (value === undefined) {
@@ -538,8 +546,8 @@ export class WebArguments {
         }
     }
 
-    private _param(param: string, required: boolean): boolean | number | string | object | null | undefined {
-        const value = this.params[param];
+    private _param(param: ParamsKeys, required: boolean): ParamsBase[ParamsKeys] {
+        const value = this.params[param] as ParamsBase[ParamsKeys];
 
         if (value === undefined && required) {
             throw this._makeWebError(param, 'is missing');
@@ -549,7 +557,9 @@ export class WebArguments {
         }
     }
 
-    private _makeWebError(param: string, is: string): WebError {
+    private _makeWebError(param: keyof Params & ParamsKeys, is: string): WebError {
+        assert(typeof param === 'string');
+
         const [ status, subject ] =
             param[0] === '?' ? [ WebStatus.BAD_REQUEST,           `Query parameter '${param.substr(1)}'`   ] :
             param[0] === '@' ? [ WebStatus.BAD_REQUEST,           `Request header '${param.substr(1)}'`    ] :

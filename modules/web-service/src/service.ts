@@ -343,7 +343,7 @@ export class WebService<Context> {
     requestEventHandler(): (req: IncomingMessage | Http2ServerRequest, res: ServerResponse | Http2ServerResponse) => Promise<void> {
         return async (req: IncomingMessage | Http2ServerRequest, res: ServerResponse | Http2ServerResponse) => {
             try {
-                const webreq = new WebRequest(this, req, this.webServiceConfig);
+                const webreq = new WebRequest(this as WebService<unknown>, req, this.webServiceConfig);
                 webreq.log.info?.(`Begin ${webreq} from ${webreq.remoteUserAgent}`);
 
                 const webres = await this.dispatchRequest(webreq);

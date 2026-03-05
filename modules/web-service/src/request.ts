@@ -68,7 +68,7 @@ export class WebRequest implements AuthSchemeRequest {
     /** Custom parameters from filters etc may be stored here. */
     public readonly params: Params = {}
 
-    private _body?: Promise<any>;
+    private _body?: Promise<unknown>;
     private _finalizers: Array<() => Promise<unknown>> = [];
     private _maxContentLength: number;
 
@@ -79,7 +79,7 @@ export class WebRequest implements AuthSchemeRequest {
      * @param incomingMessage The wrapped Node.js incoming message.
      * @param config          WebService configuration specifiying how `incomingMessage` should be parsed.
      */
-    constructor(public readonly webService: WebService<any>, public readonly incomingMessage: IncomingMessage | Http2ServerRequest, config: Required<WebServiceConfig>) {
+    constructor(public readonly webService: WebService<unknown>, public readonly incomingMessage: IncomingMessage | Http2ServerRequest, config: Required<WebServiceConfig>) {
         const incomingScheme = incomingMessage.socket instanceof TLSSocket ? 'https' : 'http';
         const incomingServer = incomingMessage.headers.host ?? `${incomingMessage.socket.localAddress}:${incomingMessage.socket.localPort}`;
         const incomingRemote = incomingMessage.socket.remoteAddress;
@@ -91,7 +91,7 @@ export class WebRequest implements AuthSchemeRequest {
         this.remoteAddress = String((config.trustForwardedFor   ? this.header('x-forwarded-for',        '', false) : '') || incomingRemote);
         this.method        = String((config.trustMethodOverride ? this.header('x-http-method-override', '', false) : '') || incomingMethod);
         this.url           = new URL(`${scheme}://${server}${incomingMessage.url}`);
-        this.userAgent     = new UAParser(incomingMessage.headers['user-agent']).getResult() as any;
+        this.userAgent     = new UAParser(incomingMessage.headers['user-agent']).getResult() as UserAgent;
         this.id            = incomingReqID && REQUEST_ID.test(incomingReqID) ? incomingReqID : cuid();
         this.log           = config.logRequestID ? decorateConsole(config.console, `#${this.id}`) : config.console;
 
@@ -218,7 +218,7 @@ export class WebRequest implements AuthSchemeRequest {
                 return this.addFinalizer(await body);
             }
             else {
-                return await this._body;
+                return await this._body as T;
             }
         }
         catch (err) {
