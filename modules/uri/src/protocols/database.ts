@@ -265,6 +265,12 @@ export interface DBParams extends URIParams {
     /** Custom options to send to the database when opening a connection. Depends on the database driver. */
     connectOptions?: object;
 
+    /**
+     * Custom queries to run when opening a new connection. This can be used to set database-specific session variables
+     * or operational modes.
+     */
+    sessionInit?: DBQuery[];
+
     /** SSL/TLS parameters. */
     tls?: SecureContextOptions & {
         /** If `false`, allow servers not in CA list. Default is `true`. */

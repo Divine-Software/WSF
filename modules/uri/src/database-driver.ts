@@ -122,6 +122,7 @@ export abstract class DBConnectionPool<P extends DBParams = DBParams> {
                 try {
                     conn = await this._createDBConnection();
                     await conn.open();
+                    await conn.query(...this._params.sessionInit ?? []);
                 }
                 catch (err: any) {
                     --this._connectionCount;
