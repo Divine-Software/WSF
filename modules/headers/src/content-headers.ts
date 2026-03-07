@@ -7,7 +7,7 @@ export abstract class ContentHeader {
     readonly params: ContentHeaderParams = {};
 
     constructor(unparsed: string | ContentHeader, public readonly headerName?: string) {
-        if (unparsed instanceof ContentHeader) {
+        if (typeof unparsed !== 'string') {
             this._type  = unparsed._type;
             this.params = JSON.parse(JSON.stringify(unparsed.params));
             return;
@@ -98,7 +98,7 @@ export class ContentDisposition extends ContentHeader {
     static get formData()   : ContentDisposition { return new ContentDisposition('form-data');  }
 
     static create(cd: string | ContentDisposition | null | undefined, fallback?: string | ContentDisposition | null): ContentDisposition {
-        if (typeof cd === 'string' || cd instanceof ContentDisposition) {
+        if (cd !== null && cd !== undefined) {
             cd = new ContentDisposition(cd);
         }
 
@@ -118,34 +118,7 @@ export class ContentDisposition extends ContentHeader {
     }
 }
 
-export class ContentType extends ContentHeader {
-    static get bytes()      : ContentType { return new ContentType('application/octet-stream');            }
-    static get csv()        : ContentType { return new ContentType('text/csv');                            }
-    static get dir()        : ContentType { return new ContentType('application/vnd.esxx.directory+json'); }
-    static get formData()   : ContentType { return new ContentType('multipart/form-data');                 }
-    static get html()       : ContentType { return new ContentType('text/html');                           }
-    static get json()       : ContentType { return new ContentType('application/json');                    }
-    static get stream()     : ContentType { return new ContentType('application/vnd.esxx.octet-stream');   }
-    static get text()       : ContentType { return new ContentType('text/plain');                          }
-    static get urlencoded() : ContentType { return new ContentType('application/x-www-form-urlencoded');   }
-    static get xml()        : ContentType { return new ContentType('application/xml');                     }
-
-    static create(ct: string | ContentType | null | undefined, fallback?: string | ContentType | null): ContentType {
-        if (typeof ct === 'string' || ct instanceof ContentType) {
-            ct = new ContentType(ct);
-        }
-
-        return ct ?? ContentType.create(fallback, ContentType.bytes);
-    }
-
-    constructor(unparsed: string | ContentType, charset?: string) {
-        super(unparsed, 'content-type');
-
-        if (charset !== undefined) {
-            this.setParam('charset', charset);
-        }
-    }
-
+export abstract class ContentTypeHeader extends ContentHeader {
     get baseType(): string {
         return this.type.split('/')[0];
     }
@@ -159,7 +132,36 @@ export class ContentType extends ContentHeader {
     }
 }
 
-/** Percent-encode everything except 0-9, A-Z, a-z, `-`, `_`, `.`, `!` and `~`. */
+export class ContentType extends ContentTypeHeader {
+    static get bytes()      : ContentType { return new ContentType('application/octet-stream');            }
+    static get csv()        : ContentType { return new ContentType('text/csv');                            }
+    static get dir()        : ContentType { return new ContentType('application/vnd.esxx.directory+json'); }
+    static get formData()   : ContentType { return new ContentType('multipart/form-data');                 }
+    static get html()       : ContentType { return new ContentType('text/html');                           }
+    static get json()       : ContentType { return new ContentType('application/json');                    }
+    static get stream()     : ContentType { return new ContentType('application/vnd.esxx.octet-stream');   }
+    static get text()       : ContentType { return new ContentType('text/plain');                          }
+    static get urlencoded() : ContentType { return new ContentType('application/x-www-form-urlencoded');   }
+    static get xml()        : ContentType { return new ContentType('application/xml');                     }
+
+    static create(ct: string | ContentType | null | undefined, fallback?: string | ContentType | null): ContentType {
+        if (ct !== null && ct !== undefined) {
+            ct = new ContentType(ct);
+        }
+
+        return ct ?? ContentType.create(fallback, ContentType.bytes);
+    }
+
+    constructor(unparsed: string | ContentType, charset?: string) {
+        super(unparsed, 'content-type');
+
+        if (charset !== undefined) {
+            this.setParam('charset', charset);
+        }
+    }
+}
+
+// Percent-encode everything except 0-9, A-Z, a-z, `-`, `_`, `.`, `!` and `~`.
 function percentEncode(str: string) {
     return encodeURIComponent(str)
         .replace(/['()*]/g, c => "%" + c.charCodeAt(0).toString(16).toUpperCase());

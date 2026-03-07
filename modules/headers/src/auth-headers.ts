@@ -38,7 +38,7 @@ export abstract class AuthHeader {
     readonly params: AuthHeaderParams = {};
 
     protected constructor(unparsed: string | AuthHeader, public readonly headerName: string) {
-        if (unparsed instanceof AuthHeader) {
+        if (typeof unparsed !== 'string') {
             this._scheme     = unparsed._scheme;
             this.credentials = unparsed.credentials;
             this.params      = JSON.parse(JSON.stringify(unparsed.params));
