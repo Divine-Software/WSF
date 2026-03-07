@@ -1,4 +1,4 @@
-import { BasicTypes, isAsyncIterable, isHTML, isJSON, isReadableStream, isXML, toAsyncIterable, toReadableStream } from '@divine/commons';
+import { BasicTypes, isAsyncIterable, isHTML, isJSON, isReadableStream, isXML, toAsyncIterable, toReadableStream, toString } from '@divine/commons';
 import { ContentType } from '@divine/headers';
 import iconv from 'iconv-lite';
 import { Readable } from 'stream';
@@ -324,7 +324,7 @@ export class StringParser extends Parser {
         const bom     = this.contentType.param('x-bom',   'absent');
         this._assertSerializebleData(data !== null && data !== undefined, data);
 
-        return iconv.encode(String(data), charset, { addBOM: bom === 'present'});
+        return iconv.encode(toString(data), charset, { addBOM: bom === 'present'});
     }
 }
 

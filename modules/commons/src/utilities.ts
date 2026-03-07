@@ -1,3 +1,4 @@
+import { toString } from './strings';
 
 export function sleep(ms: number): Promise<void> {
     return new Promise((resolve) => setTimeout(resolve, ms));
@@ -16,7 +17,7 @@ export function throwError(err: Error): never {
 }
 
 export function asError(err: unknown): Error {
-    return err instanceof Error ? err : new Error(String(err));
+    return err instanceof Error ? err : new Error(toString(err));
 }
 
 export function setProp<T extends object, K extends keyof T>(object: T, prop: K, value: T[K]): T {

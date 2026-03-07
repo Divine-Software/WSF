@@ -6,7 +6,7 @@ export function percentEncode(str: string): string {
         .replace(/['()*]/g, c => "%" + c.charCodeAt(0).toString(16).toUpperCase());
 }
 
-function toString(value: unknown) {
+export function toString(value: unknown) {
     if (value instanceof Date) {
         return value.toISOString();
     }

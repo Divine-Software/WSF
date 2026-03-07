@@ -1,4 +1,4 @@
-import { BasicTypes, esxxEncoder, Params, percentEncode, StringParams } from '@divine/commons';
+import { asError, BasicTypes, esxxEncoder, Params, percentEncode, StringParams } from '@divine/commons';
 import { Authorization, ContentType, WWWAuthenticate } from '@divine/headers';
 import url, { Url, URL } from 'url';
 import { AuthScheme, AuthSchemeRequest } from './auth-schemes';
@@ -95,7 +95,7 @@ export class IOError<D extends object = object> extends URIError {
      */
     constructor(message: string, cause?: Error | unknown, public data?: D & Metadata) {
         super(cause instanceof Error ? `${message}: ${cause.message}` : message);
-        this.cause = cause instanceof Error ? cause : cause !== undefined ? new Error(String(cause)) : undefined;
+        this.cause = cause !== undefined ? asError(cause) : undefined;
     }
 
     /** @returns This IOError represented as a string. */
@@ -612,7 +612,7 @@ export class URI extends URL implements AsyncIterable<Buffer> {
 class UnknownURI extends URI {}
 
 function metadata(_err: NodeJS.ErrnoException | unknown): Metadata {
-    const err: NodeJS.ErrnoException = _err instanceof Error ? _err : new Error(String(_err));
+    const err: NodeJS.ErrnoException = asError(_err);
 
     return {
         [STATUS]:      typeof err.errno === 'number' ? err.errno : -1,

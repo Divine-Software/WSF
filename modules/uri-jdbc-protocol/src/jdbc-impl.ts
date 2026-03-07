@@ -1,3 +1,4 @@
+import { toString } from '@divine/commons';
 import { DatabaseURI, DBColumnInfo, DBDriver, DBError, DBParams, DBQuery, DBResult, DBTransactionParams, PasswordCredentials, q } from '@divine/uri';
 import assert from 'assert';
 import java from 'java';
@@ -64,7 +65,7 @@ class JDBCDatabaseConnection implements DBDriver.DBConnection {
 
         const props = Object.entries({ user: this._creds?.identity, password: this._creds?.secret, ...this._params.connectOptions })
             .filter(([_key, value]) => value !== null && value !== undefined)
-            .reduce((props, [key, value]) => (props.setProperty(key, String(value)), props), java.newInstanceSync('java.util.Properties'));
+            .reduce((props, [key, value]) => (props.setProperty(key, toString(value)), props), java.newInstanceSync('java.util.Properties'));
 
         this._client = await (java.newInstance('DBConnectionBridge', this._dbURI.href, props) as unknown as Promise<DBConnectionBridge>);
     }

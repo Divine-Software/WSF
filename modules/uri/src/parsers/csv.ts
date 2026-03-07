@@ -1,4 +1,5 @@
 
+import { toString } from '@divine/commons';
 import iconv from 'iconv-lite';
 import * as Papa from 'papaparse';
 import { Readable } from 'stream';
@@ -78,7 +79,7 @@ export class CSVParser extends Parser {
             const line: string[] = [];
 
             for (const column of row) {
-                line.push(column === null || column === undefined ? '' : quote + String(column).replace(search, replace) + quote);
+                line.push(column === null || column === undefined ? '' : quote + toString(column).replace(search, replace) + quote);
             }
 
             return iconv.encode(line.join(separator) + eol, charset);
