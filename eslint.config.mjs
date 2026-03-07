@@ -43,8 +43,9 @@ export default [
             }],
 
             // Override tseslint.configs.strict
-            '@typescript-eslint/no-non-null-assertion': 0,
             '@typescript-eslint/no-dynamic-delete': 0,
+            '@typescript-eslint/no-invalid-void-type': ['warn', { allowAsThisParameter: true } ],
+            '@typescript-eslint/no-non-null-assertion': 0,
 
             // Override tseslint.configs.recommendedTypeCheckedOnly
             '@typescript-eslint/no-base-to-string': 0,
@@ -60,6 +61,7 @@ export default [
             '@typescript-eslint/no-unsafe-return': 0,
             '@typescript-eslint/require-await': 0,
             '@typescript-eslint/restrict-template-expressions': 0,
+            '@typescript-eslint/unbound-method': [ 'error', { ignoreStatic: true } ],
 
             // Override tseslint.configs.stylistic
             "@typescript-eslint/array-type": 0,

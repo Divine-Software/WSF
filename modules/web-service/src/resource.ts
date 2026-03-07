@@ -4,6 +4,7 @@ import { strict as assert } from 'assert';
 import { WebError, WebStatus } from './error';
 import { WebRequest } from './request';
 import { WebResponse, WebResponses } from './response';
+import { WebServiceConfig } from './service';
 
 /**
  * A custom error handler.
@@ -290,13 +291,13 @@ export class WebArguments<Params extends ParamsBase = ParamsBase> {
      *
      * @template T             The type this method should return.
      * @param contentType      What parser to use. Defaults to the `content-type` request header.
-     * @param maxContentLength The maximum number of bytes to parse. Defaults to
+     * @param maxContentLength The maximum number of bytes to parse (after content-decoding/decompression). Defaults to
      *                         {@link WebServiceConfig.maxContentLength}.
-     * @throws                 A {@link WebError}({@link WebStatus.PAYLOAD_TOO_LARGE}) if the request body was larger
+     * @throws                 A {@link WebError}({@link WebStatus.PAYLOAD_TOO_LARGE}) if the request payload was larger
      *                         than allowed.
-     * @throws                 A {@link WebError}({@link WebStatus.UNSUPPORTED_MEDIA_TYPE}) if the body could not be
+     * @throws                 A {@link WebError}({@link WebStatus.UNSUPPORTED_MEDIA_TYPE}) if the payload could not be
      *                         parsed.
-     * @returns                The parsed request entity.
+     * @returns                The parsed request payload.
      */
     async body<T extends object>(contentType?: ContentType | string, maxContentLength?: number): Promise<T> {
         const body = await this.request.body<T>(contentType, maxContentLength);

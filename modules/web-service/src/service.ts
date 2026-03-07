@@ -1,5 +1,6 @@
 import { asError, escapeRegExp, isAsyncIterable, isReadableStream, StringParams } from '@divine/commons';
-import { AuthSchemeError } from '@divine/uri';
+import { ContentType } from '@divine/headers';
+import { AuthSchemeError, Encoder, Finalizable, Parser } from '@divine/uri';
 import { IncomingMessage, ServerResponse } from 'http';
 import { Http2ServerRequest, Http2ServerResponse } from 'http2';
 import { pipeline } from 'stream';
@@ -9,6 +10,50 @@ import { WebRequest } from './request';
 import { WebArguments, WebErrorHandler, WebFilterCtor, WebResource, WebResourceCtor } from './resource';
 import { WebResponse, WebResponses } from './response';
 import { WebServer } from './server';
+
+export interface PayloadEncoder {
+    /**
+     * A custom decoder function that can be used to decode request payloads.
+     *
+     * @param  stream        The request payload to decode.
+     * @param  type          The encoding format.
+     * @throws EncoderError  On decoding errors or if the encoding format is not recognized.
+     * @returns              An encoded byte stream.
+     */
+    decode(stream: AsyncIterable<Buffer>, type: string): AsyncIterable<Buffer>;
+
+    /**
+     * A custom encoder function that can be used to encode response payloads.
+     *
+     * @param  stream        The response payload to encode.
+     * @param  type          The encoding format.
+     * @throws EncoderError  On encoding errors or if the encoding format is not recognized.
+     * @returns              An encoded byte stream.
+     */
+    encode(stream: Buffer | AsyncIterable<Buffer>, type: string): AsyncIterable<Buffer>;
+}
+
+export interface PayloadParser {
+    /**
+     * A custom parser function that can be used to parse request payloads.
+     *
+     * @param   stream       The request payload as an async iterable of buffers.
+     * @param   contentType  The content type of the request payload.
+     * @throws  ParserError  On parser errors or if the media type is not recognized.
+     * @returns              The parsed message.
+     */
+    parse(stream: AsyncIterable<Buffer>, contentType: ContentType | string): Promise<object & Finalizable>;
+
+    /**
+     * A custom serializer function that can be used to serialize response payloads.
+     *
+     * @param   data         The response payload to be serialized.
+     * @param   contentType  The content type to use for serialization.
+     * @throws  ParserError  On serialization errors or if the media type is not recognized.
+     * @returns              A tuple containing the serialized payload and the content type.
+     */
+    serialize(data: object, contentType?: ContentType): [Buffer | AsyncIterable<Buffer>, ContentType];
+}
 
 /** The WebService configuration properties. */
 export interface WebServiceConfig {
@@ -31,12 +76,20 @@ export interface WebServiceConfig {
      */
     errorMessageProperty?: string;
 
+    /** A custom encoder/decoder that can be used instead of the default {@link Encoder}. */
+    payloadEncoder?:       PayloadEncoder;
+
+    /** A custom parser/serializer that can be used instead of the default {@link Parser}. */
+    payloadParser?:        PayloadParser;
+
     /** Specifies whether request IDs should be logged autmatically. Default is `true`. */
     logRequestID?:         boolean;
 
     /**
      * Specifies the default maximum payload size {@link WebRequest.body} should accept, unless an explicit limit is
-     * proveded in the call. Default is 1,000,000 bytes.
+     * provided in the call. Note that the limit is enforced *after* the request body has been decoded by the
+     * {@link payloadEncoder} (after `Content-Encoding` processing) but *before* it is parsed by the
+     * {@link payloadParser}. Default is 1,000,000 bytes.
      */
     maxContentLength?:     number;
 
@@ -188,6 +241,8 @@ export class WebService<Context> {
             slowRequestThreshold: 1_000,
             maxContentLength:     1_000_000,
             errorMessageProperty: 'message',
+            payloadEncoder:        Encoder,
+            payloadParser:         Parser,
             logRequestID:         true,
             returnRequestID:      null,
             trustForwardedFor:    false,
@@ -332,7 +387,7 @@ export class WebService<Context> {
     }
 
     /**
-     * Returns a Node.jss HTTP request handler as specified by
+     * Returns a Node.js HTTP request handler as specified by
      * [createServer](https://nodejs.org/api/http.html#httpcreateserveroptions-requestlistener).
      *
      * The request handler will construct a {@link WebRequest} and then invoke {@link dispatchRequest}. The response
@@ -343,7 +398,7 @@ export class WebService<Context> {
     requestEventHandler(): (req: IncomingMessage | Http2ServerRequest, res: ServerResponse | Http2ServerResponse) => Promise<void> {
         return async (req: IncomingMessage | Http2ServerRequest, res: ServerResponse | Http2ServerResponse) => {
             try {
-                const webreq = new WebRequest(this as WebService<unknown>, req, this.webServiceConfig);
+                const webreq = new WebRequest(this as WebService<unknown>, req);
                 webreq.log.info?.(`Begin ${webreq} from ${webreq.remoteUserAgent}`);
 
                 const webres = await this.dispatchRequest(webreq);
@@ -353,27 +408,27 @@ export class WebService<Context> {
                         webreq.log.warn?.(`Slow: ${webreq} from ${webreq.remoteUserAgent} <${webres.timestamp - webreq.timestamp} ms>`);
                     }
 
-                    const rawres = await webres.serialize(webreq, this.webServiceConfig);
+                    const { status, headers, body } = await webreq['_serializeResponse'](webres);
 
                     if ('stream' in res) { // HTTP/2
                         for (const forbidden of [ "connection", "keep-alive", "proxy-connection", "transfer-encoding",  "upgrade" ]) {
-                            delete rawres.headers[forbidden];
+                            delete headers[forbidden];
                         }
                     }
 
-                    res.writeHead(rawres.status, rawres.headers);
+                    res.writeHead(status, headers);
 
-                    if (isReadableStream(rawres.body)) {
+                    if (isReadableStream(body)) {
                         (res as ServerResponse).flushHeaders?.();
                         webreq.log.info?.(`Send ${webres} to ${webreq.remoteUserAgent} <${webres.timestamp - webreq.timestamp} ms>`);
                     }
 
                     await new Promise<void>((resolve, reject) => {
-                        if (rawres.body instanceof Buffer) {
-                            (res as ServerResponse).write(rawres.body, (err) => err ? reject(err) : resolve());
+                        if (body instanceof Buffer) {
+                            (res as ServerResponse).write(body, (err) => err ? reject(err) : resolve());
                         }
-                        else if (rawres.body) {
-                            pipeline(rawres.body, res, (err) => err ? reject(err) : resolve());
+                        else if (body) {
+                            pipeline(body, res, (err) => err ? reject(err) : resolve());
                         }
                         else {
                             resolve();

@@ -1,69 +1,27 @@
-import { BasicTypes, isReadableStream } from '@divine/commons';
+import { BasicTypes } from '@divine/commons';
 import { ContentDisposition, ContentType, WWWAuthenticate } from '@divine/headers';
-import { Parser, URI } from '@divine/uri';
+import { URI } from '@divine/uri';
 import { Readable } from 'stream';
 import { URL } from 'url';
-import { WebError, WebStatus } from './error';
+import { WebStatus } from './error';
 import { WebRequest } from './request';
-import { WebServiceConfig } from './service';
-
-/** @internal */
-export interface RawResponse {
-    status:  number;
-    headers: { [name: string]: string | string[] };
-    body:    Buffer | NodeJS.ReadableStream | null;
-}
 
 /**
  * An HTTP response that is to be transmitted back to the client.
  */
 export class WebResponse {
-    /** The response body. */
-    public body: Buffer | NodeJS.ReadableStream | null;
-
     /** When this response was created. */
     public readonly timestamp = Date.now();
 
     /**
      * Constructs a new response object.
      *
-     * The body is currently serialized in the constructor according to the `content-type` header, but that **will**
-     * change in the future when `accept` content negotiation is added, so do not depend on that.
-     *
      * @param status  The HTTP status code to return.
-     * @param body    The HTTP response entity to return.
+     * @param body    The HTTP response paylaod to return.
      * @param headers The HTTP headers to return. If the length of the response body is known, `content-length` will be
      *                added automatically.
      */
-    constructor(public status: WebStatus, body?: null | NodeJS.ReadableStream | Buffer | string | number | bigint | boolean | Date | object, public headers: WebResponseHeaders = {}) {
-        const defaultCT = (ct: ContentType) => this.headers['content-type'] ??= ct;
-
-        if (body === undefined || body === null) {
-            this.body = null;
-        }
-        else if (body instanceof Buffer || isReadableStream(body)) {
-            defaultCT(ContentType.bytes);
-            this.body = body;
-        }
-        else if (typeof body === 'string' || typeof body === 'number' || typeof body === 'bigint' || typeof body === 'boolean' || body instanceof Date) {
-            defaultCT(ContentType.text);
-            this.body = Buffer.from(body instanceof Date ? body.toISOString() : body.toString());
-        }
-        else {
-            try {
-                const [serializied, ct] = Parser.serialize(body, this.headers['content-type']);
-
-                this.headers['content-type'] = ct; // Force parser-provided content-type (see MultiPartParser.serialize())
-                this.body = serializied instanceof Buffer ? serializied : Readable.from(serializied);
-            }
-            catch (err) {
-                throw new WebError(WebStatus.INTERNAL_SERVER_ERROR, String(err));
-            }
-        }
-
-        if (this.body instanceof Buffer) {
-            this.headers['content-length'] = this.body.length;
-        }
+    constructor(public status: WebStatus, public body: null | NodeJS.ReadableStream | Buffer | string | number | bigint | boolean | Date | object = null, public headers: WebResponseHeaders = {}) {
     }
 
     /**
@@ -87,49 +45,28 @@ export class WebResponse {
     }
 
     /**
-     * Serializes the response.
+     * Serializes the given response payload into a Buffer or byte stream and finalizes the headers and status code.
      *
-     * For successful `GET` and `HEAD` responses, if an `etag` response header matches the `if-none-match` request
-     * header, {@link WebStatus.NOT_MODIFIED} will be returned instead.
+     * This method negotiates the final response based on the provided WebResponse and the request headers. This
+     * includes content negotiation based on the `Accept`, `Accept-Charset` and `Accept-Encoding` headers, as well as
+     * handling of conditional requests based on the `If-None-Match` header.
      *
-     * If {@link WebServiceConfig.returnRequestID} is configured, the request ID will also be automatically added to the
-     * response.
+     * It is normally not necessary to call this method directly, as the WebService will automatically serialize
+     * responses before sending them to the client. However, it can be useful to call this method manually when you want
+     * to inspect the final status, headers or body of the response, for instance in order to calculate cryptographic
+     * signatures or hashes.
      *
-     * @param webreq The request this is a response to.
-     * @param config The WebService configuration.
-     * @returns      A serialized response.
+     * @param request  The request this is a response to.
+     * @returns        This WebResponse.
      */
-    async serialize(webreq: WebRequest, config: Required<WebServiceConfig>): Promise<RawResponse> {
-        const response: RawResponse = {
-            status:    this.status,
-            headers:   {},
-            body:      this.body,
-        };
+    async serialize(request: WebRequest): Promise<this> {
+        const { status, headers, body } = await request['_serializeResponse'](this);
 
-        for (const [key, value] of Object.entries(this.headers)) {
-            if (Array.isArray(value)) {
-                response.headers[key] = value.map((v) => String(v));
-            }
-            else if (value !== undefined) {
-                response.headers[key] = String(value);
-            }
-        }
+        this.status  = status;
+        this.headers = Object.freeze(headers);
+        this.body    = body;
 
-        if (response.status === WebStatus.OK && /^(HEAD|GET)$/.test(webreq.method) &&
-            response.headers['etag'] && response.headers['etag'] === webreq.header('if-none-match', '')) {
-            response.status = WebStatus.NOT_MODIFIED;
-            response.body   = null;
-        }
-
-        if (webreq.method === 'HEAD') {
-            response.body = null;
-        }
-
-        if (config.returnRequestID && response.headers[config.returnRequestID] === undefined) {
-            response.headers[config.returnRequestID] = webreq.id;
-        }
-
-        return response;
+        return this;
     }
 
     /** @returns A short description about this response, including status and content type. */

@@ -1,5 +1,5 @@
 import { EventEmitter } from 'events';
-import { pipeline, Readable, Transform, TransformCallback, TransformOptions } from 'stream';
+import { pipeline, Readable } from 'stream';
 import { toAsyncIterable } from './async-iterable';
 
 export function isReadableStream(obj: any): obj is NodeJS.ReadableStream & AsyncIterable<Buffer | string>;
@@ -15,32 +15,4 @@ export function copyStream(from: NodeJS.ReadableStream, to: NodeJS.WritableStrea
     return new Promise<typeof to>((resolve, reject) => {
         pipeline(from, to, (err) => err ? reject(err) : resolve(to));
     });
-}
-
-export class SizeLimitedReadableStream extends Transform {
-    private _count = 0;
-
-    constructor(private _maxContentLength: number, private _makeError: () => Error, opts?: TransformOptions) {
-        super(opts);
-    }
-
-    override _transform(chunk: unknown, _encoding: string, callback: TransformCallback): void {
-        if (chunk instanceof Buffer || typeof chunk === 'string') {
-            this._count += chunk.length;
-
-            if (this._count > this._maxContentLength) {
-                callback(this._makeError());
-            }
-            else {
-                callback(null, chunk);
-            }
-        }
-        else {
-            callback(new Error('Expected Buffer or string chunk'));
-        }
-    }
-
-    override _flush(callback: TransformCallback): void {
-        callback();
-    }
 }

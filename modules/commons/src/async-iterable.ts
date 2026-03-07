@@ -26,6 +26,20 @@ export async function *toAsyncIterable(data: string | Buffer | AsyncIterable<Buf
     }
 }
 
+export async function *sizeLimited(data: AsyncIterable<Buffer>, limit: number, makeError: () => Error): AsyncIterable<Buffer> {
+    let count = 0;
+
+    for await (const chunk of data) {
+        count += chunk.length;
+
+        if (count > limit) {
+            throw makeError();
+        } else {
+            yield chunk;
+        }
+    }
+}
+
 export class AsyncIteratorAdapter<T, R = void> implements AsyncIterable<T> {
     private _queue = new Queue<{ event: T } | { error: Error } | { result: R }>();
 

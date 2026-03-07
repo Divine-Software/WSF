@@ -178,7 +178,7 @@ export enum WebStatus {
     /** The client has indicated preconditions in its headers which the server does not meet. */
     PRECONDITION_FAILED             = 412,
 
-    /** Request entity is larger than limits defined by server. */
+    /** Request payload is larger than limits defined by server. */
     PAYLOAD_TOO_LARGE               = 413,
 
     /** The URI requested by the client is longer than the server is willing to interpret. */

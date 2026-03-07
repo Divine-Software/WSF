@@ -1,5 +1,5 @@
 import { fakedReq } from './test-utils';
-import { WebArguments, WebError } from '../src';
+import { WebArguments, WebError, WebResponse, WebStatus } from '../src';
 
 const toml = `
 number  = 1
@@ -170,5 +170,18 @@ describe('the WebArguments class', () => {
         expect(args.object('?missing', array)).toBe(array);
         expect(args.object('?missing', null)).toBeNull();
         expect(args.object('?missing', undefined)).toBeUndefined();
+    });
+});
+
+describe('the WebResponse class', () => {
+    it('can be serialized', async () => {
+        expect.assertions(2);
+
+        const req = fakedReq('GET', '/');
+        const res = new WebResponse(WebStatus.OK, 'Hello, world!');
+
+        expect(res.body).toBe('Hello, world!');
+        await res.serialize(req);
+        expect(res.body).toStrictEqual(Buffer.from('Hello, world!'));
     });
 });

@@ -6,6 +6,7 @@ import { EventStreamEvent, Parser } from '@divine/uri';
 import { WebError, WebStatus } from './error';
 import { WebArguments, WebFilter, WebResource } from './resource';
 import { WebResponse, WebResponseHeaders } from './response';
+import { PayloadEncoder, PayloadParser } from './service';
 
 function asSet(array: string | string[] | undefined): Set<string> {
     return new Set(typeof array === 'string' ? array.split(/\s*,\s*/) : array ?? []);
@@ -153,6 +154,22 @@ export abstract class CORSFilter implements WebFilter {
     protected getMaxAge(params: CORSFilterParams): number {
         return 600;
     }
+}
+
+/** A trivial {@link WebFilter} that configures an {@link PayloadParser}/{@link PayloadEncoder} for matching requests. */
+export abstract class PayloadSerDesFilter implements WebFilter {
+    async filter(next: () => Promise<WebResponse>, args: WebArguments, resource: () => Promise<WebResource>): Promise<WebResponse> {
+        args.request.setPayloadSerDes(await this.getEncoder(args, resource), await this.getParser(args, resource));
+        return await next();
+    }
+
+    /** Returns the {@link PayloadEncoder} to use. */
+    // eslint-disable-next-line @typescript-eslint/naming-convention
+    protected abstract getEncoder(args: WebArguments, resource: () => Promise<WebResource>): Promise<PayloadEncoder | undefined>;
+
+    /** Returns the {@link PayloadParser} to use. */
+    // eslint-disable-next-line @typescript-eslint/naming-convention
+    protected abstract getParser(args: WebArguments, resource: () => Promise<WebResource>): Promise<PayloadParser | undefined>;
 }
 
 /** A symbol in {@link EventAttributes} representing the media type of the event's `data` field. */

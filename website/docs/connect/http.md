@@ -48,7 +48,7 @@ The [query] method in [HTTPURI] can be used to send arbitrary HTTP requests with
 import { HTTPURI, URI } from '@divine/uri';
 
 const apiBase = new URI('https://ws.example.com/v1/') as HTTPURI;
-const respose = apiBase.query('POST', { 'X-RPC-Operation': 'calculatePI' }, { digits: 13 });
+const response = await apiBase.query('POST', { 'X-RPC-Operation': 'calculatePI' }, { digits: 13 });
 ```
 
 ## Authentication and Custom Headers
