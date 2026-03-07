@@ -26,9 +26,9 @@ export interface CORSFilterParams {
 /**
  * A CORS-handling {@link WebFilter} helper class.
  *
- * The implementation is configured/customized by overriding the filter's protected methods: {@link _isOriginAllowed},
- * {@link _isMethodAllowed}, {@link _isHeaderAllowed}, {@link _isHeaderExposed}, {@link _isCredentialsSupported} and
- * {@link _getMaxAge}.
+ * The implementation is configured/customized by overriding the filter's protected methods: {@link isOriginAllowed},
+ * {@link isMethodAllowed}, {@link isHeaderAllowed}, {@link isHeaderExposed}, {@link isCredentialsSupported} and
+ * {@link getMaxAge}.
  *
  * By default, all origins, methods and headers are allowed for 10 minutes. Credentials are *not* allowed by default.
  */
@@ -41,7 +41,7 @@ export abstract class CORSFilter implements WebFilter {
         const params   = { args, resource: await resource(), response };
         const origin   = args.string('@origin', undefined);
 
-        if (this._isOriginAllowed(origin, params)) {
+        if (this.isOriginAllowed(origin, params)) {
             const method = args.string('@access-control-request-method', undefined);
 
             if (method !== undefined && args.request.method === 'OPTIONS') { // Preflight
@@ -49,18 +49,18 @@ export abstract class CORSFilter implements WebFilter {
                 const headers = args.string('@access-control-request-headers', '').toLowerCase().split(/\s*,\s*/);
 
                 response
-                    .setHeader('access-control-allow-methods',  [...methods].filter((h) => this._isMethodAllowed(h, params)).join(', '))
-                    .setHeader('access-control-allow-headers',  headers.filter((h) => this._isHeaderAllowed(h, params)).join(', '))
-                    .setHeader('access-control-max-age',        this._getMaxAge(params));
+                    .setHeader('access-control-allow-methods',  [...methods].filter((h) => this.isMethodAllowed(h, params)).join(', '))
+                    .setHeader('access-control-allow-headers',  headers.filter((h) => this.isHeaderAllowed(h, params)).join(', '))
+                    .setHeader('access-control-max-age',        this.getMaxAge(params));
                 }
 
-            if (this._isCredentialsSupported(params)) {
+            if (this.isCredentialsSupported(params)) {
                 response.setHeader('access-control-allow-credentials', 'true');
             }
 
             response
                 .setHeader('access-control-allow-origin',   origin)
-                .setHeader('access-control-expose-headers', exposed.filter((h) => this._isHeaderExposed(h, params)).join(', '))
+                .setHeader('access-control-expose-headers', exposed.filter((h) => this.isHeaderExposed(h, params)).join(', '))
                 .setHeader('vary',                          [...asSet(response.headers.vary).add('origin')].join(', '));
         }
 
@@ -74,7 +74,7 @@ export abstract class CORSFilter implements WebFilter {
      * can do that by throwing a {@link WebError} instead of returning `false`, like this:
      *
      * ```ts
-     * protected _isOriginAllowed(origin: string | undefined, params: CORSFilterParams): boolean {
+     * protected isOriginAllowed(origin: string | undefined, params: CORSFilterParams): boolean {
      *     if (origin === 'https://example.com') {
      *         return true;
      *     } else {
@@ -87,7 +87,8 @@ export abstract class CORSFilter implements WebFilter {
      * @param params Request parameters.
      * @returns `true` if the request is allowed, else `false`.
      */
-    protected _isOriginAllowed(origin: string | undefined, params: CORSFilterParams): boolean {
+    // eslint-disable-next-line @typescript-eslint/naming-convention
+    protected isOriginAllowed(origin: string | undefined, params: CORSFilterParams): boolean {
         return origin !== undefined;
     }
 
@@ -98,7 +99,8 @@ export abstract class CORSFilter implements WebFilter {
      * @param params Request parameters.
      * @returns `true` if the method is allowed, else `false`.
      */
-    protected _isMethodAllowed(method: string, params: CORSFilterParams): boolean {
+    // eslint-disable-next-line @typescript-eslint/naming-convention
+    protected isMethodAllowed(method: string, params: CORSFilterParams): boolean {
         return true;
     }
 
@@ -109,7 +111,8 @@ export abstract class CORSFilter implements WebFilter {
      * @param params Request parameters.
      * @returns `true` if the header is allowed, else `false`.
      */
-    protected _isHeaderAllowed(header: string, params: CORSFilterParams): boolean {
+    // eslint-disable-next-line @typescript-eslint/naming-convention
+    protected isHeaderAllowed(header: string, params: CORSFilterParams): boolean {
         return true;
     }
 
@@ -120,7 +123,8 @@ export abstract class CORSFilter implements WebFilter {
      * @param params Request parameters.
      * @returns `true` if the header is exposed, else `false`.
      */
-    protected _isHeaderExposed(header: string, params: CORSFilterParams): boolean {
+    // eslint-disable-next-line @typescript-eslint/naming-convention
+    protected isHeaderExposed(header: string, params: CORSFilterParams): boolean {
         return !CORSFilter._excluded.has(header);
     }
 
@@ -130,7 +134,8 @@ export abstract class CORSFilter implements WebFilter {
      * @param params Request parameters.
      * @returns `true` if credentials should be allowed, else `false`.
      */
-    protected _isCredentialsSupported(params: CORSFilterParams): boolean {
+    // eslint-disable-next-line @typescript-eslint/naming-convention
+    protected isCredentialsSupported(params: CORSFilterParams): boolean {
         return false;
     }
 
@@ -144,7 +149,8 @@ export abstract class CORSFilter implements WebFilter {
      * @param params Request parameters.
      * @returns The number of seconds the client may cache the information.
      */
-    protected _getMaxAge(params: CORSFilterParams): number {
+    // eslint-disable-next-line @typescript-eslint/naming-convention
+    protected getMaxAge(params: CORSFilterParams): number {
         return 600;
     }
 }
