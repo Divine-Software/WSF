@@ -1,7 +1,8 @@
 import type { Constructor } from '@divine/commons';
 import { AuthenticationInfo, AuthHeader, Authorization, ServerAuthorization, WWWAuthenticate } from '@divine/headers';
 import { URL } from 'url';
-import { IOError, Metadata } from './uri';
+import { IOError } from './uri';
+import { Metadata } from './uri-types';
 
 /** The base credentials interface. */
 export interface Credentials {

@@ -1,7 +1,7 @@
 import { BasicTypes, setProp } from '@divine/commons';
 import YAML from 'yaml';
-import { Parser, StringParser, toObject } from '../parsers';
-import { FIELDS, WithFields } from '../uri';
+import { Parser, StringParser } from '../parsers';
+import { FIELDS, WithFields, wrap } from '../uri-types';
 
 /**
  * The `application/yaml`, `application/x-yaml`, `text/vnd.yaml`, `text/x-yaml` and `text/yaml` parser handles
@@ -15,9 +15,9 @@ export class YAMLParser extends Parser {
     async parse(stream: AsyncIterable<Buffer>): Promise<object & WithFields<BasicTypes>> {
         const yaml = YAML.parseAllDocuments(await new StringParser(this.contentType).parse(stream));
         const json = yaml.map((yaml) => yaml.toJSON() as BasicTypes);
-        const data = toObject<WithFields<BasicTypes>>(json[0]);
+        const data = wrap(json[0]);
 
-        return json.length === 1 ? data : setProp(data, FIELDS, json);
+        return json.length === 1 ? data : setProp(data as WithFields<BasicTypes>, FIELDS, json);
     }
 
     serialize(data: BasicTypes): Buffer;

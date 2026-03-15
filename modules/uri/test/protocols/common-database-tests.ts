@@ -3,7 +3,7 @@
 /* eslint-disable jest/no-standalone-expect */
 /* eslint-disable jsdoc/require-jsdoc */
 
-import { DatabaseURI, DBError, DBQuery, FIELDS, IOError, q, URI } from '../../src';
+import { DatabaseURI, DBError, DBQuery, FIELDS, IOError, q, unwrap, URI } from '../../src';
 
 export interface CommonDBTestParams {
     name:        string;
@@ -236,12 +236,13 @@ export function describeCommonDBTest(def: CommonDBTestParams): void {
         });
 
         it('handles transactions', async () => {
-            expect.assertions(14);
+            expect.assertions(15);
 
             await expect(db.query(async () => {
                 await db.$`#dt`.append({ text: '🦮 1.1' });
 
                 const t1a = await db.$`#dt(text);scalar?(eq,text,🦮 1.1)`.load();
+                expect(t1a).toBeInstanceOf(String);
                 expect(t1a.valueOf()).toBe('🦮 1.1');
 
                 throw new SyntaxError('Force failure');

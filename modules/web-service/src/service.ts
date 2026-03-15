@@ -52,7 +52,7 @@ export interface PayloadParser {
      * @throws  ParserError  On serialization errors or if the media type is not recognized.
      * @returns              A tuple containing the serialized payload and the content type.
      */
-    serialize(data: object, contentType?: ContentType): [Buffer | AsyncIterable<Buffer>, ContentType];
+    serialize(data: BasicTypes, contentType?: ContentType): [Buffer | AsyncIterable<Buffer>, ContentType];
 }
 
 /** The WebService configuration properties. */

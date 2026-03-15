@@ -1,6 +1,6 @@
 import { BasicTypes, Params, isReadableStream, sizeLimited } from '@divine/commons';
 import { Accept, AcceptCharset, ContentType } from '@divine/headers';
-import { AuthSchemeRequest, BufferParser, FINALIZE, Finalizable, ParserError, toObject } from '@divine/uri';
+import { AuthSchemeRequest, BufferParser, FINALIZE, Finalizable, ParserError, wrap } from '@divine/uri';
 import cuid from 'cuid';
 import { IncomingHttpHeaders, IncomingMessage, OutgoingHttpHeaders, } from 'http';
 import { Http2ServerRequest, Http2Session } from 'http2';
@@ -318,7 +318,7 @@ export class WebRequest implements AuthSchemeRequest {
                     try {
                         const parser = this._payloadParser ?? this.webService.webServiceConfig.payloadParser;
 
-                        [ tr, ct ] = parser.serialize(toObject(response.body), accept.type !== '*/*' ? accept.setParam('charset', charset) : undefined);
+                        [ tr, ct ] = parser.serialize(response.body, accept.type !== '*/*' ? accept.setParam('charset', charset) : undefined);
                         break ct;
                     } catch {
                         // Try the next charset in the Accept-Charset header or next media type in the Accept header

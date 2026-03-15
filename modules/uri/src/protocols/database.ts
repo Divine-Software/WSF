@@ -3,13 +3,10 @@ import { ContentType } from '@divine/headers';
 import { Barrier, Signal } from '@divine/synchronization';
 import { SecureContextOptions } from 'tls';
 import { DBCallback, DBConnection, DBConnectionPool } from '../database-driver';
-import { toObject } from '../parsers';
 import { DBSessionSelector, invalidCharacter, isDatabaseTransactionParams, isDBCallback } from '../private/database-utils';
 import { URIParams } from '../selectors';
-import { FIELDS, HEADERS, IOError, Metadata, ParamsSelector, STATUS, STATUS_TEXT, URI, WithFields } from '../uri';
-
-// eslint-disable-next-line @typescript-eslint/no-unused-vars
-import { type VOID } from '../uri';
+import { IOError, ParamsSelector, URI } from '../uri';
+import { FIELDS, HEADERS, Metadata, STATUS, STATUS_TEXT, WithFields, Wrap, wrap } from '../uri-types';
 
 /**
  * Constructs a {@link DBQuery} from a template literal.
@@ -995,7 +992,7 @@ export abstract class DatabaseURI extends URI {
      * @throws    DBError  On database/query errors.
      * @returns            A cell, row or array of rows, with DBMetadata.
      */
-    override load<T extends object>(_recvCT?: ContentType | string): Promise<T & DBMetadata> {
+    override load<T>(_recvCT?: ContentType | string): Promise<Wrap<T> & Metadata & DBMetadata> {
         return this._session(async (conn) => {
             const dbRef  = await conn.reference(this);
             const result = toObjects(await conn.query(dbRef.getLoadQuery()));
@@ -1006,15 +1003,15 @@ export abstract class DatabaseURI extends URI {
                 }
                 else if (result.length === 1) {
                     return dbRef.scope === 'scalar'
-                        ? withDBMetadata<T>(result, toObject(result[FIELDS][0][0][0]))
-                        : withDBMetadata<T>(result, result[0]);
+                        ? withDBMetadata<Wrap<T>>(result, wrap(result[FIELDS][0][0]?.[0]))
+                        : withDBMetadata<Wrap<T>>(result, wrap(result[0]));
                 }
                 else {
                     throw new IOError(`Scope '${dbRef.scope}' used with a multi-row result set`, undefined, result);
                 }
             }
             else {
-                return result as unknown as T & DBMetadata;
+                return result as unknown as Wrap<T> & DBMetadata;
             }
         });
     }
@@ -1032,9 +1029,9 @@ export abstract class DatabaseURI extends URI {
      * @throws    DBError  On database/query errors.
      * @returns            A row or array of rows (if the database supports it), with DBMetadata.
      */
-    override save<T extends object, D = unknown>(data: D, _sendCT?: ContentType | string, _recvCT?: ContentType | string): Promise<T & DBMetadata> {
+    override save<T, D = unknown>(data: D, _sendCT?: ContentType | string, _recvCT?: ContentType | string): Promise<Wrap<T> & Metadata & DBMetadata> {
         return this._session(async (conn) => {
-            return toObjects<T>(await conn.query((await conn.reference(this)).getSaveQuery(data)));
+            return toObjects<Wrap<T>>(await conn.query((await conn.reference(this)).getSaveQuery(data)));
         });
     }
 
@@ -1050,9 +1047,9 @@ export abstract class DatabaseURI extends URI {
      * @throws    DBError  On database/query errors.
      * @returns            A row or array of rows (if the database supports it), with DBMetadata.
      */
-    override append<T extends object, D = unknown>(data: D, _sendCT?: ContentType | string, _recvCT?: ContentType | string): Promise<T & DBMetadata> {
+    override append<T, D = unknown>(data: D, _sendCT?: ContentType | string, _recvCT?: ContentType | string): Promise<Wrap<T> & Metadata & DBMetadata> {
         return this._session(async (conn) => {
-            return toObjects<T>(await conn.query((await conn.reference(this)).getAppendQuery(data)));
+            return toObjects<Wrap<T>>(await conn.query((await conn.reference(this)).getAppendQuery(data)));
         });
     }
 
@@ -1066,11 +1063,11 @@ export abstract class DatabaseURI extends URI {
      * @param     _recvCT  Must not be used.
      * @throws    IOError  On I/O errors or if this URI does not have a valid *DB reference* fragment.
      * @throws    DBError  On database/query errors.
-     * @returns            Object({@link VOID}), with DBMetadata.
+     * @returns            `[]`, with DBMetadata.
      */
-    override modify<T extends object, D = unknown>(data: D, _sendCT?: ContentType | string, _recvCT?: ContentType | string): Promise<T & DBMetadata> {
+    override modify<T, D = unknown>(data: D, _sendCT?: ContentType | string, _recvCT?: ContentType | string): Promise<Wrap<T> & Metadata & DBMetadata> {
         return this._session(async (conn) => {
-            return toObjects<T>(await conn.query((await conn.reference(this)).getModifyQuery(data)));
+            return toObjects<Wrap<T>>(await conn.query((await conn.reference(this)).getModifyQuery(data)));
         });
     }
 
@@ -1081,11 +1078,11 @@ export abstract class DatabaseURI extends URI {
      * @param     _recvCT  Must not be used.
      * @throws    IOError  On I/O errors or if this URI does not have a valid *DB reference* fragment.
      * @throws    DBError  On database/query errors.
-     * @returns            Object({@link VOID}), with DBMetadata.
+     * @returns            `[]`, with DBMetadata.
      */
-    override remove<T extends object>(_recvCT?: ContentType | string): Promise<T & DBMetadata> {
+    override remove<T>(_recvCT?: ContentType | string): Promise<Wrap<T> & Metadata & DBMetadata> {
         return this._session(async (conn) => {
-            return toObjects<T>(await conn.query((await conn.reference(this)).getRemoveQuery()));
+            return toObjects<Wrap<T>>(await conn.query((await conn.reference(this)).getRemoveQuery()));
         });
     }
 
@@ -1100,7 +1097,7 @@ export abstract class DatabaseURI extends URI {
      * @returns             An array of rows from the *last* query. All result sets are available as a {@link DBResult}
      *                      array via {@link FIELDS} (from the DBMetadata).
      */
-    override query<T extends object = object[]>(...queries: DBQuery[]): Promise<T & DBMetadata>;
+    override query<T = object[]>(...queries: DBQuery[]): Promise<Wrap<T> & Metadata & DBMetadata>;
     /**
      * Executes a query in the form of a template literal.
      *
@@ -1124,7 +1121,7 @@ export abstract class DatabaseURI extends URI {
      * @returns             An array of rows. The raw set is available as a {@link DBResult} array — of length 1 — via
      *                      {@link FIELDS} (from the DBMetadata).
      */
-    override query<T extends object = object[]>(query: TemplateStringsArray, ...params: (BasicTypes)[]): Promise<T & DBMetadata>;
+    override query<T = object[]>(query: TemplateStringsArray, ...params: (BasicTypes)[]): Promise<Wrap<T> & Metadata & DBMetadata>;
     /**
      * Executes a query in the form of a query string. The string may contain `{prop}` placeholders, which will then be
      * resolved against properties in `params`.
@@ -1149,7 +1146,7 @@ export abstract class DatabaseURI extends URI {
      * @returns             An array of rows. The raw set is available as a {@link DBResult} array — of length 1 — via
      *                      {@link FIELDS} (from the DBMetadata).
      */
-    override query<T extends object = object[]>(query: string, params: Params): Promise<T & DBMetadata>;
+    override query<T = object[]>(query: string, params: Params): Promise<Wrap<T> & Metadata & DBMetadata>;
     /**
      * Begins a transaction and evaluates the provided callback.
      *

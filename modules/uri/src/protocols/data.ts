@@ -1,6 +1,7 @@
 import { ContentType } from '@divine/headers';
-import { DirectoryEntry, Metadata, URI, VOID } from '../uri';
 import { Parser } from '../parsers';
+import { DirectoryEntry, URI } from '../uri';
+import { Metadata, Wrap, wrap } from '../uri-types';
 
 export class DataURI extends URI {
     constructor(uri: URI) {
@@ -24,28 +25,28 @@ export class DataURI extends URI {
         } satisfies DirectoryEntry as unknown as T;
     }
 
-    override async load<T extends object>(recvCT?: ContentType | string): Promise<T & Metadata> {
+    override async load<T>(recvCT?: ContentType | string): Promise<Wrap<T> & Metadata> {
         const [ type, _, data ] = this._decode();
 
-        return await Parser.parse<T>(data, ContentType.create(recvCT, type));
+        return await Parser.parse<T>(data, ContentType.create(recvCT, type)) as Wrap<T> & Metadata;
     }
 
-    override async save<T extends object, D = unknown>(data: D, sendCT?: ContentType | string, recvCT?: undefined): Promise<T & Metadata> {
+    override async save<T, D = unknown>(data: D, sendCT?: ContentType | string, recvCT?: undefined): Promise<Wrap<T> & Metadata> {
         if (recvCT !== undefined) {
             throw new TypeError(`URI ${this}: save: recvCT argument is not supported`);
         }
 
         await this._write(data, sendCT, false);
-        return Object(VOID);
+        return wrap(undefined) as unknown as Wrap<T> & Metadata;
     }
 
-    override async append<T extends object, D = unknown>(data: D, sendCT?: ContentType | string, recvCT?: undefined): Promise<T & Metadata> {
+    override async append<T, D = unknown>(data: D, sendCT?: ContentType | string, recvCT?: undefined): Promise<Wrap<T> & Metadata> {
         if (recvCT !== undefined) {
             throw new TypeError(`URI ${this}: append: recvCT argument is not supported`);
         }
 
         await this._write(data, sendCT, true);
-        return Object(VOID);
+        return wrap(undefined) as unknown as Wrap<T> & Metadata;
     }
 
     private _decode(): [ContentType, boolean, Buffer] {

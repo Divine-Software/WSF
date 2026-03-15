@@ -1,64 +1,16 @@
-import { asError, BasicTypes, esxxEncoder, Params, percentEncode, StringParams } from '@divine/commons';
+import { asError, esxxEncoder, Params, percentEncode, toString } from '@divine/commons';
 import { Authorization, ContentType, WWWAuthenticate } from '@divine/headers';
 import url, { Url, URL } from 'url';
 import { AuthScheme, AuthSchemeRequest } from './auth-schemes';
-import { guessContentType, uri } from './file-utils';
+import { guessContentType } from './file-utils';
 import { AuthSelector, AuthSessionSelector, getBestSelector, HeadersSelector, isAuthSelector, isHeadersSelector, isParamsSelector, isSessionSelector, ParamsSelector, SelectorBase, SessionSelector } from './selectors';
+import { HEADERS, Metadata, STATUS, STATUS_TEXT, Wrap } from './uri-types';
 
 export { AuthSelector, HeadersSelector, ParamsSelector, Selector } from './selectors';
 
 const urlObject  = (url as any).Url;
 
-/** This symbol, wrapped in an `Object`, represents a `null` value. */
-export const NULL        = Symbol('NULL');
-
-/** This symbol, wrapped in an `Object`, represents an `undefined` value. */
-export const VOID        = Symbol('VOID');
-
-/** Used in {@link WithFields} to attach field metadata to an object. */
-export const FIELDS      = Symbol('FIELDS');
-
-/** Used in {@link Finalizable} to attach a finializer function to an object. */
-export const FINALIZE    = Symbol('FINALIZE');
-
-/** Used in {@link Metadata} to attach response headers to an object. */
-export const HEADERS     = Symbol('HEADERS');
-
-/** Used in {@link Metadata} to attach a response status code to an object. */
-export const STATUS      = Symbol('STATUS');
-
-/** Used in {@link Metadata} to attach a response status message to an object. */
-export const STATUS_TEXT = Symbol('STATUS_TEXT');
-
-/** Defines how a finalizer function is attached to an object. */
-export interface Finalizable {
-    /** A finalizer function, used to clean up temporary resources. */
-    [FINALIZE]?: () => Promise<unknown>;
-}
-
-/**
- * Defines how field metadata is attached to an object.
- *
- * @template T The field type.
- */
-export interface WithFields<T extends BasicTypes> {
-    /** Defines how field information is attached to an object. */
-    [FIELDS]?: T[];
-}
-
-/** Defines how response/result metadata is attached to an object. */
-export interface Metadata {
-    /** The response status. Example: the HTTP status or a Node.js `errno` value. */
-    [STATUS]?:      number;
-
-    /** The response status message. Example: the HTTP status text or a Node.js `code` value. */
-    [STATUS_TEXT]?: string;
-
-    /** Additional metadata as key-value pairs. Example: HTTP response headers. */
-    [HEADERS]?:     StringParams;
-}
-
-/** Filesystem metadata, returned by {@link URI.info} and {@link URI.list}. */
+/** Filesystem metadata, returned by {@link URI['info']} and {@link URI['list']}. */
 export interface DirectoryEntry {
     /** The URI this entry describes. */
     uri:      URI;
@@ -139,27 +91,6 @@ export class IOError<D extends object = object> extends URIError {
  * `tds:`              | {@link @divine/uri-tds-protocol!TDSURI}
  */
 export class URI extends URL implements AsyncIterable<Buffer> {
-    /** An alias for {@link VOID}. */
-    static readonly VOID        = VOID;
-
-    /** An alias for {@link NULL}. */
-    static readonly NULL        = NULL;
-
-    /** An alias for {@link FIELDS}. */
-    static readonly FIELDS      = FIELDS;
-
-    /** An alias for {@link FIELDS}. */
-    static readonly FINALIZE    = FINALIZE;
-
-    /** An alias for {@link HEADERS}. */
-    static readonly HEADERS     = HEADERS;
-
-    /** An alias for {@link STATUS}. */
-    static readonly STATUS      = STATUS;
-
-    /** An alias for {@link STATUS_TEXT}. */
-    static readonly STATUS_TEXT = STATUS_TEXT;
-
     /**
      * Registers a new URI protocol. All subclasses must register their URL protocol support with this method.
      *
@@ -402,7 +333,7 @@ export class URI extends URL implements AsyncIterable<Buffer> {
      * @returns               The remote resource parsed as `recvCT` *into an object*, including {@link MetaData}.
      */
     // eslint-disable-next-line @typescript-eslint/no-unused-vars
-    async load<T extends object>(recvCT?: ContentType | string): Promise<T & Metadata> {
+    async load<T>(recvCT?: ContentType | string): Promise<Wrap<T> & Metadata> {
         throw new IOError(`URI ${this} does not support load()`);
     }
 
@@ -427,7 +358,7 @@ export class URI extends URL implements AsyncIterable<Buffer> {
      *                        including {@link MetaData}.
      */
     // eslint-disable-next-line @typescript-eslint/no-unused-vars
-    async save<T extends object, D = unknown>(data: D, sendCT?: ContentType | string, recvCT?: ContentType | string): Promise<T & Metadata> {
+    async save<T, D = unknown>(data: D, sendCT?: ContentType | string, recvCT?: ContentType | string): Promise<Wrap<T> & Metadata> {
         throw new IOError(`URI ${this} does not support save()`);
     }
 
@@ -452,7 +383,7 @@ export class URI extends URL implements AsyncIterable<Buffer> {
      *                        including {@link MetaData}.
      */
     // eslint-disable-next-line @typescript-eslint/no-unused-vars
-    async append<T extends object, D = unknown>(data: D, sendCT?: ContentType | string, recvCT?: ContentType | string): Promise<T & Metadata> {
+    async append<T, D = unknown>(data: D, sendCT?: ContentType | string, recvCT?: ContentType | string): Promise<Wrap<T> & Metadata> {
         throw new IOError(`URI ${this} does not support append()`);
     }
 
@@ -477,7 +408,7 @@ export class URI extends URL implements AsyncIterable<Buffer> {
      *                        including {@link MetaData}.
      */
     // eslint-disable-next-line @typescript-eslint/no-unused-vars
-    async modify<T extends object, D = unknown>(data: D, sendCT?: ContentType | string, recvCT?: ContentType | string): Promise<T & Metadata> {
+    async modify<T, D = unknown>(data: D, sendCT?: ContentType | string, recvCT?: ContentType | string): Promise<Wrap<T> & Metadata> {
         throw new IOError(`URI ${this} does not support modify()`);
     }
 
@@ -499,7 +430,7 @@ export class URI extends URL implements AsyncIterable<Buffer> {
      *                        including {@link MetaData}.
      */
     // eslint-disable-next-line @typescript-eslint/no-unused-vars
-    async remove<T extends object>(recvCT?: ContentType | string): Promise<T & Metadata> {
+    async remove<T>(recvCT?: ContentType | string): Promise<Wrap<T> & Metadata> {
         throw new IOError(`URI ${this} does not support remove()`);
     }
 
@@ -516,7 +447,7 @@ export class URI extends URL implements AsyncIterable<Buffer> {
      * @returns               If the operation produced a result, it will returned together with {@link MetaData}.
      */
     // eslint-disable-next-line @typescript-eslint/no-unused-vars
-    async query<T extends object>(...args: unknown[]): Promise<T & Metadata> {
+    async query<T>(...args: unknown[]): Promise<Wrap<T> & Metadata> {
         throw new IOError(`URI ${this} does not support query()`);
     }
 

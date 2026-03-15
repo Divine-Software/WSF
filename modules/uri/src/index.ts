@@ -17,6 +17,7 @@ export * from './protocols/database';
 export * from './protocols/file';
 export * from './protocols/http';
 export * from './uri';
+export * from './uri-types';
 
 export * as DBDriver from './database-driver';
 
@@ -35,3 +36,4 @@ import './parsers';
 import './parsers/csv';
 import './parsers/event-stream';
 import './parsers/forms';
+

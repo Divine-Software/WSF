@@ -10,7 +10,8 @@ import pkg from '../../package.json';
 import { Encoder } from '../encoders';
 import { Parser } from '../parsers';
 import { URIParams } from '../selectors';
-import { DirectoryEntry, HEADERS, IOError, Metadata, ParamsSelector, STATUS, STATUS_TEXT, URI, VOID } from '../uri';
+import { DirectoryEntry, IOError, ParamsSelector, URI } from '../uri';
+import { HEADERS, Metadata, STATUS, STATUS_TEXT, wrap, Wrap } from '../uri-types';
 
 /** HTTP configuration parameters. */
 export interface HTTPParams extends URIParams {
@@ -60,14 +61,14 @@ export class HTTPURI extends URI {
         const type     = headers['content-type'];
         const modified = headers['last-modified'];
 
-        return this._requireValidStatus<DirectoryEntry>({
+        return {
             ...extractMetadata(response),
             uri:     this,
             name:    path.posix.basename(location.pathname),
             type:    ContentType.create(type),
             length:  typeof length === 'string' ? Number(length) : undefined,
             updated: typeof modified === 'string' ? new Date(modified) : undefined,
-        }) as T & Metadata;
+        } as unknown as T & Metadata;
     }
 
 
@@ -80,8 +81,8 @@ export class HTTPURI extends URI {
      * @throws   ParserError  If the media type is unsupported or if the parser fails to parse the resource.
      * @returns               The HTTP resource parsed as `recvCT` *into an object*, including {@link MetaData}.
      */
-    override async load<T extends object>(recvCT?: ContentType | string): Promise<T> {
-        return this._requireValidStatus(await this._query('GET', {}, undefined, undefined, recvCT));
+    override async load<T>(recvCT?: ContentType | string): Promise<Wrap<T> & Metadata> {
+        return await this._query('GET', {}, undefined, undefined, recvCT);
     }
 
     /**
@@ -97,8 +98,8 @@ export class HTTPURI extends URI {
      *                        the response.
      * @returns               The HTTP response parsed as `recvCT` *into an object*, including {@link MetaData}.
      */
-    override async save<T extends object, D = unknown>(data: D, sendCT?: ContentType | string, recvCT?: ContentType | string): Promise<T> {
-        return this._requireValidStatus(await this._query('PUT', {}, data, sendCT, recvCT));
+    override async save<T, D = unknown>(data: D, sendCT?: ContentType | string, recvCT?: ContentType | string): Promise<Wrap<T> & Metadata> {
+        return await this._query('PUT', {}, data, sendCT, recvCT);
     }
 
     /**
@@ -114,8 +115,8 @@ export class HTTPURI extends URI {
      *                        the response.
      * @returns               The HTTP response parsed as `recvCT` *into an object*, including {@link MetaData}.
      */
-    override async append<T extends object, D = unknown>(data: D, sendCT?: ContentType | string, recvCT?: ContentType | string): Promise<T> {
-        return this._requireValidStatus(await this._query('POST', {}, data, sendCT, recvCT));
+    override async append<T, D = unknown>(data: D, sendCT?: ContentType | string, recvCT?: ContentType | string): Promise<Wrap<T> & Metadata> {
+        return await this._query('POST', {}, data, sendCT, recvCT);
     }
 
     /**
@@ -131,8 +132,8 @@ export class HTTPURI extends URI {
      *                        the response.
      * @returns               The HTTP response parsed as `recvCT` *into an object*, including {@link MetaData}.
      */
-    override async modify<T extends object, D = unknown>(data: D, sendCT?: ContentType | string, recvCT?: ContentType | string): Promise<T> {
-        return this._requireValidStatus(await this._query('PATCH', {}, data, sendCT, recvCT));
+    override async modify<T, D = unknown>(data: D, sendCT?: ContentType | string, recvCT?: ContentType | string): Promise<Wrap<T> & Metadata> {
+        return await this._query('PATCH', {}, data, sendCT, recvCT);
     }
 
     /**
@@ -144,8 +145,8 @@ export class HTTPURI extends URI {
      * @throws   ParserError  If the media type is unsupported or if the parser fails to parse the response.
      * @returns               The HTTP response parsed as `recvCT` *into an object*, including {@link MetaData}.
      */
-    override async remove<T extends object>(recvCT?: ContentType | string): Promise<T> {
-        return this._requireValidStatus(await this._query('DELETE', {}, undefined, undefined, recvCT));
+    override async remove<T>(recvCT?: ContentType | string): Promise<Wrap<T> & Metadata> {
+        return await this._query('DELETE', {}, undefined, undefined, recvCT);
     }
 
     /**
@@ -163,7 +164,7 @@ export class HTTPURI extends URI {
      *                        the response.
      * @returns               The HTTP response parsed as `recvCT` *into an object*, including {@link MetaData}.
      */
-    override async query<T extends object, D = unknown>(method: string, headers?: StringParams | null, data?: D, sendCT?: ContentType | string, recvCT?: ContentType | string): Promise<T> {
+    override async query<T, D = unknown>(method: string, headers?: StringParams | null, data?: D, sendCT?: ContentType | string, recvCT?: ContentType | string): Promise<Wrap<T> & Metadata> {
         if (typeof method !== 'string') {
             throw new TypeError(`URI ${this}: query: 'method' argument missing/invalid`);
         }
@@ -177,11 +178,11 @@ export class HTTPURI extends URI {
             throw new TypeError(`URI ${this}: query: 'recvCT' argument invalid`);
         }
 
-        return this._requireValidStatus(await this._query(method, headers ?? {}, data, this._guessContentType(sendCT), recvCT));
+        return await this._query(method, headers ?? {}, data, this._guessContentType(sendCT), recvCT);
     }
 
     /** @internal */
-    protected _requireValidStatus<T extends object & Metadata>(result: T): T {
+    protected _requireValidStatus<T>(result: T & Metadata): T {
         const status = result[STATUS];
 
         if (status && (status < 200 || status >= 300)) {
@@ -193,7 +194,7 @@ export class HTTPURI extends URI {
     }
 
     /** @internal */
-    private async _query<T>(method: string, headers: StringParams, data?: unknown, sendCT?: ContentType | string, recvCT?: ContentType | string): Promise<T & Metadata> {
+    private async _query<T>(method: string, headers: StringParams, data?: unknown, sendCT?: ContentType | string, recvCT?: ContentType | string): Promise<Wrap<T> & Metadata> {
         let body: Buffer | AsyncIterable<Buffer> | undefined;
 
         headers = {
@@ -237,7 +238,7 @@ export class HTTPURI extends URI {
 
             params.console?.debug?.(`${reqDesc} ▲ ${JSON.stringify(headers)}`);
 
-            const result = new Promise<T & Metadata>((resolve, reject) => {
+            const result = new Promise<Wrap<unknown> & Metadata>((resolve, reject) => {
                 request.on('response', async (response) => {
                     try {
                         params.console?.debug?.(`${reqDesc} ▼ ${JSON.stringify(response.headers)}`);
@@ -248,9 +249,9 @@ export class HTTPURI extends URI {
                             params.console?.warn?.(`${reqDesc} ► ${response.statusCode} ${response.statusMessage} <${Date.now() - started} ms>`);
                         }
 
-                        const result: T & Metadata = method === 'HEAD' || response.statusCode === 204 /* No Content */ ? Object(VOID) :
+                        const result = (method === 'HEAD' || response.statusCode === 204 /* No Content */ ? wrap(undefined) :
                             await Parser.parse(Encoder.decode(response, response.headers['content-encoding'] ?? []),
-                                               ContentType.create(recvCT, response.headers['content-type']));
+                                               ContentType.create(recvCT, response.headers['content-type']))) as Wrap<unknown> & Metadata;
 
                         result[HEADERS]     = convertHeaders(response);
                         result[STATUS]      = response.statusCode;
@@ -304,7 +305,7 @@ export class HTTPURI extends URI {
             }
         }
 
-        return res;
+        return this._requireValidStatus(res) as unknown as Wrap<T> & Metadata;
     }
 }
 

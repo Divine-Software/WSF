@@ -1,43 +1,9 @@
-import { BasicTypes, isAsyncIterable, isHTML, isJSON, isReadableStream, isXML, toAsyncIterable, toReadableStream, toString } from '@divine/commons';
+import { isAsyncIterable, isHTML, isJSON, isReadableStream, isXML, toAsyncIterable, toReadableStream, toString } from '@divine/commons';
 import { ContentType } from '@divine/headers';
 import iconv from 'iconv-lite';
 import { Readable } from 'stream';
-import { Finalizable, IOError, NULL, URI, VOID } from './uri';
-
-/**
- * Converts a primitive value to an object and returns objects as-is.
- *
- * `undefined` will be converted to Object({@link VOID}) and `null` to Object({@link NULL}). Any other non-object value
- * will be converted via Object(value), which means that a `string` value will become a String object, a `number` will
- * become a Number instance, et cetera.
- *
- * {@link toPrimitive} can be used to reverse this operation.
- *
- * @template T     The actual type returned.
- * @param    value The value to convert to an object.
- * @returns        The value converted to an object.
- */
-export function toObject<T extends object>(value: unknown): T {
-    return value === undefined       ? Object(VOID) :
-           value === null            ? Object(NULL) :
-           typeof value !== 'object' ? Object(value) :
-           value as T;
-}
-
-/**
- * Converts an object created by {@link toObject} back into the original value.
- *
- * @template T      The actual type returned.
- * @param    value  The object that should be converted back to its original value.
- * @returns         The original value.
- */
-export function toPrimitive<T extends BasicTypes | symbol | undefined>(value: any): T {
-    if (value !== null && value !== undefined) {
-        value = value.valueOf();
-    }
-
-    return value === NULL ? null! : value === VOID ? undefined! : value;
-}
+import { IOError, URI, } from './uri';
+import { Finalizable, unwrap, wrap, Wrap } from './uri-types';
 
 /** An IOError subclass thrown by the {@link Parser} class. */
 export class ParserError<D extends object = object> extends IOError<D> {
@@ -94,12 +60,10 @@ export abstract class Parser {
     /**
      * Parses a given string, Buffer or byte stream using a parser registered for a specific media type.
      *
-     * NOTE: This method *always returns an object*. Primitives are never returned. This means that text, for instance
-     * will be returned as a String object, `null` as Object({@link NULL}) and `undefined` as Object({@link VOID}). You
-     * may use {@link toPrimitive} to return the original value, or use `.valueOf()` and test the result against the
-     * {@link NULL} and {@link VOID} symbols.
+     * NOTE: This method *always returns an object* using {@link wrap}. You may use {@link unwrap} to return the
+     * original value.
      *
-     * @template T            The type of the returned object.
+     * @template T            The type of the parsed object.
      * @param    stream       The source that should be parsed.
      * @param    contentType  The media type that specifies what parser to use.
      * @throws   ParserError  On parser errors or if the media type is not recognized.
@@ -107,12 +71,12 @@ export abstract class Parser {
      *                        possible that the Parser subclass allocated temporary resources as part of the process.
      *                        These resources may be cleaned up by calling {@link FINALIZE}.
      */
-    static async parse<T extends object>(stream: string | Buffer | AsyncIterable<Buffer | string>, contentType: ContentType | string): Promise<T & Finalizable> {
+    static async parse<T>(stream: string | Buffer | AsyncIterable<Buffer | string>, contentType: ContentType | string): Promise<Wrap<T> & Finalizable> {
         try {
-            const result = await Parser._create(ContentType.create(contentType)).parse(toAsyncIterable(stream));
+            const result = await Parser._create(ContentType.create(contentType)).parse(toAsyncIterable(stream)) as T;
 
             // Never return primitive types or null/undefined
-            return await toObject(result);
+            return wrap(result) as Wrap<T> & Finalizable;
         }
         catch (err) {
             throw err instanceof ParserError ? err : new ParserError(`${contentType} parser failed`, err);
@@ -135,7 +99,7 @@ export abstract class Parser {
      */
     static serialize<T = unknown>(data: T, contentType?: ContentType | string): [Buffer | Readable & AsyncIterable<Buffer>, ContentType] {
         try {
-            data = toPrimitive(data) as unknown as T; // Unpack values wrapped by toObject()
+            data = unwrap(data); // Unpack values wrapped by toObject()
 
             contentType = ContentType.create(contentType,
                 data instanceof Buffer        ? ContentType.bytes :
@@ -253,7 +217,7 @@ export abstract class Parser {
         if (!condition) {
             const type = data instanceof Object ? Object.getPrototypeOf(data).constructor.name : data === null ? 'null' : typeof data;
 
-            throw new ParserError(`${this.constructor.name} cannot serialize ${type} as ${this.contentType.type}`, cause, toObject(data));
+            throw new ParserError(`${this.constructor.name} cannot serialize ${type} as ${this.contentType.type}`, cause, wrap(data));
         }
     }
 }

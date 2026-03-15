@@ -7,7 +7,8 @@ import { URLSearchParams } from 'url';
 import { Encoder } from '../encoders';
 import { Parser, StringParser } from '../parsers';
 import { CacheURI } from '../protocols/cache';
-import { FIELDS, Finalizable, FINALIZE, URI, WithFields } from '../uri';
+import { URI } from '../uri';
+import { FIELDS, Finalizable, FINALIZE, WithFields } from '../uri-types';
 
 /** A basic string key-value record. */
 export interface FormData extends WithFields<FormField> {

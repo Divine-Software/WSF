@@ -4,7 +4,8 @@ import { promises as fs } from 'fs';
 import { resolve } from 'path';
 import xdg from 'xdg-portable';
 import pkg from '../../package.json';
-import { DirectoryEntry, Metadata, URI } from '../uri';
+import { DirectoryEntry, URI } from '../uri';
+import { Metadata, Wrap } from '../uri-types';
 import { FileURI, FileWatchEvent } from './file';
 
 const cacheDir = resolve(xdg.cache(), pkg.name, 'CacheURI', 'v1');
@@ -83,22 +84,22 @@ export class CacheURI extends URI {
     }
 
     /** See {@link FileURI.load}. */
-    override async load<T extends object>(recvCT?: ContentType | string): Promise<T & Metadata> {
+    override async load<T>(recvCT?: ContentType | string): Promise<Wrap<T> & Metadata> {
         return await this._delegate('load', recvCT ?? this._type);
     }
 
     /** See {@link FileURI.save}. */
-    override async save<T extends object, D = unknown>(data: D, sendCT?: ContentType | string, recvCT?: undefined): Promise<T & Metadata> {
+    override async save<T, D = unknown>(data: D, sendCT?: ContentType | string, recvCT?: undefined): Promise<Wrap<T> & Metadata> {
         return await this._delegate('save', data, sendCT, recvCT);
     }
 
     /** See {@link FileURI.append}. */
-    override async append<T extends object, D = unknown>(data: D, sendCT?: ContentType | string, recvCT?: undefined): Promise<T & Metadata> {
+    override async append<T, D = unknown>(data: D, sendCT?: ContentType | string, recvCT?: undefined): Promise<Wrap<T> & Metadata> {
         return await this._delegate('append', data, sendCT, recvCT);
     }
 
     /** See {@link FileURI.remove}. */
-    override async remove<T extends object>(recvCT?: undefined): Promise<T & Metadata> {
+    override async remove<T>(recvCT?: undefined): Promise<Wrap<T> & Metadata> {
         return await this._delegate('remove', recvCT);
     }
 

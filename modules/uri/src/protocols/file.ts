@@ -6,7 +6,8 @@ import { lookup } from 'mime-types';
 import { basename, join, normalize } from 'path';
 import { encodeFilePath } from '../file-utils';
 import { Parser } from '../parsers';
-import { DirectoryEntry, IOError, Metadata, URI, VOID } from '../uri';
+import { DirectoryEntry, IOError, URI } from '../uri';
+import { Metadata, Wrap, wrap } from '../uri-types';
 
 const _chokidar = import('chokidar').catch(() => null);
 
@@ -43,7 +44,7 @@ export class FileURI extends URI {
      * @returns           A new FileURI instance.
      */
     static create(path: string, base?: FileURI): FileURI {
-        const result = new URI(`${encodeFilePath(path)}`, base) as FileURI;
+        const result = new URI(encodeFilePath(path), base) as FileURI;
 
         if (result instanceof FileURI) {
             return result;
@@ -51,7 +52,6 @@ export class FileURI extends URI {
         else {
             throw new TypeError(`FileURI.create result was not actually a FileURI`)
         }
-
     }
 
     private _path: string;
@@ -131,12 +131,12 @@ export class FileURI extends URI {
      * @throws   ParserError  If the media type is unsupported or if the parser fails to parse the resource.
      * @returns               The file resource parsed as `recvCT` *into an object*, including {@link Metadata}.
      */
-    override async load<T extends object>(recvCT?: ContentType | string): Promise<T & Metadata> {
+    override async load<T>(recvCT?: ContentType | string): Promise<Wrap<T> & Metadata> {
         try {
             await fs.access(this._path, R_OK); // Throws immediately, unlike createReadStream()
             const stream = createReadStream(this._path, { flags: 'r', encoding: undefined });
 
-            return await Parser.parse<T>(stream, ContentType.create(recvCT, lookup(this._path) || undefined));
+            return await Parser.parse<T>(stream, ContentType.create(recvCT, lookup(this._path) || undefined)) as Wrap<T> & Metadata;
         }
         catch (err) {
             throw this._makeIOError(err);
@@ -153,16 +153,16 @@ export class FileURI extends URI {
      * @param    recvCT       Must not be used.
      * @throws   IOError      On I/O errors or if this resource is not a file.
      * @throws   ParserError  If the media type is unsupported or if the parser fails to serialize the data.
-     * @returns               Object({@link VOID}).
+     * @returns               `{@link Wrap}<undefined>`.
      */
-    override async save<T extends object, D = unknown>(data: D, sendCT?: ContentType | string, recvCT?: undefined): Promise<T & Metadata> {
+    override async save<T, D = unknown>(data: D, sendCT?: ContentType | string, recvCT?: undefined): Promise<Wrap<T> & Metadata> {
         if (recvCT !== undefined) {
             throw new TypeError(`URI ${this}: save: recvCT argument is not supported`);
         }
 
         try {
             await this._write(data, sendCT, false);
-            return Object(VOID);
+            return wrap(undefined) as unknown as Wrap<T> & Metadata;
         }
         catch (err) {
             throw this._makeIOError(err);
@@ -179,16 +179,16 @@ export class FileURI extends URI {
      * @param    recvCT       Must not be used.
      * @throws   IOError      On I/O errors or if this resource is not a file.
      * @throws   ParserError  If the media type is unsupported or ig the parser fails to serialize the data.
-     * @returns               Object({@link VOID}).
+     * @returns               `{@link Wrap}<undefined>`.
      */
-    override async append<T extends object, D = unknown>(data: D, sendCT?: ContentType | string, recvCT?: undefined): Promise<T & Metadata> {
+    override async append<T, D = unknown>(data: D, sendCT?: ContentType | string, recvCT?: undefined): Promise<Wrap<T> & Metadata> {
         if (recvCT !== undefined) {
             throw new TypeError(`URI ${this}: append: recvCT argument is not supported`);
         }
 
         try {
             await this._write(data, sendCT, true);
-            return Object(VOID);
+            return wrap(undefined) as unknown as Wrap<T> & Metadata;
         }
         catch (err) {
             throw this._makeIOError(err);
@@ -201,10 +201,10 @@ export class FileURI extends URI {
      * @template T            Object.
      * @param    recvCT       Must not be used.
      * @throws   IOError      On I/O errors.
-     * @returns               Object(`true`) if the file was removed, or Object(`true`) if the resource did not exist in
-     *                        the first place.
+     * @returns               `Boolean(true)` if the file was removed, or `Boolean(false)` if the resource did not exist
+     *                        in the first place.
      */
-    override async remove<T extends object>(recvCT?: undefined): Promise<T & Metadata> {
+    override async remove<T>(recvCT?: undefined): Promise<Wrap<T> & Metadata> {
         if (recvCT !== undefined) {
             throw new TypeError(`URI ${this}: remove: recvCT argument is not supported`);
         }
@@ -217,11 +217,11 @@ export class FileURI extends URI {
                 await fs.unlink(this._path);
             }
 
-            return Object(true);
+            return wrap(true) as Wrap<T> & Metadata;
         }
         catch (err) {
             if (err instanceof Error && (err as NodeJS.ErrnoException).code === 'ENOENT') {
-                return Object(false);
+                return wrap(false) as Wrap<T> & Metadata;
             }
             else {
                 throw this._makeIOError(err);
