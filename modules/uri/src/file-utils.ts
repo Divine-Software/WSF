@@ -1,18 +1,7 @@
-import { es6Encoder, percentEncode } from '@divine/commons';
+import { percentEncode } from '@divine/commons';
 import { ContentType } from '@divine/headers';
 import { extension, lookup } from 'mime-types';
 import path from 'path';
-
-/**
- * A template literal tag function that applies {@link percentEncode} to all arguments
- *
- * @param strings  The template string array.
- * @param values   The values to be encoded.
- * @returns        A string with the arguments encoded.
- */
-export function uri(strings: TemplateStringsArray, ...values: unknown[]): string {
-    return es6Encoder(strings, values, percentEncode);
-}
 
 /**
  * Normalizes a file path and then applies {@link percentEncode} to each individual path components.

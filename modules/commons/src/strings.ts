@@ -15,16 +15,6 @@ export function toString(value: unknown) {
     }
 }
 
-export function es6Encoder(strings: TemplateStringsArray, values: unknown[], encoder: ValueEncoder): string {
-    let result = strings[0];
-
-    for (let i = 0; i < values.length; ++i) {
-        result += encoder(toString(values[i]), i) + strings[i + 1];
-    }
-
-    return result;
-}
-
 export function esxxEncoder(template: string, params: Params, encoder: ValueEncoder): string {
     return template.replace(/(^|[^\\])(\\\\)*{([^{}[\]()"'`\s]+)}/g, (match) => {
         const start = match.lastIndexOf('{');

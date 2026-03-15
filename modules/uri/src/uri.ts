@@ -10,6 +10,40 @@ export { AuthSelector, HeadersSelector, ParamsSelector, Selector } from './selec
 
 const urlObject  = (url as any).Url;
 
+class URIString extends String {}
+
+/**
+ * A template literal tag function that applies {@link percentEncode} to all arguments.
+ *
+ * Note that the result is passed through {@link uri.raw}, meaning that it will not be escaped again if passed to
+ * another {@link uri} template literal. This allows you to construct a URI in multiple steps without having to worry
+ * about double-encoding.
+ *
+ * @param strings  The template string array.
+ * @param values   The values to be encoded.
+ * @returns        An String object with the arguments encoded.
+ */
+export function uri(strings: TemplateStringsArray, ...values: unknown[]): URIString {
+    const result = strings[0] + values.map((value, i) =>
+        (value instanceof URIString ? value.valueOf() : percentEncode(toString(value))) + strings[i + 1])
+        .join('');
+
+    return uri.raw(result);
+}
+
+// eslint-disable-next-line @typescript-eslint/no-namespace
+export namespace uri {
+    /**
+     * Constructs a special String object that *will not* be escaped when passed to {@link uri}.
+     *
+     * @param raw   The raw string to be used in the template literal.
+     * @returns     A String that will not be escaped when passed to {@link uri}.
+     */
+    export function raw(raw: string): URIString {
+        return new URIString(raw);
+    }
+}
+
 /** Filesystem metadata, returned by {@link URI['info']} and {@link URI['list']}. */
 export interface DirectoryEntry {
     /** The URI this entry describes. */
@@ -117,7 +151,7 @@ export class URI extends URL implements AsyncIterable<Buffer> {
      * @returns        A new URI subclass instance.
      */
     static $(strings: TemplateStringsArray, ...values: unknown[]): URI {
-        return new URI(uri(strings, ...values));
+        return new URI(uri(strings, ...values).valueOf());
     }
 
     private static _protocols = new Map<string, typeof URI>();
@@ -238,7 +272,7 @@ export class URI extends URL implements AsyncIterable<Buffer> {
      * @returns        A new URI subclass instance.
      */
     $(strings: TemplateStringsArray, ...values: unknown[]): URI {
-        return new URI(uri(strings, ...values), this);
+        return new URI(uri(strings, ...values).valueOf(), this);
     }
 
     /**
