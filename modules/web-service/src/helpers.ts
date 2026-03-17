@@ -34,7 +34,7 @@ export interface CORSFilterParams {
  * By default, all origins, methods and headers are allowed for 10 minutes. Credentials are *not* allowed by default.
  */
 export abstract class CORSFilter implements WebFilter {
-    protected static readonly _excluded = new Set(['cache-control', 'content-language', 'content-type', 'expires', 'last-modified', 'pragma']);
+    private static readonly _excluded = new Set(['cache-control', 'content-language', 'content-type', 'expires', 'last-modified', 'pragma']);
 
     async filter(next: () => Promise<WebResponse>, args: WebArguments, resource: () => Promise<WebResource>): Promise<WebResponse> {
         const response = await next();
@@ -88,7 +88,6 @@ export abstract class CORSFilter implements WebFilter {
      * @param params Request parameters.
      * @returns `true` if the request is allowed, else `false`.
      */
-    // eslint-disable-next-line @typescript-eslint/naming-convention
     protected isOriginAllowed(origin: string | undefined, params: CORSFilterParams): boolean {
         return origin !== undefined;
     }
@@ -100,7 +99,6 @@ export abstract class CORSFilter implements WebFilter {
      * @param params Request parameters.
      * @returns `true` if the method is allowed, else `false`.
      */
-    // eslint-disable-next-line @typescript-eslint/naming-convention
     protected isMethodAllowed(method: string, params: CORSFilterParams): boolean {
         return true;
     }
@@ -112,7 +110,6 @@ export abstract class CORSFilter implements WebFilter {
      * @param params Request parameters.
      * @returns `true` if the header is allowed, else `false`.
      */
-    // eslint-disable-next-line @typescript-eslint/naming-convention
     protected isHeaderAllowed(header: string, params: CORSFilterParams): boolean {
         return true;
     }
@@ -124,7 +121,6 @@ export abstract class CORSFilter implements WebFilter {
      * @param params Request parameters.
      * @returns `true` if the header is exposed, else `false`.
      */
-    // eslint-disable-next-line @typescript-eslint/naming-convention
     protected isHeaderExposed(header: string, params: CORSFilterParams): boolean {
         return !CORSFilter._excluded.has(header);
     }
@@ -135,7 +131,6 @@ export abstract class CORSFilter implements WebFilter {
      * @param params Request parameters.
      * @returns `true` if credentials should be allowed, else `false`.
      */
-    // eslint-disable-next-line @typescript-eslint/naming-convention
     protected isCredentialsSupported(params: CORSFilterParams): boolean {
         return false;
     }
@@ -150,7 +145,6 @@ export abstract class CORSFilter implements WebFilter {
      * @param params Request parameters.
      * @returns The number of seconds the client may cache the information.
      */
-    // eslint-disable-next-line @typescript-eslint/naming-convention
     protected getMaxAge(params: CORSFilterParams): number {
         return 600;
     }
@@ -164,11 +158,9 @@ export abstract class PayloadSerDesFilter implements WebFilter {
     }
 
     /** Returns the {@link PayloadEncoder} to use. */
-    // eslint-disable-next-line @typescript-eslint/naming-convention
     protected abstract getEncoder(args: WebArguments, resource: () => Promise<WebResource>): Promise<PayloadEncoder | undefined>;
 
     /** Returns the {@link PayloadParser} to use. */
-    // eslint-disable-next-line @typescript-eslint/naming-convention
     protected abstract getParser(args: WebArguments, resource: () => Promise<WebResource>): Promise<PayloadParser | undefined>;
 }
 

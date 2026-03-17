@@ -72,7 +72,6 @@ export abstract class WebFilterBase<Context> implements WebFilter {
      * @param context The WebService context.
      * @param args    The request arguments.
      */
-    // eslint-disable-next-line @typescript-eslint/naming-convention
     constructor(protected context: Context, protected args: WebArguments) {
         // All done
     }
@@ -224,7 +223,6 @@ export abstract class WebResourceBase<Context> implements WebResource {
      * @param context The WebService context.
      * @param args    The request arguments.
      */
-    // eslint-disable-next-line @typescript-eslint/naming-convention
     constructor(protected context: Context, protected args: WebArguments) {
         // All done
     }

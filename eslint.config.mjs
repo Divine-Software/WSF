@@ -86,7 +86,7 @@ export default [
                     selector: 'memberLike',
                     modifiers: ['protected'],
                     format: ['camelCase'],
-                    leadingUnderscore: 'require',
+                    leadingUnderscore: 'allow',
                 },
             ],
         },
