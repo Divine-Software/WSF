@@ -32,7 +32,7 @@
     "papaparse": "^5.5.2",
     "tslib": "catalog:",
     "xdg-portable": "^10.6.0",
-    "yaml": "^2.7.0"
+    "yaml": "^2.8.3"
   },
   "peerDependencies": {
     "@divine/headers": "workspace:^2.0.4",
