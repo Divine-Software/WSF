@@ -182,11 +182,21 @@ export class MyReference extends DBDriver.DBReference {
         super(dbURI);
     }
 
-    protected override _getPagingClause(): DBQuery {
-        const [ count, offset ] = this._getCountAndOffset();
+    protected override _getTotalCountColumn(): DBQuery {
+        const required = this._dbURI.protocol === 'mariadb:' ? 10.2 : 8.0;
 
-        return count !== undefined || offset !== undefined
-            ? q`limit ${q.raw(count ?? BigInt('0xffffffffffffffff'))} offset ${q.raw(offset ?? 0)}`
+        if (parseFloat(this._version) >= required) {
+            return super._getTotalCountColumn();
+        } else {
+            return q``;
+        }
+    }
+
+    protected override _getPagingClause(): DBQuery {
+        const [ limit, offset ] = this._getLimitAndOffset();
+
+        return limit !== undefined || offset !== undefined
+            ? q`limit ${q.raw(limit ?? BigInt('0xffffffffffffffff'))} offset ${q.raw(offset ?? 0)}`
             : q``;
     }
 

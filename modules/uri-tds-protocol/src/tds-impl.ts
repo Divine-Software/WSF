@@ -264,10 +264,10 @@ export class TDSResult extends DBResult {
 
 export class TDSReference extends DBDriver.DBReference {
     protected override _getPagingClause(): DBQuery {
-        const [ count, offset ] = this._getCountAndOffset();
+        const [ limit, offset ] = this._getLimitAndOffset();
 
-        return count !== undefined || offset !== undefined
-            ? q`offset ${q.raw(offset ?? 0)} rows ${count !== undefined ? q`fetch next ${q.raw(count)} rows only` : q``}`
+        return limit !== undefined || offset !== undefined
+            ? q`offset ${q.raw(offset ?? 0)} rows ${limit !== undefined ? q`fetch next ${q.raw(limit)} rows only` : q``}`
             : q``;
     }
 
@@ -292,7 +292,7 @@ export class TDSReference extends DBDriver.DBReference {
         this._checkLoadArguments();
 
         return q`\
-select ${this.scope === 'unique' ? q`distinct` : q``} ${this._getColumns()} \
+select ${this.scope === 'unique' ? q`distinct` : q``} ${this._getColumns()} ${this._getTotalCountColumn()} \
 from ${this._getTable()} \
 ${this._getLockClause()} \
 ${this._getWhereClause()} \

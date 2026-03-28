@@ -224,10 +224,10 @@ export class SQLiteResult extends DBResult {
 
 export class SQLiteReference extends DBDriver.DBReference {
     protected override _getPagingClause(): DBQuery {
-        const [ count, offset ] = this._getCountAndOffset();
+        const [ limit, offset ] = this._getLimitAndOffset();
 
-        return count !== undefined || offset !== undefined
-            ? q`limit ${q.raw(count ?? -1)} offset ${q.raw(offset ?? 0)}`
+        return limit !== undefined || offset !== undefined
+            ? q`limit ${q.raw(limit ?? -1)} offset ${q.raw(offset ?? 0)}`
             : q``;
     }
 

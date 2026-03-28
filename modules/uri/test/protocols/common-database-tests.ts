@@ -411,7 +411,7 @@ export function describeCommonDBTest(def: CommonDBTestParams): void {
         });
 
         it('parses and executes load() DB references', async () => {
-            expect.assertions(7);
+            expect.assertions(12);
 
             await db.$`#dt`.append([
                 { text: 'dbref-load', real: 2 },
@@ -424,11 +424,11 @@ export function describeCommonDBTest(def: CommonDBTestParams): void {
 
             const l1 = await db.$`#dt`.load<DataTypes[]>();
             const l2 = await db.$`#dt(real,text);unique`.load<DataTypes[]>();
-            const l3 = await db.$`#dt(real)?(eq,text,dbref-load)&sort=real`.load<DataTypes[]>();
-            const l4 = await db.$`#dt(real)?(eq,text,dbref-load)&sort=-real`.load<DataTypes[]>();
-            const l5 = await db.$`#dt(real)?(eq,text,dbref-load)&sort=real&count=2`.load<DataTypes[]>();
-            const l6 = await db.$`#dt(real)?(eq,text,dbref-load)&sort=real&offset=2`.load<DataTypes[]>();
-            const l7 = await db.$`#dt(real)?(eq,text,dbref-load)&sort=real&offset=3&count=2`.load<DataTypes[]>();
+            const l3 = await db.$`#dt(real)?(eq,text,dbref-load)&order=real`.load<DataTypes[]>();
+            const l4 = await db.$`#dt(real)?(eq,text,dbref-load)&order=-real`.load<DataTypes[]>();
+            const l5 = await db.$`#dt(real)?(eq,text,dbref-load)&order=real&limit=2`.load<DataTypes[]>();
+            const l6 = await db.$`#dt(real)?(eq,text,dbref-load)&order=real&offset=2`.load<DataTypes[]>();
+            const l7 = await db.$`#dt(real)?(eq,text,dbref-load)&order=real&offset=3&limit=2`.load<DataTypes[]>();
 
             expect(l1.filter((r) => r.text === 'dbref-load')).toHaveLength(6);
             expect(l2.filter((r) => r.text === 'dbref-load')).toHaveLength(5);
@@ -437,6 +437,14 @@ export function describeCommonDBTest(def: CommonDBTestParams): void {
             expect([...l5]).toStrictEqual([{ real: 1 }, { real: 2 } ]);
             expect([...l6]).toStrictEqual([{ real: 3 }, { real: 4 }, { real: 5 }, { real: 5 } ]);
             expect([...l7]).toStrictEqual([{ real: 4 }, { real: 5 } ]);
+
+            const totalCount = db.protocol !== 'mysql:' || parseFloat((await db.query<any>`select version()`)[0].version) >= 8 ? 6 : undefined;
+
+            expect(l3[FIELDS][0].totalCount).toBe(totalCount);
+            expect(l4[FIELDS][0].totalCount).toBe(totalCount);
+            expect(l5[FIELDS][0].totalCount).toBe(totalCount);
+            expect(l6[FIELDS][0].totalCount).toBe(totalCount);
+            expect(l7[FIELDS][0].totalCount).toBe(totalCount);
         });
 
         (def.upsert === 'no' ? it.skip : it)('parses and executes save() DB references', async () => {
@@ -460,7 +468,7 @@ export function describeCommonDBTest(def: CommonDBTestParams): void {
             expect(u2[FIELDS][0].rowCount).toBe(1);
 
             const l1 = await db.$`#dt;one?(eq,serial,${k1})`.load<DataTypes>();
-            const l2 = await db.$`#dt;one?(or(eq,serial,${k1})(eq,serial,${k2}))&sort=-text&count=1`.load<DataTypes>();
+            const l2 = await db.$`#dt;one?(or(eq,serial,${k1})(eq,serial,${k2}))&order=-text&limit=1`.load<DataTypes>();
 
             expect(String(l1.serial)).toBe(k1);
             expect(String(l2.serial)).toBe(k2);

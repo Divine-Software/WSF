@@ -549,7 +549,7 @@ const booleanColInfoProps: PropTypeMap<InformationSchema, boolean> = {
  * A raw database result set.
  *
  * This Array subclass hold rows of cells in a tabular format and metadata about the columns (name, type etc) in the
- * {@link columns} property. Additional metadata such as *row count* and *row key* is also available.
+ * {@link columns} property. Additional metadata such as *row count*, *row key* and *total count* is also available.
  *
  * This is an abstract class. Each database driver is expected to provide a full implementation and a concrete subclass.
  */
@@ -562,15 +562,26 @@ export abstract class DBResult extends Array<unknown[]> {
     /**
      * Constructs a new DBResult.
      *
-     * @param _db      The DatabaseURI this result set belongs to.
-     * @param columns  Metadata abount the columns in this result set.
-     * @param records  The records to adopt. May be an empty array if no actual result was produced by the query.
-     * @param rowCount The number of rows the query producing the result set affected.
-     * @param rowKey   The primary key/unique row key the the query producing the result set generated.
+     * @param _db        The DatabaseURI this result set belongs to.
+     * @param columns    Metadata abount the columns in this result set.
+     * @param records    The records to adopt. May be an empty array if no actual result was produced by the query.
+     * @param rowCount   The number of rows the query producing the result set affected.
+     * @param rowKey     The primary key/unique row key the the query producing the result set generated.
+     * @param totalCount The total number of rows available in the database for this query, ignoring any pagination.
      */
-    constructor(protected _db: DatabaseURI, public readonly columns: DBColumnInfo[], records: unknown[][], public rowCount?: number, public rowKey?: string) {
+    constructor(protected _db: DatabaseURI, public readonly columns: DBColumnInfo[], records: unknown[][], public rowCount?: number, public rowKey?: string, public totalCount?: number) {
         super(records.length);
         Object.defineProperty(this, '_db', { enumerable: false });
+
+        if (totalCount === undefined && columns[columns.length - 1]?.label === '@@total_count') {
+            const i = columns.length - 1, tc = records[0]?.[i];
+
+            if (!records.some((r) => r[i] !== tc)) {
+                this.totalCount = Number(tc) || undefined;
+                columns.pop();
+                records.forEach((r) => r.pop());
+            }
+        }
 
         for (const c of columns) {
             for (const k of Object.keys(c) as (keyof typeof c)[]) {
@@ -793,9 +804,9 @@ function withDBMetadata<T extends object>(meta: DBMetadata, value: object): T & 
  *
  * Finally, one or more parameters may be specified. Currently, parameters are only defined for read operations. A
  * parameter begins with an ampersand followed by the *name* of the parameter, and equals sign (`=`) and the *value*.
- * The available parameters are `offset` (skip rows in the result set), `count` (limit the result set), `sort` (to
- * specify a sort column; precede with a dash to reverse the sort order) and `lock` (either `read` or `write`) to lock
- * the rows returned.
+ * The available parameters are `order` (to specify a sort order column; precede with a dash to reverse the sort order),
+ * `limit` (limit the result set size), `offset` (skip rows in the result set) and `lock` (either `read` or `write`) to
+ * lock the rows returned.
  *
  * ### Filters
  *
@@ -817,8 +828,9 @@ function withDBMetadata<T extends object>(meta: DBMetadata, value: object): T & 
  * This syntax, while perhaps a bit exotic for both JavaScript and SQL developers, was chosen so that filters do not
  * have to be URI-encoded when beeing included in the URI fragment.
  *
- * As a general rule, filters should be kept simple with just one or two relations. Otherwise, it's probably better to
- * simply write an SQL query instead.
+ * A utility function called {@link dbRef} is provided, that can be used to construct DB reference filters
+ * programmatically. But as a general rule, filters should be kept simple with just one or two relations. Otherwise,
+ * it's probably better to simply write an SQL query instead.
  *
  * ### Examples
  *

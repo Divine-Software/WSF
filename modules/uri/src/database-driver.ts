@@ -190,9 +190,9 @@ namespace DBReference {
         { op: 'not',        value: Filter };
 
     export interface Params {
+        order?:  string;
+        limit?:  string;
         offset?: string;
-        count?:  string;
-        sort?:   string;
         lock?:   string;
     }
 }
@@ -243,6 +243,10 @@ export class DBReference {
             : q`*`;
     }
 
+    protected _getTotalCountColumn(): DBQuery {
+        return q`,count(*) over() as ${this._quote('@@total_count')}`;
+    }
+
     protected _getFilter(filter: DBReference.Filter): DBQuery {
         switch (filter.op) {
             case 'and':  return q.join('and', filter.value.map((f) => q`(${this._getFilter(f)})`));
@@ -260,26 +264,26 @@ export class DBReference {
     }
 
     protected _getSortOrder(): [ column?: string, desc?: boolean ] {
-        const sort = this.params.sort;
+        const order = this.params.order;
 
-        return sort ?
-            sort[0] === '-'
-                ? [ sort.substr(1), true ] : [ sort, false ]
+        return order ?
+            order[0] === '-'
+                ? [ order.substr(1), true ] : [ order, false ]
                 : [ undefined, undefined ];
     }
 
-    protected _getCountAndOffset(): [ count?: number, offset?: number ] {
-        const count  = typeof this.params.count  === 'string' ? Number(this.params.count)  : undefined;
+    protected _getLimitAndOffset(): [ limit?: number, offset?: number ] {
+        const limit  = typeof this.params.limit  === 'string' ? Number(this.params.limit)  : undefined;
         const offset = typeof this.params.offset === 'string' ? Number(this.params.offset) : undefined;
 
-        if (count !== undefined && isNaN(count)) {
-            throw this._makeIOError(`Invalid 'count' param: ${count}`);
+        if (limit !== undefined && isNaN(limit)) {
+            throw this._makeIOError(`Invalid 'limit' param: ${limit}`);
         }
         else if (offset !== undefined && isNaN(offset)) {
             throw this._makeIOError(`Invalid 'offset' param: ${offset}`);
         }
 
-        return [ count, offset ];
+        return [ limit, offset ];
     }
 
     protected _getWhereClause(): DBQuery {
@@ -293,10 +297,10 @@ export class DBReference {
     }
 
     protected _getPagingClause(): DBQuery {
-        const [ count, offset ] = this._getCountAndOffset();
+        const [ limit, offset ] = this._getLimitAndOffset();
 
-        return count !== undefined || offset !== undefined
-            ? q`offset ${q.raw(offset ?? 0)} rows fetch next ${q.raw(count ?? 'null')} rows only`
+        return limit !== undefined || offset !== undefined
+            ? q`offset ${q.raw(offset ?? 0)} rows fetch next ${q.raw(limit ?? 'null')} rows only`
             : q``;
         }
 
@@ -330,7 +334,7 @@ export class DBReference {
         this._checkLoadArguments();
 
         return q`\
-select ${this.scope === 'unique' ? q`distinct` : q``} ${this._getColumns()} \
+select ${this.scope === 'unique' ? q`distinct` : q``} ${this._getColumns()} ${this._getTotalCountColumn()} \
 from ${this._getTable()} \
 ${this._getWhereClause()} \
 ${this._getOrderClause()} \

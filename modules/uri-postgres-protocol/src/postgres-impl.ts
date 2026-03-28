@@ -253,6 +253,14 @@ export class PGReference extends DBDriver.DBReference {
         super(dbURI);
     }
 
+    protected override _getTotalCountColumn(): DBQuery {
+        if (this.params.lock) {
+            return q``;
+        } else {
+            return super._getTotalCountColumn();
+        }
+    }
+
     override getSaveQuery(value: unknown): DBQuery {
         const [ _scope, columns, objects, keys ] = this._checkSaveArguments(value, !this._isCRDB);
         const updColumns = columns.filter((c) => !keys?.includes(c));

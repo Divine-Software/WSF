@@ -19,7 +19,7 @@ column_list = head:word tail:(',' word)*                           { return [ he
 param_list  = params:('&' param)+                                  { return Object.fromEntries(params.map(t => t[1])) }
 
 param       = key:param_key '=' value:word                         { return [ key, value ] }
-param_key   = 'offset' / 'count' / 'sort' / 'lock'
+param_key   = 'order' / 'limit' / 'offset' / 'lock'
 
 word        = word:$character+                                     { return decodeURIComponent(word) }
 character   = unreserved / special / encoded

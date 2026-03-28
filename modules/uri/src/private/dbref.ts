@@ -324,9 +324,9 @@ function peg$parse(input, options) {
   var peg$c20 = "/";
   var peg$c21 = "&";
   var peg$c22 = "=";
-  var peg$c23 = "offset";
-  var peg$c24 = "count";
-  var peg$c25 = "sort";
+  var peg$c23 = "order";
+  var peg$c24 = "limit";
+  var peg$c25 = "offset";
   var peg$c26 = "lock";
   var peg$c27 = "%";
 
@@ -358,9 +358,9 @@ function peg$parse(input, options) {
   var peg$e20 = peg$literalExpectation("/", false);
   var peg$e21 = peg$literalExpectation("&", false);
   var peg$e22 = peg$literalExpectation("=", false);
-  var peg$e23 = peg$literalExpectation("offset", false);
-  var peg$e24 = peg$literalExpectation("count", false);
-  var peg$e25 = peg$literalExpectation("sort", false);
+  var peg$e23 = peg$literalExpectation("order", false);
+  var peg$e24 = peg$literalExpectation("limit", false);
+  var peg$e25 = peg$literalExpectation("offset", false);
   var peg$e26 = peg$literalExpectation("lock", false);
   var peg$e27 = peg$classExpectation(["!", "'", "*", ["-", "."], ["0", "9"], ["A", "Z"], "_", ["a", "z"], "~"], false, false);
   var peg$e28 = peg$classExpectation([["0", "9"], ["A", "Z"], ["a", "z"], ".", "_", "~", "-"], false, false);
@@ -1910,11 +1910,11 @@ peg$parseparam_key() {
     var s0;
 
 // @ts-ignore
-    if (input.substr(peg$currPos, 6) === peg$c23) {
+    if (input.substr(peg$currPos, 5) === peg$c23) {
 // @ts-ignore
       s0 = peg$c23;
 // @ts-ignore
-      peg$currPos += 6;
+      peg$currPos += 5;
 // @ts-ignore
     } else {
 // @ts-ignore
@@ -1940,11 +1940,11 @@ peg$parseparam_key() {
 // @ts-ignore
       if (s0 === peg$FAILED) {
 // @ts-ignore
-        if (input.substr(peg$currPos, 4) === peg$c25) {
+        if (input.substr(peg$currPos, 6) === peg$c25) {
 // @ts-ignore
           s0 = peg$c25;
 // @ts-ignore
-          peg$currPos += 4;
+          peg$currPos += 6;
 // @ts-ignore
         } else {
 // @ts-ignore
@@ -2348,7 +2348,7 @@ export type TablePath = [Word, ...Word[]];
 export type ColumnList = [Word, ...Word[]];
 export type ParamList = { [k: string]: any };
 export type Param = [ParamKey, Word];
-export type ParamKey = "offset" | "count" | "sort" | "lock";
+export type ParamKey = "order" | "limit" | "offset" | "lock";
 export type Word = string;
 export type Character = string | Encoded;
 export type Unreserved = string;
