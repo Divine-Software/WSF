@@ -93,13 +93,13 @@ class WebServerBase {
             const channel = 'stream' in res ? res.stream.session : req.socket;
             const counter = getOrSetEntry(this._channels, channel, [ 0 ]);
 
-            if (this._closing) {
+            if (this._closing && channel) {
                 isSession(channel) ? channel.goaway() : res.setHeader('connection', 'close');
             }
 
             ++counter[0];
             /* async */ void _requestHandler(req, res).finally(() => {
-                if (--counter[0] === 0 && this._closing) {
+                if (--counter[0] === 0 && this._closing && channel) {
                     isSession(channel) ? channel.close() : channel.end();
                 }
             });

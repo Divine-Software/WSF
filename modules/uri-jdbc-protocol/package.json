@@ -36,6 +36,6 @@
     "@types/node": "catalog:"
   },
   "engines": {
-    "node": ">= 12.17.0"
+    "node": ">= 22"
   }
 }

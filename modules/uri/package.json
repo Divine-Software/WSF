@@ -47,13 +47,13 @@
     "@divine/headers": "workspace:^",
     "@types/dicer": "~0.2.4",
     "@types/mime-types": "^2.1.4",
-    "@types/node": "^16.18.126",
+    "@types/node": "catalog:",
     "@types/papaparse": "^5.3.15",
     "chokidar": "^4.0.3",
     "peggy": "^4.2.0",
     "ts-pegjs": "^4.2.1"
   },
   "engines": {
-    "node": ">= 12.17.0"
+    "node": ">= 22"
   }
 }

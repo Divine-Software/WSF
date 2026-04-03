@@ -116,7 +116,7 @@ export interface WebResponseHeaders {
     'cache-control'?:                    string;
 
     /** Control options for the current connection and list of hop-by-hop response fields. */
-    'connection'?:                       string;
+    'connection'?:                       string | string[];
 
     /** An opportunity to raise a "File Download" dialogue box for a known MIME type with binary format or suggest a filename for dynamic content. */
     'content-disposition'?:              string | ContentDisposition;
@@ -167,7 +167,7 @@ export interface WebResponseHeaders {
     'last-modified'?:                    string | Date;
 
     /** Used to express a typed relationship with another resource. */
-    'link'?:                             string;
+    'link'?:                             string | string[];
 
     /** Used in redirection, or when a new resource has been created. */
     'location'?:                         string | URL;
@@ -179,7 +179,7 @@ export interface WebResponseHeaders {
     'p3p'?:                              string;
 
     /** Implementation-specific fields that may have various effects anywhere along the request-response chain. */
-    'pragma'?:                           string;
+    'pragma'?:                           string | string[];
 
     /** To allow or disable different features or APIs of the browser. */
     'permissions-policy'?:               string;
@@ -188,7 +188,7 @@ export interface WebResponseHeaders {
     'preference-applied'?:               string;
 
     /** Request authentication to access the proxy. */
-    'proxy-authenticate'?:               string | WWWAuthenticate | WWWAuthenticate[];
+    'proxy-authenticate'?:               string | string[] | WWWAuthenticate | WWWAuthenticate[];
 
     /** HTTP Public Key Pinning, announces hash of website's authentic TLS certificate. */
     'public-key-pins'?:                  string;
@@ -206,7 +206,7 @@ export interface WebResponseHeaders {
     'server'?:                           string;
 
     /** An HTTP cookie. */
-    'set-cookie'?:                       string;
+    'set-cookie'?:                       string | string[];
 
     /** A HSTS Policy informing the HTTP client how long to cache the HTTPS only policy and whether this applies to subdomains. */
     'strict-transport-security'?:        string;
@@ -236,7 +236,7 @@ export interface WebResponseHeaders {
     'warning'?:                          string;
 
     /** Indicates the authentication scheme that should be used to access the requested entity. */
-    'www-authenticate'?:                 string | WWWAuthenticate | WWWAuthenticate[];
+    'www-authenticate'?:                 string | string[] | WWWAuthenticate | WWWAuthenticate[];
 
     /** Provide the duration of the audio or video in seconds; only supported by Gecko browsers. */
     'x-content-duration'?:               string | number;
@@ -270,7 +270,7 @@ export interface WebResponseHeaders {
 
     /** Cross-site scripting (XSS) filter. */
     'x-xss-protection'?:                 string;
-}
+};
 
 /** A union of all types a {@link WebResource} method may return. */
 export type WebResponses = WebResponse | BasicTypes | Date | URI | NodeJS.ReadableStream | Buffer | AsyncIterable<BasicTypes | undefined> ;

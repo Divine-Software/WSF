@@ -134,7 +134,7 @@ export class WebRequest implements AuthSchemeRequest {
             ? this.incomingMessage.stream.session
             : this.incomingMessage.socket;
 
-        return stream && (stream[CONNECTION_CLOSING] === true || 'closed' in stream && stream.closed === true);
+        return stream ? (stream[CONNECTION_CLOSING] === true || 'closed' in stream && stream.closed === true) : false;
     }
 
     /** @returns `true` when the server has been shut down and the request has been aborted. */
@@ -367,7 +367,7 @@ export class WebRequest implements AuthSchemeRequest {
             body = null;
         }
 
-        return { status, headers, body };
+        return { status, headers: headers as OutgoingHttpHeaders, body };
     }
 
     /**

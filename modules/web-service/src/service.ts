@@ -1,4 +1,4 @@
-import { asError, escapeRegExp, isAsyncIterable, isReadableStream, StringParams } from '@divine/commons';
+import { asError, BasicTypes, escapeRegExp, isAsyncIterable, isReadableStream, StringParams } from '@divine/commons';
 import { ContentType } from '@divine/headers';
 import { AuthSchemeError, Encoder, Finalizable, Parser } from '@divine/uri';
 import { IncomingMessage, ServerResponse } from 'http';
