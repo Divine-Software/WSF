@@ -1,24 +1,16 @@
-import { BasicTypes, Params, isReadableStream, sizeLimited } from '@divine/commons';
-import { Accept, AcceptCharset, ContentType } from '@divine/headers';
-import { AuthSchemeRequest, BufferParser, FINALIZE, Finalizable, ParserError, wrap } from '@divine/uri';
+import { BasicTypes, Params, sizeLimited } from '@divine/commons';
+import { ContentType } from '@divine/headers';
+import { AuthSchemeRequest, FINALIZE, Finalizable, ParserError } from '@divine/uri';
 import cuid from 'cuid';
-import { IncomingHttpHeaders, IncomingMessage, OutgoingHttpHeaders, } from 'http';
+import { IncomingHttpHeaders, IncomingMessage } from 'http';
 import { Http2ServerRequest, Http2Session } from 'http2';
 import { Socket } from 'net';
-import { Readable } from 'stream';
 import { TLSSocket } from 'tls';
 import { UAParser } from 'ua-parser-js';
 import { URL } from 'url';
 import { WebError, WebStatus } from './error';
 import { CONNECTION_CLOSING, WithConnectionClosing, decorateConsole } from './private/utils';
-import { WebResponse, WebResponseHeaders } from './response';
 import { PayloadEncoder, PayloadParser, WebService, WebServiceConfig } from './service';
-
-interface FinalResult {
-    status:  number;
-    headers: OutgoingHttpHeaders;
-    body:    Buffer | NodeJS.ReadableStream | null;
-}
 
 /** Information about the remote client that issued the {@link WebRequest}. */
 export interface UserAgent {
@@ -291,83 +283,6 @@ export class WebRequest implements AuthSchemeRequest {
         }
 
         return finalizable;
-    }
-
-    protected async _serializeResponse(response: WebResponse) : Promise<FinalResult> {
-        let status = response.status;
-        let headers: Partial<Record<keyof WebResponseHeaders, string | string[]>> =
-                     Object.fromEntries(Object.entries(response.headers).map(([k, v]) => [k, Array.isArray(v) ? v.map(String): String(v)]));
-        let body:    Buffer | NodeJS.ReadableStream | null;
-
-        if (response.body === null || Buffer.isBuffer(response.body) || isReadableStream(response.body)) {
-            body = response.body;
-        } else {
-            const acceptedCharsets  = this.header('accept-charset', 'utf-8');
-            const accepteTypes      = response.headers['content-type']?.toString() ?? this.header('accept', '*/*');
-            const acceptedEncodings = response.headers['content-encoding']?.toString() ?? this.header('accept-encoding', 'identity');
-
-            let tr : Buffer | AsyncIterable<Buffer> | null = null, ct: ContentType | null = null, en: string | null = null;
-
-            // Serialize accoring to specified content-type, or negotiate based on Accept and Accept-Charset headers if content-type is missing
-        ct: for (const accept of Accept.create(accepteTypes).filter(a => a.q > 0)) {
-                const charsets = accept.baseType === 'text' && accept.charset === undefined
-                    ? AcceptCharset.create(acceptedCharsets).filter(c => c.q > 0).map(c => c.type)
-                    : [ accept.charset ];
-
-                for (const charset of charsets) {
-                    try {
-                        const parser = this._payloadParser ?? this.webService.webServiceConfig.payloadParser;
-
-                        [ tr, ct ] = parser.serialize(response.body, accept.type !== '*/*' ? accept.setParam('charset', charset) : undefined);
-                        break ct;
-                    } catch {
-                        // Try the next charset in the Accept-Charset header or next media type in the Accept header
-                    }
-                }
-            }
-
-            if (tr === null) {
-                status  = WebStatus.NOT_ACCEPTABLE;
-                headers = { 'content-type': 'text/plain; charset=utf-8', 'vary': '*' };
-                body    = Buffer.from(`Cannot provide a response as ${accepteTypes} [${acceptedCharsets}]`);
-            } else {
-                // Encode accoring to specified content-encoding, or negotiate based on Accept-Encoding headers if content-encoding is missing
-                for (const encoding of Accept.create(acceptedEncodings).filter(e => e.q > 0 && e.type !== 'identity').map(e => e.type)) {
-                    try {
-                        const encoder = this._payloadEncoder ?? this.webService.webServiceConfig.payloadEncoder;
-                        const encoded = encoder.encode(tr, encoding);
-
-                        tr = Buffer.isBuffer(tr) ? await new BufferParser(ContentType.bytes).parse(encoded) : encoded;
-                        en = encoding;
-                        break;
-                    } catch {
-                        // Try the next encoding in the Accept-Encoding header
-                    }
-                }
-
-                body = tr instanceof Buffer ? tr : Readable.from(tr);
-                headers['content-type']     = ct?.toString();
-                headers['content-encoding'] = en?.toString();
-                headers['vary']           ??= '*';
-            }
-        }
-
-        if (this.webService.webServiceConfig.returnRequestID) {
-            headers[this.webService.webServiceConfig.returnRequestID as keyof WebResponseHeaders] ??= this.id;
-        }
-
-        if (Buffer.isBuffer(body)) {
-            headers['content-length'] = body.length.toString();
-        }
-
-        if (status === WebStatus.OK && ['HEAD', 'GET'].includes(this.method) && this.header('if-none-match', '') === headers.etag?.toString()) {
-            status = WebStatus.NOT_MODIFIED;
-            body = null;
-        } else if (this.method === 'HEAD') {
-            body = null;
-        }
-
-        return { status, headers: headers as OutgoingHttpHeaders, body };
     }
 
     /**

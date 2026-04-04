@@ -1,14 +1,14 @@
 import { asError, BasicTypes, escapeRegExp, isAsyncIterable, isReadableStream, StringParams } from '@divine/commons';
 import { ContentType } from '@divine/headers';
 import { AuthSchemeError, Encoder, Finalizable, Parser } from '@divine/uri';
-import { IncomingMessage, ServerResponse } from 'http';
+import { IncomingMessage, ServerResponse, OutgoingHttpHeaders } from 'http';
 import { Http2ServerRequest, Http2ServerResponse } from 'http2';
 import { pipeline } from 'stream';
 import { WebError, WebStatus } from './error';
 import { EventStreamResponse } from './helpers';
 import { WebRequest } from './request';
 import { WebArguments, WebErrorHandler, WebFilterCtor, WebResource, WebResourceCtor } from './resource';
-import { WebResponse, WebResponses } from './response';
+import { WebResponse, WebResponseHeaders, WebResponses } from './response';
 import { WebServer } from './server';
 
 export interface PayloadEncoder {
@@ -408,15 +408,15 @@ export class WebService<Context> {
                         webreq.log.warn?.(`Slow: ${webreq} from ${webreq.remoteUserAgent} <${webres.timestamp - webreq.timestamp} ms>`);
                     }
 
-                    const { status, headers, body } = await webreq['_serializeResponse'](webres);
+                    const { status, headers, body } = await webres.serialize(webreq);
 
                     if ('stream' in res) { // HTTP/2
                         for (const forbidden of [ "connection", "keep-alive", "proxy-connection", "transfer-encoding",  "upgrade" ]) {
-                            delete headers[forbidden];
+                            delete headers[forbidden as keyof WebResponseHeaders];
                         }
                     }
 
-                    res.writeHead(status, headers);
+                    res.writeHead(status, headers as OutgoingHttpHeaders);
 
                     if (isReadableStream(body)) {
                         (res as ServerResponse).flushHeaders?.();

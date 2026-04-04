@@ -1,12 +1,11 @@
 import { Parser } from '@divine/uri';
 import { IncomingHttpHeaders } from 'http';
 import { Readable } from 'stream';
-import { WebArguments, WebRequest, WebResponse, WebService, WebStatus } from '../src';
+import { WebArguments, WebRequest, WebResponse, WebResponseHeaders, WebService, WebStatus } from '../src';
 import { fakedReq } from './test-utils';
 
 async function dispatchRequest<T>(ws: WebService<T>, request: WebRequest) {
-    const response = await ws.dispatchRequest(request);
-    return WebRequest.prototype['_serializeResponse'].call(request, response);
+    return (await ws.dispatchRequest(request)).serialize(request);
 }
 
 describe('the WebService dispatcher', () => {
@@ -170,7 +169,7 @@ describe(`a WebService's resources`, () => {
         expect(r.status).toBe(WebStatus.ACCEPTED);
         expect(r.body!.toString()).toBe('five');
         expect(r.headers['etag']).toBe('V');
-        expect(r.headers['custom-header']).toBe('v');
+        expect(r.headers['custom-header' as keyof WebResponseHeaders]).toBe('v');
     });
 
     it('returns 404 or 405 if no resource matches', async () => {

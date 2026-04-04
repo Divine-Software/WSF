@@ -1,6 +1,6 @@
-import { BasicTypes } from '@divine/commons';
-import { ContentDisposition, ContentType, WWWAuthenticate } from '@divine/headers';
-import { URI } from '@divine/uri';
+import { BasicTypes, isReadableStream } from '@divine/commons';
+import { Accept, AcceptCharset, ContentDisposition, ContentType, WWWAuthenticate } from '@divine/headers';
+import { BufferParser, URI } from '@divine/uri';
 import { Readable } from 'stream';
 import { URL } from 'url';
 import { WebStatus } from './error';
@@ -9,7 +9,7 @@ import { WebRequest } from './request';
 /**
  * An HTTP response that is to be transmitted back to the client.
  */
-export class WebResponse {
+export class WebResponse<T extends BasicTypes = BasicTypes> {
     /** When this response was created. */
     public readonly timestamp = Date.now();
 
@@ -21,7 +21,7 @@ export class WebResponse {
      * @param headers The HTTP headers to return. If the length of the response body is known, `content-length` will be
      *                added automatically.
      */
-    constructor(public status: WebStatus, public body: null | NodeJS.ReadableStream | Buffer | string | number | bigint | boolean | Date | object = null, public headers: WebResponseHeaders = {}) {
+    constructor(public status: WebStatus, public body: null | NodeJS.ReadableStream | Buffer | T = null, public headers: WebResponseHeaders = {}) {
     }
 
     /**
@@ -59,14 +59,81 @@ export class WebResponse {
      * @param request  The request this is a response to.
      * @returns        This WebResponse.
      */
-    async serialize(request: WebRequest): Promise<this> {
-        const { status, headers, body } = await request['_serializeResponse'](this);
+    async serialize(request: WebRequest): Promise<WebResponse<never>> {
+        const toString = (v: unknown) => v !== null && v !== undefined ? String(v) : undefined;
 
-        this.status  = status;
-        this.headers = Object.freeze(headers);
-        this.body    = body;
+        // Normalize header names to lowercase strings and all values to strings
+        this.headers = Object.fromEntries(Object.entries(this.headers)
+            .map(([k, v]) => [k.toLowerCase(), Array.isArray(v) ? v.map(toString).filter(Boolean) : toString(v)])
+            .filter(([_, v]) => Boolean(v)));
 
-        return this;
+        if (this.body !== null && !Buffer.isBuffer(this.body) && !isReadableStream(this.body)) {
+            const acceptedCharsets  = request.header('accept-charset', 'utf-8');
+            const accepteTypes      = this.headers['content-type']?.toString() ?? request.header('accept', '*/*');
+            const acceptedEncodings = this.headers['content-encoding']?.toString() ?? request.header('accept-encoding', 'identity');
+
+            let tr : Buffer | AsyncIterable<Buffer> | null = null, ct: ContentType | null = null, en: string | null = null;
+
+            // Serialize accoring to specified content-type, or negotiate based on Accept and Accept-Charset headers if content-type is missing
+        ct: for (const accept of Accept.create(accepteTypes).filter(a => a.q > 0)) {
+                const charsets = accept.baseType === 'text' && accept.charset === undefined
+                    ? AcceptCharset.create(acceptedCharsets).filter(c => c.q > 0).map(c => c.type)
+                    : [ accept.charset ];
+
+                for (const charset of charsets) {
+                    try {
+                        const parser = request['_payloadParser'] ?? request.webService.webServiceConfig.payloadParser;
+
+                        [ tr, ct ] = parser.serialize(this.body, accept.type !== '*/*' ? accept.setParam('charset', charset) : undefined);
+                        break ct;
+                    } catch {
+                        // Try the next charset in the Accept-Charset header or next media type in the Accept header
+                    }
+                }
+            }
+
+            if (tr === null) {
+                this.status  = WebStatus.NOT_ACCEPTABLE;
+                this.headers = { 'content-type': 'text/plain; charset=utf-8', 'vary': '*' };
+                this.body    = Buffer.from(`Cannot provide a response as ${accepteTypes} [${acceptedCharsets}]`);
+            } else {
+                // Encode accoring to specified content-encoding, or negotiate based on Accept-Encoding headers if content-encoding is missing
+                for (const encoding of Accept.create(acceptedEncodings).filter(e => e.q > 0 && e.type !== 'identity').map(e => e.type)) {
+                    try {
+                        const encoder = request['_payloadEncoder'] ?? request.webService.webServiceConfig.payloadEncoder;
+                        const encoded = encoder.encode(tr, encoding);
+
+                        tr = Buffer.isBuffer(tr) ? await new BufferParser(ContentType.bytes).parse(encoded) : encoded;
+                        en = encoding;
+                        break;
+                    } catch {
+                        // Try the next encoding in the Accept-Encoding header
+                    }
+                }
+
+                this.body = tr instanceof Buffer ? tr : Readable.from(tr);
+                this.headers['content-type']     = ct?.toString();
+                this.headers['content-encoding'] = en?.toString();
+                this.headers['vary']           ??= '*';
+            }
+        }
+
+        if (request.webService.webServiceConfig.returnRequestID) {
+            this.headers[request.webService.webServiceConfig.returnRequestID as keyof WebResponseHeaders] ??= request.id;
+        }
+
+        if (Buffer.isBuffer(this.body)) {
+            this.headers['content-length'] = this.body.length.toString();
+        }
+
+        if (this.status === WebStatus.OK && ['HEAD', 'GET'].includes(request.method) && request.header('if-none-match', '') === this.headers.etag?.toString()) {
+            this.status = WebStatus.NOT_MODIFIED;
+            this.body = null;
+        } else if (request.method === 'HEAD') {
+            this.body = null;
+        }
+
+        return this as WebResponse<any> as WebResponse<never>;
     }
 
     /** @returns A short description about this response, including status and content type. */
