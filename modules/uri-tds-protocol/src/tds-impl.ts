@@ -235,7 +235,7 @@ export class TDSResult extends DBResult {
     constructor(db: DatabaseURI, private _ci: ColumnMetadata[], rows: unknown[][], rowCount?: number) {
         super(db, _ci.map((ci) => ({
                 label:   ci.colName,
-                type_id: (ci.type as any).id,
+                type_id: ci.type.id,
             })), rows, rowCount);
 
         // Fixup BigInt, Numeric/Decimal
@@ -302,7 +302,7 @@ ${this._getPagingClause()} \
     }
 
     override getAppendQuery(value: unknown): DBQuery {
-        const [ _scope, columns, objects ] = this._checkAppendArguments(value);
+        const [ columns, objects ] = this._checkAppendArguments(value);
         const colQuery = q.values(objects, columns, 'columns');
         const valQuery = q.values(objects, columns, 'values');
 

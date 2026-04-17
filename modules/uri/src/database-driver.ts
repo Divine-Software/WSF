@@ -181,7 +181,7 @@ export abstract class DBConnectionPool<P extends DBParams = DBParams> {
 }
 
 // eslint-disable-next-line @typescript-eslint/no-namespace
-namespace DBReference {
+export namespace DBReference {
     export type Scope  = 'scalar' | 'one' | 'unique' | 'all';
 
     export type Filter =
@@ -322,6 +322,8 @@ export class DBReference {
     }
 
     protected _checkLoadArguments(): void {
+        this.scope ??= 'all';
+
         if (this.keys) {
             throw this._makeIOError(`No primary keys may me be specified for this query`);
         }
@@ -343,8 +345,8 @@ ${this._getLockClause()} \
 `;
     }
 
-    protected _checkSaveArguments(value: unknown, keysRequired: boolean): [ scope: DBReference.Scope, columns: string[], objects: Params[], keys?: string[] ] {
-        const [ scope, columns, objects ] = this._checkSaveAndAppendArguments(value);
+    protected _checkSaveArguments(value: unknown, keysRequired: boolean): [ columns: string[], objects: Params[], keys?: string[] ] {
+        const [ columns, objects ] = this._checkSaveAndAppendArguments(value);
 
         if (keysRequired && !this.keys) {
             throw this._makeIOError(`Primary keys is required for this query`);
@@ -353,17 +355,17 @@ ${this._getLockClause()} \
             throw this._makeIOError(`No parameters may be specified for this query`);
         }
 
-        return [ scope, columns, objects, this.keys ];
+        return [ columns, objects, this.keys ];
     }
 
     getSaveQuery(value: unknown): DBQuery {
-        const [ _scope, _objects ] = this._checkSaveArguments(value, false);
+        const [ _objects ] = this._checkSaveArguments(value, false);
 
         throw this._makeIOError(`Operation is not supported for this database`);
     }
 
-    protected _checkAppendArguments(value: unknown): [ scope: DBReference.Scope, columns: string[], objects: Params[] ] {
-        const [ scope, columns, objects ] = this._checkSaveAndAppendArguments(value);
+    protected _checkAppendArguments(value: unknown): [ columns: string[], objects: Params[] ] {
+        const [ columns, objects ] = this._checkSaveAndAppendArguments(value);
 
         if (this.keys) {
             throw this._makeIOError(`No primary keys may me be specified for this query`);
@@ -372,10 +374,10 @@ ${this._getLockClause()} \
             throw this._makeIOError(`No parameters may be specified for this query`);
         }
 
-        return [ scope, columns, objects ];
+        return [ columns, objects ];
     }
 
-    private _checkSaveAndAppendArguments(value: unknown): [ scope: DBReference.Scope, columns: string[], objects: Params[] ] {
+    private _checkSaveAndAppendArguments(value: unknown): [ columns: string[], objects: Params[] ] {
         let objects: object[];
 
         this.scope ??= (Array.isArray(value) ? 'all' : 'one');
@@ -417,19 +419,19 @@ ${this._getLockClause()} \
 
         this.columns ??= [...new Set(objects.map(Object.keys).flat())];
 
-        return [ this.scope, this.columns, objects as Params[] ];
+        return [ this.columns, objects as Params[] ];
     }
 
     getAppendQuery(value: unknown): DBQuery {
-        const [ _scope, columns, objects ] = this._checkAppendArguments(value);
+        const [ columns, objects ] = this._checkAppendArguments(value);
 
         return q`insert into ${this._getTable()} ${q.values(objects, columns)}`
     }
 
-    protected _checkModifyArguments(value: unknown): [ scope: DBReference.Scope, columns: string[], object: Params ] {
+    protected _checkModifyArguments(value: unknown): [ columns: string[], object: Params ] {
         let object: object;
 
-        this.scope ??= 'one';
+        this.scope ??= 'all';
 
         if (this.scope === 'scalar') {
             if (this.columns?.length !== 1) {
@@ -439,9 +441,9 @@ ${this._getLockClause()} \
                 object = { [this.columns[0]]: value };
             }
         }
-        else if (this.scope === 'one') {
+        else if (this.scope === 'one' || this.scope === 'all') {
             if (Array.isArray(value) || typeof value !== 'object' || value === null) {
-                throw this._makeIOError(`Argument must be a object when scope is 'one'`);
+                throw this._makeIOError(`Argument must be a object when scope is 'one' or 'all'`);
             }
             else {
                 object = value;
@@ -463,24 +465,27 @@ ${this._getLockClause()} \
 
         this.columns ??= Object.keys(object);
 
-        return [ this.scope, this.columns, object as Params ];
+        return [ this.columns, object as Params ];
     }
 
     getModifyQuery(value: unknown): DBQuery {
-        const [ _scope, columns, object ] = this._checkModifyArguments(value);
+        const [ columns, object ] = this._checkModifyArguments(value);
 
         return q`update ${this._getTable()} set ${q.assign(object, columns)} ${this._getWhereClause()}`;
     }
 
     checkRemoveArguments(): void {
+        this.scope ??= 'all';
+
+        if (this.scope !== 'one' && this.scope !== 'all') {
+            throw this._makeIOError(`Unsupported scope '${this.scope}`);
+        }
+
         if (this.keys) {
             throw this._makeIOError(`No primary keys may be specified for this query`);
         }
         else if (this.columns) {
             throw this._makeIOError(`No columns may be specified for this query`);
-        }
-        else if (this.scope) {
-            throw this._makeIOError(`No scope may be specified for this query`);
         }
         else if (Object.keys(this.params).length) {
             throw this._makeIOError(`No parameters may be specified for this query`);

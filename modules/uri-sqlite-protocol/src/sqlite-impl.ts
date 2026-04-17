@@ -237,7 +237,7 @@ export class SQLiteReference extends DBDriver.DBReference {
     }
 
     override getSaveQuery(value: unknown): DBQuery {
-        const [ _scope, columns, objects, keys] = this._checkSaveArguments(value, true);
+        const [ columns, objects, keys] = this._checkSaveArguments(value, true);
         const updColumns = columns.filter((c) => !keys?.includes(c));
 
         return q`\

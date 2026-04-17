@@ -170,7 +170,7 @@ export class JDBCResult extends DBResult {
 export class JDBCReference extends DBDriver.DBReference {
     override getSaveQuery(value: unknown): DBQuery {
         if (this._dbURI.pathname.startsWith('h2:')) {
-            const [ _scope, columns, objects, keys ] = this._checkSaveArguments(value, false);
+            const [ columns, objects, keys ] = this._checkSaveArguments(value, false);
             const colQuery = q.values(objects, columns, 'columns');
             const valQuery = q.values(objects, columns, 'values');
 

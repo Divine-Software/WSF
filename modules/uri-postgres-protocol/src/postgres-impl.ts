@@ -262,7 +262,7 @@ export class PGReference extends DBDriver.DBReference {
     }
 
     override getSaveQuery(value: unknown): DBQuery {
-        const [ _scope, columns, objects, keys ] = this._checkSaveArguments(value, !this._isCRDB);
+        const [ columns, objects, keys ] = this._checkSaveArguments(value, !this._isCRDB);
         const updColumns = columns.filter((c) => !keys?.includes(c));
 
         return keys ? q`\

@@ -2,7 +2,7 @@ import { AsyncIteratorAdapter, BasicTypes, esxxEncoder, isTemplateStringsLike, m
 import { ContentType } from '@divine/headers';
 import { Barrier, Signal } from '@divine/synchronization';
 import { SecureContextOptions } from 'tls';
-import { DBCallback, DBConnection, DBConnectionPool } from '../database-driver';
+import { DBCallback, DBConnection, DBConnectionPool, DBReference } from '../database-driver';
 import { DBSessionSelector, invalidCharacter, isDatabaseTransactionParams, isDBCallback } from '../private/database-utils';
 import { URIParams } from '../selectors';
 import { IOError, ParamsSelector, URI } from '../uri';
@@ -738,8 +738,22 @@ export abstract class DBResult extends Array<unknown[]> {
     }
 }
 
-function toObjects<T extends object = object[]>(results: DBResult[]): T & DBMetadata {
-    return results[results.length - 1].toObjects(results) as unknown as T & DBMetadata;
+function toWrappedResult<T>(results: DBResult[], scope?: DBReference.Scope): Wrap<T> & DBMetadata {
+    const result = results[results.length - 1].toObjects(results);
+
+    if (scope === 'scalar' || scope === 'one') {
+        if (result.length === 0) {
+            return Object.defineProperty<any>(wrap(undefined), FIELDS, { enumerable: false, value: result[FIELDS] });
+        } else if (result.length === 1) {
+            return scope === 'scalar'
+                ? Object.defineProperty<any>(wrap(result[FIELDS][0][0]?.[0]), FIELDS, { enumerable: false, value: result[FIELDS] })
+                : Object.defineProperty<any>(wrap(result[0]),                 FIELDS, { enumerable: false, value: result[FIELDS] });
+        } else {
+            throw new IOError(`Scope '${scope}' used with a multi-row result set`, undefined, result);
+        }
+    } else {
+        return result as unknown as Wrap<T> & DBMetadata;
+    }
 }
 
 /**
@@ -995,25 +1009,9 @@ export abstract class DatabaseURI extends URI {
      */
     override load<T>(_recvCT?: ContentType | string): Promise<Wrap<T> & Metadata & DBMetadata> {
         return this._session(async (conn) => {
-            const dbRef  = await conn.reference(this);
-            const result = toObjects(await conn.query(dbRef.getLoadQuery()));
+            const dbRef = await conn.reference(this);
 
-            if (dbRef.scope === 'scalar' || dbRef.scope === 'one') {
-                if (result.length === 0) {
-                    throw new IOError(`Scope '${dbRef.scope}' used with a empty result set`, undefined, result);
-                }
-                else if (result.length === 1) {
-                    return dbRef.scope === 'scalar'
-                        ? Object.defineProperty<any>(wrap(result[FIELDS][0][0]?.[0]), FIELDS, { enumerable: false, value: result[FIELDS] })
-                        : Object.defineProperty<any>(wrap(result[0]),                 FIELDS, { enumerable: false, value: result[FIELDS] });
-                }
-                else {
-                    throw new IOError(`Scope '${dbRef.scope}' used with a multi-row result set`, undefined, result);
-                }
-            }
-            else {
-                return result as unknown as Wrap<T> & DBMetadata;
-            }
+            return toWrappedResult<T>(await conn.query(dbRef.getLoadQuery()), dbRef.scope ?? 'all');
         });
     }
 
@@ -1032,7 +1030,9 @@ export abstract class DatabaseURI extends URI {
      */
     override save<T, D = unknown>(data: D, _sendCT?: ContentType | string, _recvCT?: ContentType | string): Promise<Wrap<T> & Metadata & DBMetadata> {
         return this._session(async (conn) => {
-            return toObjects<Wrap<T>>(await conn.query((await conn.reference(this)).getSaveQuery(data)));
+            const dbRef = await conn.reference(this);
+
+            return toWrappedResult<T>(await conn.query(dbRef.getSaveQuery(data)), dbRef.scope);
         });
     }
 
@@ -1050,7 +1050,9 @@ export abstract class DatabaseURI extends URI {
      */
     override append<T, D = unknown>(data: D, _sendCT?: ContentType | string, _recvCT?: ContentType | string): Promise<Wrap<T> & Metadata & DBMetadata> {
         return this._session(async (conn) => {
-            return toObjects<Wrap<T>>(await conn.query((await conn.reference(this)).getAppendQuery(data)));
+            const dbRef = await conn.reference(this);
+
+            return toWrappedResult<T>(await conn.query(dbRef.getAppendQuery(data)), dbRef.scope);
         });
     }
 
@@ -1068,7 +1070,9 @@ export abstract class DatabaseURI extends URI {
      */
     override modify<T, D = unknown>(data: D, _sendCT?: ContentType | string, _recvCT?: ContentType | string): Promise<Wrap<T> & Metadata & DBMetadata> {
         return this._session(async (conn) => {
-            return toObjects<Wrap<T>>(await conn.query((await conn.reference(this)).getModifyQuery(data)));
+            const dbRef = await conn.reference(this);
+
+            return toWrappedResult<T>(await conn.query(dbRef.getModifyQuery(data)), dbRef.scope);
         });
     }
 
@@ -1083,7 +1087,9 @@ export abstract class DatabaseURI extends URI {
      */
     override remove<T>(_recvCT?: ContentType | string): Promise<Wrap<T> & Metadata & DBMetadata> {
         return this._session(async (conn) => {
-            return toObjects<Wrap<T>>(await conn.query((await conn.reference(this)).getRemoveQuery()));
+            const dbRef = await conn.reference(this);
+
+            return toWrappedResult<T>(await conn.query(dbRef.getRemoveQuery()), dbRef.scope);
         });
     }
 
@@ -1199,11 +1205,11 @@ export abstract class DatabaseURI extends URI {
     override query<T>(cb: DBCallback<T>): Promise<T>;
     override async query<T>(first: DBQuery | TemplateStringsArray | string | DBTransactionParams | DBCallback<T>, ...rest: unknown[]): Promise<unknown & Metadata & WithFields<DBResult>> {
         if (first instanceof DBQuery && rest.every((r) => r instanceof DBQuery)) {
-            return this._session(async (conn) => toObjects(await conn.query(first, ...rest)));
+            return this._session(async (conn) => toWrappedResult(await conn.query(first, ...rest)));
         } else if (isTemplateStringsLike(first)) {
-            return this._session(async (conn) => toObjects(await conn.query(q(first, ...rest))));
+            return this._session(async (conn) => toWrappedResult(await conn.query(q(first, ...rest))));
         } else if (typeof first === 'string' && rest.length === 1 && rest[0] !== null && typeof rest[0] === 'object') {
-            return this._session(async (conn) => toObjects(await conn.query(q(first, rest[0] as Params))));
+            return this._session(async (conn) => toWrappedResult(await conn.query(q(first, rest[0] as Params))));
         } else if (isDatabaseTransactionParams(first) && rest.length === 1 && isDBCallback<T & Metadata & WithFields<DBResult>>(rest[0])) {
             const cb = rest[0];
             return this._session(async (conn) => conn.transaction(first, cb), false /* Do not wrap CB exceptions */);

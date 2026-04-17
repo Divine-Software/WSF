@@ -236,7 +236,7 @@ export function describeCommonDBTest(def: CommonDBTestParams): void {
         });
 
         it('handles transactions', async () => {
-            expect.assertions(15);
+            expect.assertions(14);
 
             await expect(db.query(async () => {
                 await db.$`#dt`.append({ text: '🦮 1.1' });
@@ -251,12 +251,10 @@ export function describeCommonDBTest(def: CommonDBTestParams): void {
             await expect(db.query(null!)).rejects.toThrow('Invalid query() arguments'); // Should throw async
 
             // Transaction #1 should be rolled back completely
-            const t1b = db.$`#dt(text);scalar?{eq,text,🦮 1.1}`.load();
-
-            await expect(t1b).rejects.toThrow(`Scope 'scalar' used with a empty result set`);
-            await expect(t1b).rejects.toBeInstanceOf(IOError);
-            await expect(t1b).rejects.not.toBeInstanceOf(DBError);
-            expect(await t1b.catch((e: IOError<unknown[]>) => e.data?.length)).toBe(0);
+            const t1b = await db.$`#dt(text);scalar?{eq,text,🦮 1.1}`.load();
+            expect(t1b).toStrictEqual(wrap(undefined));
+            expect(t1b.valueOf()).toBe(undefined);
+            expect(unwrap(t1b)).toBe(undefined);
 
             const t2a = await db.query(async () => {
                 await db.$`#dt`.append({ text: '🦮 2.1' });
@@ -371,16 +369,16 @@ export function describeCommonDBTest(def: CommonDBTestParams): void {
         });
 
         it('parses and executes common DB references', async () => {
-            expect.assertions(16);
+            expect.assertions(19);
 
-            const a1 = await db.$`#dt`.append<DataTypes[]> ({ text: 'dbref1' });
+            const a1 = await db.$`#dt`.append<DataTypes | undefined> ({ text: 'dbref1' });
             const a2 = await db.$`#dt`.append<DataTypes[]>([{ text: 'dbref2' }, { text: 'dbref3' }]);
-            const k1 = a1[FIELDS][0].rowKey ?? a1[0]?.serial;
+            const k1 = a1[FIELDS][0].rowKey ?? unwrap(a1)?.serial;
             const k2 = a2[FIELDS][0].rowKey ?? a2[0]?.serial;
 
             expect(k1).toBeDefined();
             expect(k2).toBeDefined();
-            expect(a1).toHaveLength(def.returning ? 1 : 0);
+            expect(a1).toMatchObject(def.returning ? { serial: k1, text: 'dbref1' } : wrap(undefined));
             expect(a2).toHaveLength(def.returning ? 2 : 0);
             expect(a1[FIELDS][0].rowCount).toBe(1);
             expect(a2[FIELDS][0].rowCount).toBe(2);
@@ -408,6 +406,9 @@ export function describeCommonDBTest(def: CommonDBTestParams): void {
             expect(l2.real.valueOf()).toBe(1337);
             expect(l3[0].real.valueOf()).toBe(1337);
             expect(l3).toHaveLength(1);
+            expect(l1[FIELDS][0][0][0]).toBe(1337);
+            expect(l2[FIELDS][0][0][4]).toBe(1337);
+            expect(l3[FIELDS][0][0][4]).toBe(1337);
         });
 
         it('parses and executes load() DB references', async () => {
@@ -455,9 +456,9 @@ export function describeCommonDBTest(def: CommonDBTestParams): void {
 
             const i1 = db.pathname.startsWith('h2:') ? { serial: 98 } : undefined; // H2 quirk
             const i2 = db.pathname.startsWith('h2:') ? { serial: 99 } : undefined; // H2 quirk
-            const s1 = await db1.save<DataTypes[]>({ ...i1, text: 'dbref-save 1', real: 1 });
-            const s2 = await db2.save<DataTypes[]>({ ...i2, text: 'dbref-save 2', real: 2 });
-            const k1 = String(s1[FIELDS][0].rowKey ?? s1[0]?.serial ?? i1?.serial);
+            const s1 = await db1.save<DataTypes>({ ...i1, text: 'dbref-save 1', real: 1 });
+            const s2 = await db2.save<DataTypes[]>([{ ...i2, text: 'dbref-save 2', real: 2 }]);
+            const k1 = String(s1[FIELDS][0].rowKey ?? unwrap(s1)?.serial ?? i1?.serial);
             const k2 = String(s2[FIELDS][0].rowKey ?? s2[0]?.serial ?? i2?.serial);
             const u1 = await db2.save<DataTypes[]>({ serial: k1, real: 3 });
             const u2 = await db1.save<DataTypes[]>({ serial: k2, real: 4 });
