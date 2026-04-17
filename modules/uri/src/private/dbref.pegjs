@@ -9,20 +9,24 @@ filter      = expr
 params      = param_list
 
 expr        = expr_rel / expr_bool / expr_not
-expr_rel    = '(' op:$expr_ops ',' column:word ',' value:word ')'  { return { op, column, value } }
-expr_bool   = '(' op:$('and' / 'or') value:expr+ ')'               { return { op, value } }
-expr_not    = '(' op:$'not' value:expr ')'                         { return { op, value } }
+expr_rel    = '{' op:$expr_ops ',' column:word ',' value:value '}' { return { op, column, value } }
+expr_bool   = '{' op:$('and' / 'or') value:expr+ '}'               { return { op, value } }
+expr_not    = '{' op:$'not' value:expr '}'                         { return { op, value } }
 expr_ops    = 'lt' / 'le' / 'eq' / 'ne' / 'ge' / 'gt'
 
 table_path  = head:word tail:('/' word)*                           { return [ head, ...tail.map(t => t[1]) ] }
 column_list = head:word tail:(',' word)*                           { return [ head, ...tail.map(t => t[1]) ] }
 param_list  = params:('&' param)+                                  { return Object.fromEntries(params.map(t => t[1])) }
 
-param       = key:param_key '=' value:word                         { return [ key, value ] }
+param       = key:param_key '=' value:value                        { return [ key, value ] }
 param_key   = 'order' / 'limit' / 'offset' / 'lock'
 
-word        = word:$character+                                     { return decodeURIComponent(word) }
-character   = unreserved / special / encoded
+word        = word:$char+                                          { return decodeURIComponent(word) }
+char        = unreserved / encoded
+
+value       = word:$vchar+                                         { return decodeURIComponent(word) }
+vchar       = unreserved / special / encoded
+
 unreserved  = [0-9A-Za-z._~-]
-special     = [!'*]                                                // Also allow chars not encoded by encodeURIComponent(), except ()
+special     = [!'()*]                                              // Also allow chars not encoded by encodeURIComponent()
 encoded     = '%' [0-9A-Fa-f] [0-9A-Fa-f]

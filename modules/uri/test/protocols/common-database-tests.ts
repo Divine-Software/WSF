@@ -241,7 +241,7 @@ export function describeCommonDBTest(def: CommonDBTestParams): void {
             await expect(db.query(async () => {
                 await db.$`#dt`.append({ text: '🦮 1.1' });
 
-                const t1a = await db.$`#dt(text);scalar?(eq,text,🦮 1.1)`.load();
+                const t1a = await db.$`#dt(text);scalar?{eq,text,🦮 1.1}`.load();
                 expect(t1a).toBeInstanceOf(String);
                 expect(t1a.valueOf()).toBe('🦮 1.1');
 
@@ -251,7 +251,7 @@ export function describeCommonDBTest(def: CommonDBTestParams): void {
             await expect(db.query(null!)).rejects.toThrow('Invalid query() arguments'); // Should throw async
 
             // Transaction #1 should be rolled back completely
-            const t1b = db.$`#dt(text);scalar?(eq,text,🦮 1.1)`.load();
+            const t1b = db.$`#dt(text);scalar?{eq,text,🦮 1.1}`.load();
 
             await expect(t1b).rejects.toThrow(`Scope 'scalar' used with a empty result set`);
             await expect(t1b).rejects.toBeInstanceOf(IOError);
@@ -318,7 +318,7 @@ export function describeCommonDBTest(def: CommonDBTestParams): void {
                 ++start;
 
                 try {
-                    await db.$`#dt?(eq,text,rowlock)&lock=write`.load();
+                    await db.$`#dt?{eq,text,rowlock}&lock=write`.load();
                 }
                 finally {
                     await step(1);
@@ -362,7 +362,7 @@ export function describeCommonDBTest(def: CommonDBTestParams): void {
             });
 
             await Promise.all([t1, t2]);
-            const col = await db.$`#j(col);scalar?(eq,col,113)`.load();
+            const col = await db.$`#j(col);scalar?{eq,col,113}`.load();
 
             expect(maxRetries).toBeGreaterThanOrEqual(1);
             expect(start).toBeGreaterThanOrEqual(3);
@@ -387,22 +387,22 @@ export function describeCommonDBTest(def: CommonDBTestParams): void {
 
             await expect(db.$`#dt`.remove()).rejects.toThrow('A filter is required to this query');
 
-            const r1 = await db.$`#dt?(eq,serial,${k1})`.remove();
-            const r2 = await db.$`#dt?(eq,text,dbref2)`.remove();
+            const r1 = await db.$`#dt?{eq,serial,${k1}}`.remove();
+            const r2 = await db.$`#dt?{eq,text,dbref2}`.remove();
 
             expect(r1[FIELDS][0].rowCount).toBe(1);
             expect(r2[FIELDS][0].rowCount).toBe(1);
 
             await expect(db.$`#dt`.modify({})).rejects.toThrow('A filter is required to this query');
 
-            const u1 = await db.$`#dt?(eq,text,dbref3)`.modify({ text: 'dbref3b', real: 1337 });
+            const u1 = await db.$`#dt?{eq,text,dbref3}`.modify({ text: 'dbref3b', real: 1337 });
 
             expect(u1[FIELDS][0].rowCount).toBe(1);
             expect(u1).toHaveLength(0);
 
-            const l1 = await db.$`#dt(real);scalar?(eq,text,dbref3b)`.load();
-            const l2 = await db.$`#dt;one?(and(gt,text,dbref)(lt,text,dbref9))`.load<DataTypes>();
-            const l3 = await db.$`#dt?(eq,real,${l1})`.load<DataTypes[]>();
+            const l1 = await db.$`#dt(real);scalar?{eq,text,dbref3b}`.load();
+            const l2 = await db.$`#dt;one?{and{gt,text,dbref}{lt,text,dbref9}}`.load<DataTypes>();
+            const l3 = await db.$`#dt?{eq,real,${l1}}`.load<DataTypes[]>();
 
             expect(l1.valueOf()).toBe(1337);
             expect(l2.real.valueOf()).toBe(1337);
@@ -424,11 +424,11 @@ export function describeCommonDBTest(def: CommonDBTestParams): void {
 
             const l1 = await db.$`#dt`.load<DataTypes[]>();
             const l2 = await db.$`#dt(real,text);unique`.load<DataTypes[]>();
-            const l3 = await db.$`#dt(real)?(eq,text,dbref-load)&order=real`.load<DataTypes[]>();
-            const l4 = await db.$`#dt(real)?(eq,text,dbref-load)&order=-real`.load<DataTypes[]>();
-            const l5 = await db.$`#dt(real)?(eq,text,dbref-load)&order=real&limit=2`.load<DataTypes[]>();
-            const l6 = await db.$`#dt(real)?(eq,text,dbref-load)&order=real&offset=2`.load<DataTypes[]>();
-            const l7 = await db.$`#dt(real)?(eq,text,dbref-load)&order=real&offset=3&limit=2`.load<DataTypes[]>();
+            const l3 = await db.$`#dt(real)?{eq,text,dbref-load}&order=real`.load<DataTypes[]>();
+            const l4 = await db.$`#dt(real)?{eq,text,dbref-load}&order=-real`.load<DataTypes[]>();
+            const l5 = await db.$`#dt(real)?{eq,text,dbref-load}&order=real&limit=2`.load<DataTypes[]>();
+            const l6 = await db.$`#dt(real)?{eq,text,dbref-load}&order=real&offset=2`.load<DataTypes[]>();
+            const l7 = await db.$`#dt(real)?{eq,text,dbref-load}&order=real&offset=3&limit=2`.load<DataTypes[]>();
 
             expect(l1.filter((r) => r.text === 'dbref-load')).toHaveLength(6);
             expect(l2.filter((r) => r.text === 'dbref-load')).toHaveLength(5);
@@ -467,8 +467,8 @@ export function describeCommonDBTest(def: CommonDBTestParams): void {
             expect(u1[FIELDS][0].rowCount).toBe(1);
             expect(u2[FIELDS][0].rowCount).toBe(1);
 
-            const l1 = await db.$`#dt;one?(eq,serial,${k1})`.load<DataTypes>();
-            const l2 = await db.$`#dt;one?(or(eq,serial,${k1})(eq,serial,${k2}))&order=-text&limit=1`.load<DataTypes>();
+            const l1 = await db.$`#dt;one?{eq,serial,${k1}}`.load<DataTypes>();
+            const l2 = await db.$`#dt;one?{or{eq,serial,${k1}}{eq,serial,${k2}}}&order=-text&limit=1`.load<DataTypes>();
 
             expect(String(l1.serial)).toBe(k1);
             expect(String(l2.serial)).toBe(k2);
@@ -500,8 +500,8 @@ export function describeCommonDBTest(def: CommonDBTestParams): void {
 
             await db.query`update "d" set ${q.assign({ def: null })} where "key" = 101`;
             await db.query`update "d" set ${q.assign({ def: undefined })} where "key" = 102`;
-            await db.$`#d?(eq,key,111)`.modify({ def: null });
-            await db.$`#d(def)?(eq,key,112)`.modify({});
+            await db.$`#d?{eq,key,111}`.modify({ def: null });
+            await db.$`#d(def)?{eq,key,112}`.modify({});
             keyedUpsert && await db.$`#d[key]`.save([{ key: 121, def: null }, { key: 122, def: undefined }]);
             primeUpsert && await db.$`#d`.save([{ key: 131, def: null }, { key: 132, def: undefined }]);
 

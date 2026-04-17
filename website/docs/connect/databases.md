@@ -29,7 +29,7 @@ Assuming you have a `users` table with `id` as primary key, here is how to retri
 identifier:
 
 ```ts
-const user = await dbURI.$`#users;one?(eq,id,${userID})`.load<User>();
+const user = await dbURI.$`#users;one?{eq,id,${userID}}`.load<User>();
 ```
 
 The `$` method in URI just creates a new relative URI from a template literal, and in this case we set the fragment part
@@ -37,14 +37,14 @@ while leaving everything else as-is. `users` is our table, `;one` means "fetch o
 Should you instead want to fetch all users from the US, you'd write:
 
 ```ts
-const users = await dbURI.$`#users?(eq,country,us)`.load<User[]>();
+const users = await dbURI.$`#users?{eq,country,us}`.load<User[]>();
 ```
 
 It's also possible to reference a single cell in the database. In the following example, we retrieve only a user's name
 from the database, as a `String`[^2].
 
 ```ts
-const name = await dbURI.$`#users(name);scalar?(eq,id,${userID})`.load<String>();
+const name = await dbURI.$`#users(name);scalar?{eq,id,${userID}}`.load<String>();
 ```
 
 ## Writing Rows
@@ -69,13 +69,13 @@ const user = await dbURI.$`#users`.save<User>({ id: userID, name: 'John Doe', co
 Existing rows may be updated with [modify], like this:
 
 ```ts
-await dbURI.$`#users?(eq,country,se)`.modify({ language: 'sv' });
+await dbURI.$`#users?{eq,country,se}`.modify({ language: 'sv' });
 ```
 
 And, naturally, rows can be deleted using [remove]:
 
 ```ts
-await dbURI.$`#users(eq,id,${userID})`.remove();
+await dbURI.$`#users?{eq,id,${userID}}`.remove();
 ```
 
 :::tip

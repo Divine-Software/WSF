@@ -799,19 +799,19 @@ function toObjects<T extends object = object[]>(results: DBResult[]): T & DBMeta
  *
  * ### Filters
  *
- * Relational filters are written as `(` *relation* `,` *column* `,` *value* `)`, where *relation* is one of `lt` (less
+ * Relational filters are written as `{` *relation* `,` *column* `,` *value* `}`, where *relation* is one of `lt` (less
  * than), `le` (less than or equal), `eq` (equal), `ge` (greater than or equal) and `gt` (greater than). These kinds of
  * filter expressions test a column against a fixed value.
  *
- * There are also boolean filters. To require two or more filters to all be true, write `(` `and` *filter1* ...
- * *filterN* `)`. To require only one of several filters to be true, write `(` `or` *filter1* ... *filterN* `)`. It's
- * also possible to invert a filter by writing `(` `not` *filter* `)`.
+ * There are also boolean filters. To require two or more filters to all be true, write `{` `and` *filter1* ...
+ * *filterN* `}`. To require only one of several filters to be true, write `{` `or` *filter1* ... *filterN* `}`. It's
+ * also possible to invert a filter by writing `{` `not` *filter* `}`.
  *
  * Filters may be nested, so the following filter part of a DB reference would return all products that cost between 10
  * and 20 USD as well as those being completely free:
  *
  * ```
- * #products?(or(and(ge,amount,10)(le,amount,20))(eq,amount,0))
+ * #products?{or{and{ge,amount,10}{le,amount,20}}{eq,amount,0}}
  * ```
  *
  * This syntax, while perhaps a bit exotic for both JavaScript and SQL developers, was chosen so that filters do not
@@ -835,7 +835,7 @@ function toObjects<T extends object = object[]>(results: DBResult[]): T & DBMeta
  * Insert multiple rows:
  *
  * ```ts
- * const user = await db.$`#users`.append<User[]>([
+ * const users = await db.$`#users`.append<User[]>([
  *     { name: 'Martin', language: 'sv', country: 'se' },
  *     { name: 'Vilgot', language: 'es', country: 'mx' }
  * ]);
@@ -844,25 +844,25 @@ function toObjects<T extends object = object[]>(results: DBResult[]): T & DBMeta
  * Retrieve a row:
  *
  * ```ts
- * const user = await db.$`#users;one?(eq,id,${userID})`.load<User>();
+ * const user = await db.$`#users;one?{eq,id,${userID}}`.load<User | undefined>();
  * ```
  *
  * Retrieve multiple rows:
  *
  * ```ts
- * const users = await db.$`#users?(eq,country,mx)`.load<User[]>();
+ * const users = await db.$`#users?{eq,country,mx}`.load<User[]>();
  * ```
  *
  * Update one or more rows
  *
  * ```ts
- * await db.$`#users?(eq,id,${userID})`.modify({ country: 'fi' });
+ * await db.$`#users?{eq,id,${userID}}`.modify({ country: 'fi' });
  * ```
  *
  * Remove one or more rows:
  *
  * ```ts
- * await db.$`#users?(eq,id,${userID})`.remove();
+ * await db.$`#users?{eq,id,${userID}}`.remove();
  * ```
  *
  * Some databases also supports *upsert* semantics, which means the row will be created if it doesn't exist, or updated
@@ -964,7 +964,7 @@ export abstract class DatabaseURI extends URI {
      *
      * ```ts
      * const base = new URI('sqlite:/tmp/demo.db');
-     * const info = await base.$`#item_info?(eq,id,${item})`.load();
+     * const info = await base.$`#item_info?{eq,id,${item}}`.load();
      * ```
      *
      * @param  strings    The template string array.
