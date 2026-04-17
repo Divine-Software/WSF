@@ -61,16 +61,18 @@ export class HTTPURI extends URI {
         const type     = headers['content-type'];
         const modified = headers['last-modified'];
 
-        return {
-            ...extractMetadata(response),
+        return Object.defineProperties({
             uri:     this,
             name:    path.posix.basename(location.pathname),
             type:    ContentType.create(type),
             length:  typeof length === 'string' ? Number(length) : undefined,
             updated: typeof modified === 'string' ? new Date(modified) : undefined,
-        } as unknown as T & Metadata;
+        } as unknown as T & Metadata, {
+            [HEADERS]:     { enumerable: false, value: response[HEADERS]     },
+            [STATUS]:      { enumerable: false, value: response[STATUS]      },
+            [STATUS_TEXT]: { enumerable: false, value: response[STATUS_TEXT] },
+        });
     }
-
 
     /**
      * Issues a `GET` request and parses the result.
@@ -253,9 +255,11 @@ export class HTTPURI extends URI {
                             await Parser.parse(Encoder.decode(response, response.headers['content-encoding'] ?? []),
                                                ContentType.create(recvCT, response.headers['content-type']))) as Wrap<unknown> & Metadata;
 
-                        result[HEADERS]     = convertHeaders(response);
-                        result[STATUS]      = response.statusCode;
-                        result[STATUS_TEXT] = response.statusMessage;
+                        Object.defineProperties(result, {
+                            [HEADERS]:     { enumerable: false, value: convertHeaders(response) },
+                            [STATUS]:      { enumerable: false, value: response.statusCode },
+                            [STATUS_TEXT]: { enumerable: false, value: response.statusMessage },
+                        });
 
                         resolve(result);
                     }
@@ -307,10 +311,6 @@ export class HTTPURI extends URI {
 
         return this._requireValidStatus(res) as unknown as Wrap<T> & Metadata;
     }
-}
-
-function extractMetadata(m: Metadata) {
-    return { [STATUS]: m[STATUS], [STATUS_TEXT]: m[STATUS_TEXT], [HEADERS]: m[HEADERS] };
 }
 
 function convertHeaders(response: IncomingMessage): StringParams {

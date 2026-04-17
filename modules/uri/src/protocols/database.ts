@@ -695,7 +695,7 @@ export abstract class DBResult extends Array<unknown[]> {
      */
     toObject<T extends object>(fields?: DBResult[]): T & DBMetadata {
         const result: any = {};
-        result[FIELDS] = fields ?? [ this ];
+        Object.defineProperty(result, FIELDS, { enumerable: false, value: fields ?? [ this ] });
 
         if (this.length !== 1) {
             throw new TypeError(`toObject: expected 1 row, but found ${this.length} rows`);
@@ -723,7 +723,7 @@ export abstract class DBResult extends Array<unknown[]> {
      */
     toObjects<T extends object>(fields?: DBResult[]): T[] & DBMetadata {
         const result: T[] & WithFields<DBResult> = Array<T>(this.length);
-        result[FIELDS] = fields ?? [ this ];
+        Object.defineProperty(result, FIELDS, { enumerable: false, value: fields ?? [ this ] });
 
         for (let r = 0, rl = result.length, hl = this.columns.length; r < rl; ++r) {
             const s = this[r];
@@ -740,17 +740,6 @@ export abstract class DBResult extends Array<unknown[]> {
 
 function toObjects<T extends object = object[]>(results: DBResult[]): T & DBMetadata {
     return results[results.length - 1].toObjects(results) as unknown as T & DBMetadata;
-}
-
-function withDBMetadata<T extends object>(meta: DBMetadata, value: object): T & DBMetadata {
-    const result = value as T & DBMetadata;
-
-    if (meta[FIELDS]       !== undefined) result[FIELDS]      = meta[FIELDS];
-    if (meta[STATUS]       !== undefined) result[STATUS]      = meta[STATUS];
-    if (meta[STATUS_TEXT]  !== undefined) result[STATUS_TEXT] = meta[STATUS_TEXT];
-    if (meta[HEADERS]      !== undefined) result[HEADERS]     = meta[HEADERS];
-
-    return result;
 }
 
 /**
@@ -1015,8 +1004,8 @@ export abstract class DatabaseURI extends URI {
                 }
                 else if (result.length === 1) {
                     return dbRef.scope === 'scalar'
-                        ? withDBMetadata<Wrap<T>>(result, wrap(result[FIELDS][0][0]?.[0]))
-                        : withDBMetadata<Wrap<T>>(result, wrap(result[0]));
+                        ? Object.defineProperty<any>(wrap(result[FIELDS][0][0]?.[0]), FIELDS, { enumerable: false, value: result[FIELDS] })
+                        : Object.defineProperty<any>(wrap(result[0]),                 FIELDS, { enumerable: false, value: result[FIELDS] });
                 }
                 else {
                     throw new IOError(`Scope '${dbRef.scope}' used with a multi-row result set`, undefined, result);

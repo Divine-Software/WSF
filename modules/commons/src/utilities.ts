@@ -20,11 +20,6 @@ export function asError(err: unknown): Error {
     return err instanceof Error ? err : new Error(toString(err));
 }
 
-export function setProp<T extends object, K extends keyof T>(object: T, prop: K, value: T[K]): T {
-    object[prop] = value;
-    return object;
-}
-
 export function getOrSetEntry<K, V>(map: Map<K, V>, key: K, value: V): V {
     const result = map.get(key);
 

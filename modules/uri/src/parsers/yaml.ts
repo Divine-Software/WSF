@@ -1,4 +1,4 @@
-import { BasicTypes, setProp } from '@divine/commons';
+import { BasicTypes } from '@divine/commons';
 import YAML from 'yaml';
 import { Parser, StringParser } from '../parsers';
 import { FIELDS, WithFields, wrap } from '../uri-types';
@@ -17,7 +17,7 @@ export class YAMLParser extends Parser {
         const json = yaml.map((yaml) => yaml.toJSON() as BasicTypes);
         const data = wrap(json[0]);
 
-        return json.length === 1 ? data : setProp(data as WithFields<BasicTypes>, FIELDS, json);
+        return json.length === 1 ? data : Object.defineProperty(data, FIELDS, { enumerable: false, value: json });
     }
 
     serialize(data: BasicTypes): Buffer;
