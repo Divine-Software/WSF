@@ -3,7 +3,7 @@ import { Authorization, ContentType, WWWAuthenticate } from '@divine/headers';
 import url, { Url, URL } from 'url';
 import { AuthScheme, AuthSchemeRequest } from './auth-schemes';
 import { guessContentType } from './file-utils';
-import { AuthSelector, AuthSessionSelector, getBestSelector, HeadersSelector, isAuthSelector, isHeadersSelector, isParamsSelector, isSessionSelector, ParamsSelector, SelectorBase, SessionSelector } from './selectors';
+import { AuthSelector, AuthSessionSelector, getBestSelector, HeadersSelector, isAuthSelector, isHeadersSelector, isParamsSelector, isSameSelector, isSessionSelector, ParamsSelector, SelectorBase, SessionSelector, updateSelector } from './selectors';
 import { HEADERS, Metadata, STATUS, STATUS_TEXT, Wrap } from './uri-types';
 
 export { AuthSelector, HeadersSelector, ParamsSelector, Selector } from './selectors';
@@ -209,7 +209,9 @@ export class URI extends URL implements AsyncIterable<Buffer> {
      * If the URI contains user information (credentials), it will be added as an {@link AuthSelector} and removed from
      * the URI.
      *
-     * NOTE: If `base` is an URI, all its selectors will be inherited by the newly constructed URI.
+     * NOTE: If constructed using a sole URI argument, or if `base` is an URI, all its selectors will be inherited by
+     * the newly constructed URI. To create a fresh new URI without inheriting selectors, use `new URI(uri.href)`
+     * instead of `new URI(uri)`.
      *
      * @param url     The URL to construct. If relative, it will be resolved against `base`. If `url` is a string *and*
      *                `params` are provided, the string may contain `{prop}` placeholders, which will then be resolved
@@ -242,7 +244,7 @@ export class URI extends URL implements AsyncIterable<Buffer> {
             return;
         }
 
-        this.selectors = base instanceof URI ? base.selectors : {};
+        this.selectors = arguments.length === 1 && url instanceof URI ? url.selectors : base instanceof URI ? base.selectors : {};
 
         if (this.username || this.password) {
             this.addSelector({ credentials: {
@@ -290,34 +292,46 @@ export class URI extends URL implements AsyncIterable<Buffer> {
      * kind of this configuration, it will apply unconditionally.
      *
      * @param  selector   The selector to add.
+     * @param  merge      If a selector of the same kind already exists, merge the new selector instead of replacing the
+     *                    previous one. Note that merging auth selectors is not supported.
      * @throws TypeError  If the selector to add is invalid.
      * @returns           This URI.
      */
-    addSelector<T extends AuthSelector | HeadersSelector | ParamsSelector | SessionSelector>(selector: T): this {
+    addSelector<T extends AuthSelector | HeadersSelector | ParamsSelector | SessionSelector>(selector: T, merge = false): this {
         let valid = false;
 
+        const addSelector = (selectors: SelectorBase[], selector: T, kind: 'auth' | 'headers' | 'params' | 'session') => {
+            const existing = selectors.findIndex(s => isSameSelector(s, selector));
+
+            if (existing === -1) {
+                selectors.push(selector);
+            } else {
+                selectors[existing] = updateSelector(selectors[existing], selector, kind, merge);
+            }
+        }
+
         if (isAuthSelector(selector)) {
-            (this.selectors.auth ??= []).push(selector);
+            addSelector(this.selectors.auth ??= [], selector, 'auth');
             valid = true;
         }
 
         if (isHeadersSelector(selector)) {
-            (this.selectors.headers ??= []).push(selector);
+            addSelector(this.selectors.headers ??= [], selector, 'headers');
             valid = true;
         }
 
         if (isParamsSelector(selector)) {
-            (this.selectors.params ??= []).push(selector);
+            addSelector(this.selectors.params ??= [], selector, 'params');
             valid = true;
         }
 
         if (isSessionSelector(selector)) {
-            (this.selectors.session ??= []).push(selector);
+            addSelector(this.selectors.session ??= [], selector, 'session');
             valid = true;
         }
 
         if (!valid) {
-            throw new TypeError('Invalid selector');
+            throw new TypeError('Invalid selector.');
         }
 
         return this;

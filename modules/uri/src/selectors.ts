@@ -1,4 +1,6 @@
-import { StringParams } from '@divine/commons';
+/* eslint-disable jsdoc/require-jsdoc */
+
+import { StringParams, throwError } from '@divine/commons';
 import { WWWAuthenticate } from '@divine/headers';
 import { URL } from 'url';
 import { AuthScheme, Credentials, CredentialsProvider } from './auth-schemes';
@@ -34,6 +36,8 @@ export interface SelectorBase {
     selector?: Selector;
 }
 
+export type AnySelector = Partial<AuthSelector> & Partial<HeadersSelector> & Partial<ParamsSelector> & Partial<SessionSelector>;
+
 /** Provides authentication for {@link URI} and its subclasses.. */
 export interface AuthSelector extends SelectorBase {
     /** The credentials or credential provider to use for authentication. */
@@ -43,7 +47,7 @@ export interface AuthSelector extends SelectorBase {
     preemptive?: boolean;
 }
 
-export function isAuthSelector(selector: any): selector is AuthSelector {
+export function isAuthSelector(selector: AnySelector): selector is AuthSelector {
     return ['function', 'object'].includes(typeof selector.credentials) &&
         (selector.preemptive === undefined || typeof selector.preemptive === 'boolean');
 }
@@ -54,7 +58,7 @@ export interface HeadersSelector extends SelectorBase {
     headers: StringParams;
 }
 
-export function isHeadersSelector(selector: any): selector is HeadersSelector {
+export function isHeadersSelector(selector: AnySelector): selector is HeadersSelector {
     return typeof selector.headers === 'object';
 }
 
@@ -70,7 +74,7 @@ export interface ParamsSelector extends SelectorBase {
     params: URIParams;
 }
 
-export function isParamsSelector(selector: any): selector is ParamsSelector {
+export function isParamsSelector(selector: AnySelector): selector is ParamsSelector {
     return typeof selector.params === 'object';
 }
 
@@ -78,7 +82,7 @@ export interface SessionSelector extends SelectorBase {
     states: { [key: string]: unknown };
 }
 
-export function isSessionSelector(selector: any): selector is SessionSelector {
+export function isSessionSelector(selector: AnySelector): selector is SessionSelector {
     return typeof selector.states === 'object';
 }
 
@@ -86,6 +90,38 @@ export interface AuthSessionSelector extends SessionSelector {
     states: {
         authScheme?: AuthScheme<Credentials>;
     }
+}
+
+export function isSameSelector(sel1: AnySelector, sel2: AnySelector): boolean {
+    const sig = (sel: AnySelector) => JSON.stringify(Object.entries(sel.selector ?? {})
+        .map(([k, v]) => [k, String(v)])
+        .sort(([k1], [k2]) => k1.localeCompare(k2))
+    );
+
+    return sig(sel1) === sig(sel2);
+}
+
+export function updateSelector(target: AnySelector, source: AnySelector, kind: 'auth' | 'headers' | 'params' | 'session', merge: boolean): AnySelector {
+    const result = { ...target }; // Shallow copy of all non-affected properties
+
+    if (kind === 'auth') {
+        if (merge) {
+            throwError('Merging auth selectors is not supported.');
+        } else {
+            result.credentials = source.credentials;
+            result.preemptive  = source.preemptive;
+        }
+    } else if (kind === 'headers') {
+        result.headers = merge ? { ...target.headers, ...source.headers } : source.headers;
+    } else if (kind === 'params') {
+        result.params = merge ? { ...target.params, ...source.params } : source.params;
+    } else if (kind === 'session') {
+        result.states = merge ? { ...target.states, ...source.states } : source.states;
+    } else {
+        throw new TypeError(`Unknown selector kind '${kind}'.`);
+    }
+
+    return result;
 }
 
 export function getBestSelector<T extends SelectorBase>(sels: T[] | undefined, url: URL, challenge?: WWWAuthenticate): T | null {
