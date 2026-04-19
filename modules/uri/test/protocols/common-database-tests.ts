@@ -3,7 +3,9 @@
 /* eslint-disable jest/no-standalone-expect */
 /* eslint-disable jsdoc/require-jsdoc */
 
-import { DatabaseURI, DBError, DBQuery, FIELDS, IOError, q, unwrap, URI } from '../../src';
+import { createHash } from 'crypto';
+import { DatabaseURI, DBError, DBParamsSelector, DBQuery, dbRef, FIELDS, q, unwrap, URI, wrap } from '../../src';
+import { DBDataTable, DT_METADATA, DTError, DTRecordMetadata, DTTableMetadata, noAuth, Precondition } from '../../src/datatable';
 
 export interface CommonDBTestParams {
     name:        string;
@@ -41,6 +43,64 @@ export interface DataTypes {
 export type EnabledDataTypes = Record<keyof DataTypes, boolean>
 
 type Nullable<T> = { [P in keyof T]: null | T[P] }
+
+interface CDTEntity {
+    date?: string | null;
+    req:   string;
+    opt?:  string;
+}
+
+interface CDTTable {
+    id:    string;
+    date:  string | null;
+    req:   string;
+    opt?:  string;
+}
+
+class CommonDataTable extends DBDataTable<string, CDTEntity, CDTTable> {
+    public tableMetadataStatus: boolean | undefined;
+
+    constructor(private _def: CommonDBTestParams, db: DatabaseURI, table: string, pk: keyof CDTTable) {
+        super(db, table, pk);
+    }
+
+    protected override makeRecord(key: string | null, current: Readonly<CDTTable> | null, entity: CDTEntity | CDTTable): CDTTable {
+        (entity as CDTTable).id = key ?? String(Date.now() + Math.random());
+
+        if (entity.date === undefined) {
+            entity.date = new Date().toISOString();
+        }
+
+        if (!this._def.defaultVal && entity.opt === undefined) {
+            entity.opt = 'Def';
+        }
+
+        return entity as CDTTable;
+    }
+
+    protected override async recordMetadata(record: Readonly<CDTTable>): Promise<DTRecordMetadata> {
+        return {
+            version:   createHash('sha256').update(JSON.stringify(record)).digest('hex'),
+            timestamp: record.date ? new Date(record.date) : undefined,
+        };
+    }
+
+    protected override async tableMetadata(): Promise<DTTableMetadata> {
+        if (this.tableMetadataStatus === true) {
+            return {
+                version:   createHash('sha256').update(JSON.stringify(await this._db.query`select * from "dv"`)).digest('hex'),
+                timestamp: new Date((await this._db.query<any>`select max("date") as "max_date" from "dv"`)[0].max_date),
+            };
+        } else if (this.tableMetadataStatus === false) {
+            return {
+                version:   null,       // Not present
+                timestamp: undefined,  // Resource has no timestamp
+            };
+        } else {
+            return {};
+        }
+    }
+}
 
 export function describeCommonDBTest(def: CommonDBTestParams): void {
     const columns: Nullable<DataTypes> = {
@@ -92,12 +152,16 @@ export function describeCommonDBTest(def: CommonDBTestParams): void {
         beforeAll(async () => {
             await db.query(
                 q`drop table if exists "dt"`,
+                q`drop table if exists "dv"`,
                 q`drop table if exists "j"`,
                 q`drop table if exists "d"`,
+                q`create table "dv" ("id" varchar(24) primary key not null, "date" char(24), "req" varchar(12) not null, "opt" varchar(12) default 'Def')`,
                 q`create table "j" ("col" integer)`,
                 q`create table "d" ("key" integer primary key not null, "def" varchar(10) default 'Def')`,
                 ...[def.createDT].flat(),
             );
+
+            hasTC = db.protocol !== 'mysql:' || parseFloat((await db.query<any>`select version()`)[0].version) >= 8;
         });
 
         afterAll(async () => {
@@ -468,13 +532,11 @@ export function describeCommonDBTest(def: CommonDBTestParams): void {
             expect([...l6]).toStrictEqual([{ real: 3 }, { real: 4 }, { real: 5 }, { real: 5 } ]);
             expect([...l7]).toStrictEqual([{ real: 4 }, { real: 5 } ]);
 
-            const totalCount = db.protocol !== 'mysql:' || parseFloat((await db.query<any>`select version()`)[0].version) >= 8 ? 6 : undefined;
-
-            expect(l3[FIELDS][0].totalCount).toBe(totalCount);
-            expect(l4[FIELDS][0].totalCount).toBe(totalCount);
-            expect(l5[FIELDS][0].totalCount).toBe(totalCount);
-            expect(l6[FIELDS][0].totalCount).toBe(totalCount);
-            expect(l7[FIELDS][0].totalCount).toBe(totalCount);
+            expect(l3[FIELDS][0].totalCount).toBe(hasTC ? 6 : undefined);
+            expect(l4[FIELDS][0].totalCount).toBe(hasTC ? 6 : undefined);
+            expect(l5[FIELDS][0].totalCount).toBe(hasTC ? 6 : undefined);
+            expect(l6[FIELDS][0].totalCount).toBe(hasTC ? 6 : undefined);
+            expect(l7[FIELDS][0].totalCount).toBe(hasTC ? 6 : undefined);
         });
 
         (def.upsert === 'no' ? it.skip : it)('parses and executes save() DB references', async () => {
@@ -546,6 +608,204 @@ export function describeCommonDBTest(def: CommonDBTestParams): void {
                 ...(keyedUpsert ? { '120': 'Def', '121': 'null', '122':  Def } : {}),
                 ...(primeUpsert ? { '130': 'Def', '131': 'null', '132':  Def } : {}),
             });
+        });
+
+        it('handles basic DataTable entity ops', async () => {
+            expect.assertions(33);
+
+            const dv = new CommonDataTable(def, db, 'dv', 'id');
+
+            await expect(dv.load(noAuth, 'entity')).rejects.toThrow(DTError);
+            await expect(dv.load(noAuth, 'entity')).rejects.toThrow('not-found');
+
+            const s1 = await dv.save(noAuth, 'entity', { req: 'req1', opt: 'opt1' });
+            expect(s1).toStrictEqual({ id: 'entity', date: expect.any(String), req: 'req1', opt: 'opt1' });
+            expect(s1[DT_METADATA].timestamp).toBeInstanceOf(Date);
+            expect(await dv.load(noAuth, 'entity')).toStrictEqual(s1);
+
+            const s2 = await dv.save(noAuth, 'entity', { req: 'req2', opt: 'opt2' });
+            expect(s2).toStrictEqual({ id: 'entity', date: expect.any(String), req: 'req2', opt: 'opt2' });
+            expect(s2[DT_METADATA].timestamp).toBeInstanceOf(Date);
+            expect(await dv.load(noAuth, 'entity')).toStrictEqual(s2);
+
+            const s3 = await dv.save(noAuth, 'entity', { req: 'req3', date: new Date(0).toISOString() });
+            expect(s3).toStrictEqual({ id: 'entity', date: '1970-01-01T00:00:00.000Z', req: 'req3', opt: 'Def' });
+            expect(s3[DT_METADATA].timestamp).toStrictEqual(new Date(0));
+            expect(await dv.load(noAuth, 'entity')).toStrictEqual(s3);
+
+            const s4 = dv.save(noAuth, 'entity', {} as CDTEntity);
+            await expect(s4).rejects.toBeInstanceOf(DBError);
+            expect(await dv.load(noAuth, 'entity')).toStrictEqual(s3);
+
+            const s5 = dv.save(noAuth, 'entity', { req: 'req5', unknown: 'value' } as CDTEntity);
+            await expect(s5).rejects.toBeInstanceOf(DBError);
+            expect(await dv.load(noAuth, 'entity')).toStrictEqual(s3);
+
+            const s6 = await dv.save(noAuth, 'entity', { id: 'ignored', date: null, req: 'req6' } as CDTEntity);
+            expect(s6).toStrictEqual({ id: 'entity', date: null, req: 'req6', opt: 'Def' });
+            expect(s6[DT_METADATA].timestamp).toBeUndefined();
+            expect(await dv.load(noAuth, 'entity')).toStrictEqual(s6);
+
+            const m1 = await dv.modify(noAuth, 'entity', { id: 'ignored', date: undefined, req: 'req1', opt: 'opt1' } as Partial<CDTEntity>);
+            expect(m1).toStrictEqual({ id: 'entity', date: expect.any(String), req: 'req1', opt: 'opt1' });
+            expect(await dv.load(noAuth, 'entity')).toStrictEqual(m1);
+
+            const m2 = await dv.modify(noAuth, 'entity', { id: undefined, date: null, opt: undefined } as Partial<CDTEntity>);
+            expect(m2).toStrictEqual({ id: 'entity', date: null, req: 'req1', opt: 'Def' });
+            expect(await dv.load(noAuth, 'entity')).toStrictEqual(m2);
+
+            const m3 = await dv.modify(noAuth, 'entity', async (row) => ({ ...row, date: new Date(0).toISOString(), req: row.req + '*', opt: undefined }));
+            expect(m3).toStrictEqual({ id: 'entity', date: '1970-01-01T00:00:00.000Z', req: 'req1*', opt: 'Def' });
+            expect(m3[DT_METADATA].timestamp).toStrictEqual(new Date(0));
+            expect(await dv.load(noAuth, 'entity')).toStrictEqual(m3);
+
+            const m4 = dv.modify(noAuth, 'unknown', { req: 'req4' });
+            await expect(m4).rejects.toThrow('not-found');
+
+            const r1 = await dv.remove(noAuth, 'entity');
+            expect(r1).toStrictEqual(wrap(null));
+            expect(unwrap(r1)).toBeNull();
+            expect(r1[DT_METADATA].version).toBeNull();
+            expect(r1[DT_METADATA].timestamp).toBeUndefined();
+            await expect(dv.load(noAuth, 'entity')).rejects.toThrow('not-found');
+
+            const r2 = dv.remove(noAuth, 'entity');
+            await expect(r2).rejects.toThrow('not-found');
+            await expect(dv.load(noAuth, 'entity')).rejects.toThrow('not-found');
+        });
+
+        it('handles basic DataTable list ops', async () => {
+            expect.assertions(32);
+
+            const dv = new CommonDataTable(def, db, 'dv', 'id');
+
+            const i1 = await dv.info();
+            expect(i1).toStrictEqual(wrap(undefined));
+            expect(i1[DT_METADATA].version).toBeUndefined();
+            expect(i1[DT_METADATA].timestamp).toBeUndefined();
+
+            dv.tableMetadataStatus = false;
+
+            const i2 = await dv.info();
+            expect(i2).toStrictEqual(wrap(undefined));
+            expect(i2[DT_METADATA].version).toBeNull();
+            expect(i2[DT_METADATA].timestamp).toBeUndefined();
+
+            const l1 = await dv.list(noAuth);
+            expect(l1).toHaveLength(0);
+            expect(l1[DT_METADATA].version).toBeNull();
+            expect(l1[DT_METADATA].timestamp).toBeUndefined();
+
+            const a1 = await dv.append(noAuth, { req: 'list1' });
+            expect(a1).toStrictEqual({ id: expect.any(String), req: 'list1', date: expect.any(String), opt: 'Def' })
+
+            const a2 = await dv.append(noAuth, { id: 'ignored', req: 'list2', date: null, opt: 'opt2' } as CDTEntity);
+            expect(a2).toStrictEqual({ id: expect.any(String), req: 'list2', date: null, opt: 'opt2' })
+            expect(a2.id).not.toBe('ignored');
+
+            await Promise.all(Array(7).fill(0).map((_, i) => dv.append(noAuth, { req: 'list' + (i + 3) })));
+
+            const l2 = await dv.list(noAuth, { order: 'req' });
+            expect(l2).toHaveLength(9);
+            expect(l2[0]).toStrictEqual(a1);
+            expect(l2[1]).toStrictEqual(a2);
+            expect(l2[DT_METADATA].totalCount).toBe(hasTC ? 9 : undefined);
+
+            const l3 = await dv.list(noAuth, { order: '-req' });
+            expect(l3).toHaveLength(9);
+            expect(l3[8]).toStrictEqual(a1);
+            expect(l3[7]).toStrictEqual(a2);
+            expect(l3[DT_METADATA].totalCount).toBe(hasTC ? 9 : undefined);
+
+            const l4 = await dv.list(noAuth, { order: 'req', limit: 2 });
+            expect(l4).toHaveLength(2);
+            expect(l4[0]).toStrictEqual(a1);
+            expect(l4[1]).toStrictEqual(a2);
+            expect(l4[DT_METADATA].totalCount).toBe(hasTC ? 9 : undefined);
+
+            const l5 = await dv.list(noAuth, { order: 'req', limit: 2, offset: 1 });
+            expect(l5).toHaveLength(2);
+            expect(l5[0]).toStrictEqual(a2);
+            expect(l5[1].req).toBe('list3');
+            expect(l5[DT_METADATA].totalCount).toBe(hasTC ? 9 : undefined);
+
+            const l6 = await dv.list(noAuth, { order: 'req', limit: 2, offset: 3, where: dbRef('gt', 'req', 'list4') });
+            expect(l6).toHaveLength(2);
+            expect(l6[0].req).toBe('list8');
+            expect(l6[1].req).toBe('list9');
+            expect(l6[DT_METADATA].totalCount).toBe(hasTC ? 5 : undefined);
+        });
+
+        it('handles conditional DataTable entity ops', async () => {
+            expect.assertions(12);
+
+            const dv = new CommonDataTable(def, db, 'dv', 'id');
+
+            await expect(dv.save(noAuth,   'cond-entity', { req: 'cond-entity' }, new Precondition('present'))).rejects.toThrow('precondition-failed');
+            await expect(dv.modify(noAuth, 'cond-entity', { req: 'cond-entity' }, new Precondition('present'))).rejects.toThrow('precondition-failed');
+            await expect(dv.remove(noAuth, 'cond-entity', new Precondition('present'))).rejects.toThrow('precondition-failed');
+
+            const e1 = await dv.save(noAuth, 'cond-entity', { req: 'cond-entity' }, new Precondition('absent'));
+
+            await expect(dv.save(noAuth,   'cond-entity', { req: 'cond-entity' }, new Precondition('absent'))).rejects.toThrow('precondition-failed');
+            await expect(dv.modify(noAuth, 'cond-entity', { req: 'cond-entity' }, new Precondition('absent'))).rejects.toThrow('precondition-failed');
+            await expect(dv.remove(noAuth, 'cond-entity', new Precondition('absent'))).rejects.toThrow('precondition-failed');
+
+            await expect(dv.save(noAuth,   'cond-entity', { req: 'cond-entity' }, new Precondition('none-match', e1[DT_METADATA].version!))).rejects.toThrow('precondition-failed');
+            await expect(dv.modify(noAuth, 'cond-entity', { req: 'cond-entity' }, new Precondition('none-match', e1[DT_METADATA].version!))).rejects.toThrow('precondition-failed');
+            await expect(dv.remove(noAuth, 'cond-entity', new Precondition('none-match', e1[DT_METADATA].version!))).rejects.toThrow('precondition-failed');
+
+            const e2 = await dv.save(noAuth, 'cond-entity', { req: 'cond-entity2' }, new Precondition('match', e1[DT_METADATA].version!));
+            await expect(dv.modify(noAuth, 'cond-entity', { req: 'cond-entity' }, new Precondition('match', e1[DT_METADATA].version!))).rejects.toThrow('precondition-failed');
+
+            const e3 = await dv.modify(noAuth, 'cond-entity', { req: 'cond-entity3' }, new Precondition('match', e2[DT_METADATA].version!));
+
+            await dv.remove(noAuth, 'cond-entity', new Precondition('match', e3[DT_METADATA].version!));
+            await expect(dv.remove(noAuth, 'cond-entity', new Precondition('match', e3[DT_METADATA].version!))).rejects.toThrow('precondition-failed');
+            await expect(dv.remove(noAuth, 'cond-entity', new Precondition('none-match', e3[DT_METADATA].version!))).rejects.toThrow('not-found');
+        });
+
+        it('handles conditional DataTable list ops', async () => {
+            expect.hasAssertions();
+
+            const dv = new CommonDataTable(def, db, 'dv', 'id');
+
+            // tableMetadata() not supported, so all strong conditions should fail
+            await expect(dv.append(noAuth, { req: 'cond-list' }, new Precondition('present'))).rejects.toThrow('precondition-failed');
+            await expect(dv.append(noAuth, { req: 'cond-list' }, new Precondition('absent'))).rejects.toThrow('precondition-failed');
+            await expect(dv.append(noAuth, { req: 'cond-list' }, new Precondition('none-match', 'some-version'))).rejects.toThrow('precondition-failed');
+            await expect(dv.append(noAuth, { req: 'cond-list' }, new Precondition('match', 'some-version'))).rejects.toThrow('precondition-failed');
+
+            // Legacy conditions should be ignored, since resource has no timestamp
+            await expect(dv.append(noAuth, { req: 'cond-list' }, new Precondition('modified-since', new Date()))).resolves.not.toThrow();
+            await expect(dv.append(noAuth, { req: 'cond-list' }, new Precondition('unmodified-since', new Date(0)))).resolves.not.toThrow();
+
+            dv.tableMetadataStatus = false;
+
+            // Strong conditions should work now
+            await expect(dv.append(noAuth, { req: 'cond-list' }, new Precondition('present'))).rejects.toThrow('precondition-failed');
+            await expect(dv.append(noAuth, { req: 'cond-list1' }, new Precondition('absent'))).resolves.not.toThrow();
+
+            // Legacy conditions should be ignored, since resource has no timestamp
+            await dv.append(noAuth, { req: 'cond-list2' }, new Precondition('modified-since', new Date()));
+            await dv.append(noAuth, { req: 'cond-list3' }, new Precondition('unmodified-since', new Date(0)))
+
+            dv.tableMetadataStatus = true;
+
+            await dv.append(noAuth, { req: 'cond-list4' }, new Precondition('present'))
+            await expect(dv.append(noAuth, { req: 'cond-list' }, new Precondition('absent'))).rejects.toThrow('precondition-failed');
+
+            const list = await dv.list(noAuth, { order: 'req', limit: 1 });
+
+            await expect(dv.append(noAuth, { req: 'cond-list' }, new Precondition('none-match', 'foo', list[DT_METADATA].version!, 'bar'))).rejects.toThrow('precondition-failed');
+            await dv.append(noAuth, { req: 'cond-list5' }, new Precondition('match', 'foo', list[DT_METADATA].version!, 'bar'));
+            await expect(dv.append(noAuth, { req: 'cond-list' }, new Precondition('match', 'foo', list[DT_METADATA].version!, 'bar'))).rejects.toThrow('precondition-failed');
+
+            await expect(dv.append(noAuth, { req: 'cond-list' }, new Precondition('modified-since', new Date(Date.now() + 2000)))).rejects.toThrow('precondition-failed');
+            await dv.append(noAuth, { req: 'cond-list6' }, new Precondition('modified-since', new Date(Date.now() - 2000)));
+
+            await expect(dv.append(noAuth, { req: 'cond-list' }, new Precondition('unmodified-since', new Date(Date.now() - 2000)))).rejects.toThrow('precondition-failed');
+            await dv.append(noAuth, { req: 'cond-list7' }, new Precondition('unmodified-since', new Date(Date.now() + 2000)));
         });
     });
 }
