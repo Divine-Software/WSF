@@ -1,4 +1,4 @@
-import { Params } from '@divine/commons';
+import { Params, throwError } from '@divine/commons';
 import { Authorization, WWWAuthenticate } from '@divine/headers';
 import { Condition } from '@divine/synchronization';
 import { AsyncLocalStorage } from 'async_hooks';
@@ -186,6 +186,9 @@ export namespace DBReference {
 
     export type Filter =
         { op: 'lt' | 'le' | 'eq' | 'ne' | 'ge' | 'gt', column: string, value: string } |
+        { op: 'in', column: string, value: string[] } |
+        { op: 'null', column: string } |
+        { op: 'fn', fn: string, value: string[] } |
         { op: 'and' | 'or', value: Filter[] } |
         { op: 'not',        value: Filter };
 
@@ -258,6 +261,12 @@ export class DBReference {
             case 'ne':   return q`${this._quote(filter.column)} <> ${filter.value}`;
             case 'ge':   return q`${this._quote(filter.column)} >= ${filter.value}`;
             case 'gt':   return q`${this._quote(filter.column)} > ${filter.value}`;
+            case 'in':   return filter.value.length ? q`${this._quote(filter.column)} in ${q.list(filter.value)}` : q`1=0`;
+            case 'null': return q`${this._quote(filter.column)} is null`;
+            case 'fn': {
+                const handler = (getBestSelector(this._dbURI.selectors.params, this._dbURI)?.params as DBParams | undefined)?.dbRefExtensionHandler;
+                return handler?.(this.table, filter.fn, filter.value) ?? throwError(this._makeIOError(`Unknown filter function '${filter.fn}'.`));
+            }
         }
 
         throw this._makeIOError(`Unexpected filter operator '${filter['op']}'.`);

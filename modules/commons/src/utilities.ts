@@ -8,12 +8,12 @@ export function as<T>(value: T): T {
     return value;
 }
 
-export function isOneOf<T extends string | number, V extends T[]>(value: T | undefined, of: V): value is V[number] {
+export function isOneOf<T extends string | number | null, V extends T[]>(value: T | undefined, of: V): value is V[number] {
     return value !== undefined && of.includes(value);
 }
 
-export function throwError(err: Error): never {
-    throw err;
+export function throwError(err: Error | string): never {
+    throw asError(err);
 }
 
 export function asError(err: unknown): Error {

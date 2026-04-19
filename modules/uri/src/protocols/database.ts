@@ -1,12 +1,12 @@
-import { AsyncIteratorAdapter, BasicTypes, esxxEncoder, isTemplateStringsLike, mapped, Params } from '@divine/commons';
+import { AsyncIteratorAdapter, BasicTypes, esxxEncoder, isOneOf, isTemplateStringsLike, mapped, Params } from '@divine/commons';
 import { ContentType } from '@divine/headers';
 import { Barrier, Signal } from '@divine/synchronization';
 import { SecureContextOptions } from 'tls';
 import { DBCallback, DBConnection, DBConnectionPool, DBReference } from '../database-driver';
 import { DBSessionSelector, invalidCharacter, isDatabaseTransactionParams, isDBCallback } from '../private/database-utils';
 import { URIParams } from '../selectors';
-import { IOError, ParamsSelector, URI } from '../uri';
-import { FIELDS, HEADERS, Metadata, STATUS, STATUS_TEXT, WithFields, Wrap, wrap } from '../uri-types';
+import { IOError, ParamsSelector, uri, URI, URIString } from '../uri';
+import { FIELDS, Metadata, WithFields, Wrap, wrap } from '../uri-types';
 
 /**
  * Constructs a {@link DBQuery} from a template literal.
@@ -233,6 +233,83 @@ export namespace q {
     }
 }
 
+/**
+ * Utility function for constructing relational *DB reference* filters for use in {@link DatabaseURI} fragments.
+ *
+ * @param op      A relation.
+ * @param column  The column to compare.
+ * @param value   The value to compare the column to.
+ * @returns       The constructed filter, escaped correctly.
+ */
+export function dbRef(op: 'lt' | 'le' | 'eq' | 'ne' | 'ge' | 'gt', column: string, value: unknown): URIString;
+/**
+ * Utility function for constructing is-included-in-set *DB reference* filters for use in {@link DatabaseURI} fragments.
+ *
+ * @param op      `in`
+ * @param column  The column to compare.
+ * @param value   A list of values to compare the column to.
+ * @returns       The constructed filter, escaped correctly.
+ */
+export function dbRef(op: 'in', column: string, ...value: unknown[]): URIString;
+/**
+ * Utility function for constructing null-checking *DB reference* filters for use in {@link DatabaseURI} fragments.
+ *
+ * @param op      `null`
+ * @param column  The column to check for null.
+ * @returns       The constructed filter, escaped correctly.
+ */
+export function dbRef(op: 'null', column: string): URIString;
+/**
+ * Utility function for calling *DB reference* extendsion functions for use in {@link DatabaseURI} fragments.
+ *
+ * @param op      `fn`, to indicate an extension function.
+ * @param name    The name of the extension function.
+ * @param args    The arguments to pass to the extension function.
+ * @returns       The constructed filter, escaped correctly.
+ */
+// eslint-disable-next-line @typescript-eslint/unified-signatures
+export function dbRef(op: 'fn', name: string, ...args: unknown[]): URIString;
+/**
+ * Utility function for constructing boolean *DB reference* filters for use in {@link DatabaseURI} fragments.
+ *
+ * @param op         A boolean operator (`and` or `or`).
+ * @param subqueries The subqueries to combine.
+ * @returns          The constructed filter, escaped correctly.
+ */
+export function dbRef(op: 'and' | 'or', ...subqueries: URIString[]): URIString;
+/**
+ * Utility function for constructing negated *DB reference* filters for use in {@link DatabaseURI} fragments.
+ *
+ * @param op       `not`
+ * @param subquery The subquery to negate.
+ * @returns        The constructed filter, escaped correctly.
+ */
+export function dbRef(op: 'not', subquery: URIString): URIString;
+// eslint-disable-next-line jsdoc/require-jsdoc
+export function dbRef(op: string, ...args: unknown[]): URIString {
+    if (isOneOf(op, ['and', 'not', 'or'])) {
+        return uri`{${op}${args}}`;
+    } else if (isOneOf(op, ['lt', 'le', 'eq', 'ne', 'ge', 'gt'])) {
+        if (args.length !== 2) {
+            throw new TypeError(`Just a single column and value must be provided for operator '${op}'.`);
+        }
+
+        return uri`{${op},${args[0]},${args[1]}}`;
+    } else if (op === 'in') {
+        return uri`{${op},${args[0]},${uri.raw(args.slice(1).map(arg => uri`${arg}`).join(','))}}`;
+    } else if (op === 'null') {
+        if (args.length !== 1) {
+            throw new TypeError(`Just a single column must be provided for operator '${op}'.`);
+        }
+
+        return uri`{${op},${args[0]}}`;
+    } else if (op === 'fn') {
+        return uri`{${args[0]}[${uri.raw(args.slice(1).map(arg => uri`${arg}`).join(','))}]}`;
+    } else {
+        throw new TypeError(`Invalid dbRef operator: '${op} ${args}'.`);
+    }
+}
+
 /** Database configuration parameters. */
 export interface DBParams extends URIParams {
     /**
@@ -267,6 +344,29 @@ export interface DBParams extends URIParams {
      * or operational modes.
      */
     sessionInit?: DBQuery[];
+
+    /**
+     * A optional DB reference extension handler.
+     *
+     * This callback will be invoked when a DB reference filter containing an extension function is being processed,
+     * with the name of the table, the function, and its arguments.
+     *
+     * It should return a {@link DBQuery} representing a valid SQL `WHERE` clause that implements the extension, or
+     * `undefined` if the table/function is unknown.
+     *
+     * Example:
+     *
+     * ```ts
+     * function myDBRefExtensionHandler(table: string[], fn: string, args: string[]): DBQuery | undefined {
+     *     if (table.join('.') === 'users' && fn === 'isAdult') {
+     *         return q`age >= 18`;
+     *     } else {
+     *         return undefined;
+     *     }
+     * }
+     * ```
+     */
+    dbRefExtensionHandler?: (table: string[], fn: string, args: string[]) => DBQuery | undefined;
 
     /** SSL/TLS parameters. */
     tls?: SecureContextOptions & {

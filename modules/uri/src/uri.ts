@@ -10,7 +10,7 @@ export { AuthSelector, HeadersSelector, ParamsSelector, Selector } from './selec
 
 const urlObject  = (url as any).Url;
 
-class URIString extends String {}
+export class URIString extends String {}
 
 /**
  * A template literal tag function that applies {@link percentEncode} to all arguments.
@@ -24,8 +24,8 @@ class URIString extends String {}
  * @returns        An String object with the arguments encoded.
  */
 export function uri(strings: TemplateStringsArray, ...values: unknown[]): URIString {
-    const result = strings[0] + values.map((value, i) =>
-        (value instanceof URIString ? value.valueOf() : percentEncode(toString(value))) + strings[i + 1])
+    const result = strings[0] + values.map((valueOrArray, i) => (Array.isArray(valueOrArray) ? valueOrArray : [valueOrArray]).map(value =>
+        (value instanceof URIString ? value.valueOf() : percentEncode(toString(value))) + strings[i + 1]).join(''))
         .join('');
 
     return uri.raw(result);

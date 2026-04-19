@@ -75,7 +75,17 @@ export function describeCommonDBTest(def: CommonDBTestParams): void {
     }
 
     describe(`the ${def.name} driver`, () => {
-        const db = def.uri as DatabaseURI;
+        const db = def.uri.addSelector<DBParamsSelector>({ params: {
+            dbRefExtensionHandler(table, fn, args) {
+                if (table.join('.') === 'dt' && fn === 'get' && args.length === 1) {
+                    return q`text = ${args[0]}`;
+                } else {
+                    return undefined;
+                }
+            }
+        }}, true) as DatabaseURI;
+
+        let hasTC = false;
 
         jest.setTimeout(15000);
 
@@ -369,7 +379,7 @@ export function describeCommonDBTest(def: CommonDBTestParams): void {
         });
 
         it('parses and executes common DB references', async () => {
-            expect.assertions(19);
+            expect.assertions(26);
 
             const a1 = await db.$`#dt`.append<DataTypes | undefined> ({ text: 'dbref1' });
             const a2 = await db.$`#dt`.append<DataTypes[]>([{ text: 'dbref2' }, { text: 'dbref3' }]);
@@ -409,6 +419,25 @@ export function describeCommonDBTest(def: CommonDBTestParams): void {
             expect(l1[FIELDS][0][0][0]).toBe(1337);
             expect(l2[FIELDS][0][0][4]).toBe(1337);
             expect(l3[FIELDS][0][0][4]).toBe(1337);
+
+            await db.$`#dt`.append([{ text: 'dbref4' }, { text: 'dbref5' }]);
+
+            const l4 = await db.$`#dt?{in,text,}`.load<DataTypes[]>();
+            const l5 = await db.$`#dt?{in,text,dbref4,dbref3b}`.load<DataTypes[]>();
+            const l6 = await db.$`#dt?{and{gt,text,dbref}{lt,text,dbref9}{null,real}}`.load<DataTypes>();
+            const l7 = await db.$`#dt?{and{gt,text,dbref}{lt,text,dbref9}{not{null,real}}}`.load<DataTypes>();
+
+            expect(l4).toHaveLength(0);
+            expect(l5).toHaveLength(2);
+            expect(l6).toHaveLength(2);
+            expect(l7).toHaveLength(1);
+
+            await expect(db.$`#dt?{missing-func[]}`.load()).rejects.toThrow(`Unknown filter function 'missing-func'.`);
+
+            const l8 = await db.$`#dt?{get[dbref4]}`.load<DataTypes[]>();
+
+            expect(l8).toHaveLength(1);
+            expect(l8[0].text).toBe('dbref4');
         });
 
         it('parses and executes load() DB references', async () => {
