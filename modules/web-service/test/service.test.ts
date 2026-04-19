@@ -72,6 +72,13 @@ describe('the WebService dispatcher', () => {
 
         expect((await dispatchRequest(ws, fakedReq('POST', '/options'))).status).toBe(WebStatus.METHOD_NOT_ALLOWED);
     });
+
+    it('rejects with 501 if method is unknown', async () => {
+        expect.assertions(1);
+        jest.spyOn(console, 'warn').mockImplementation(() => void 0);
+
+        expect((await dispatchRequest(ws, fakedReq('FOOBAR', '/options'))).status).toBe(WebStatus.NOT_IMPLEMENTED);
+    });
 });
 
 describe(`a WebService's resources`, () => {

@@ -363,6 +363,9 @@ export interface WebResponseHeaders {
     /** Correlates HTTP requests between a client and server. */
     'x-request-id'?:                     string;
 
+    /** The total number of items in a collection. */
+    'x-total-count'?:                    string | number;
+
     /** Recommends the preferred rendering engine (often a backward-compatibility mode) to use to display the content. */
     'x-ua-compatible'?:                  string;
 

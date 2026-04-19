@@ -128,9 +128,9 @@ interface ResourceDescriptor<Context> {
 
 const ALLOWED_METHODS = /^(HEAD|GET|PUT|POST|PATCH|DELETE|OPTIONS)$/;
 
-function getMethods(obj: any): string[] {
-    return obj && typeof obj === 'object'
-        ? Object.getOwnPropertyNames(obj).filter((method) => typeof obj[method] === 'function').concat(getMethods(Object.getPrototypeOf(obj)))
+function getMethods(obj: any, top = obj): string[] {
+    return obj && typeof obj === 'object' && obj !== Object.prototype
+        ? Object.getOwnPropertyNames(obj).filter((method) => typeof top[method] === 'function').concat(getMethods(Object.getPrototypeOf(obj), top))
         : [];
 }
 
@@ -192,17 +192,12 @@ export class WebService<Context> {
      * This method checks what methods are implemented on the provided object and generates a comma-separated list of
      * allowed HTTP methods.
      *
-     * @param rsrc The resource to produce an `Allow` header for.
-     * @returns    A comma-separated list of allowed HTTP methods.
+     * @param rsrc             The resource to produce an `Allow` header for.
+     * @param methodToVerbMap  An optional mapping of method names to HTTP verbs.
+     * @returns                A comma-separated list of allowed HTTP methods.
      */
-    public static makeAllowHeader(rsrc?: WebResource): string {
-        const methods: string[] = [];
-
-        for (const method of getMethods(rsrc)) {
-            if (ALLOWED_METHODS.test(method)) {
-                methods.push(method);
-            }
-        }
+    public static makeAllowHeader(rsrc: object, methodToVerbMap?: Record<string, string | undefined>): string {
+        const methods = getMethods(rsrc).map(m => methodToVerbMap ? methodToVerbMap[m] : m).filter(m => m && ALLOWED_METHODS.test(m));
 
         if (methods.includes('GET') && !methods.includes('HEAD')) {
             methods.push('HEAD');
@@ -213,6 +208,25 @@ export class WebService<Context> {
         }
 
         return methods.sort().join(', ');
+    }
+
+    /**
+     * Throws a `405 Method Not Allowed` error if the method is recognized, or a `501 Not Implemented` error if not.
+     *
+     * @param method           The method to reject.
+     * @param rsrc             The resource to use for the `Allow` header. @see {@link makeAllowHeader}.
+     * @param methodToVerbMap  An optional mapping of method names to HTTP verbs, used to generate the `Allow` header.
+     */
+    public static rejectUnhandledMethod(method: string, rsrc: object, methodToVerbMap?: Record<string, string | undefined>): never {
+        if (ALLOWED_METHODS.test(method)) {
+            throw new WebError(WebStatus.METHOD_NOT_ALLOWED, `This resource does not handle '${method}' requests.`, {
+                allow: WebService.makeAllowHeader(rsrc, methodToVerbMap)
+            });
+        } else {
+            throw new WebError(WebStatus.NOT_IMPLEMENTED, `This server does not understand '${method}' requests.`, {
+                allow: WebService.makeAllowHeader(rsrc, methodToVerbMap)
+            });
+        }
     }
 
     /** The actual {@link WebServiceConfig} used by this service. */
@@ -241,8 +255,8 @@ export class WebService<Context> {
             slowRequestThreshold: 1_000,
             maxContentLength:     1_000_000,
             errorMessageProperty: 'message',
-            payloadEncoder:        Encoder,
-            payloadParser:         Parser,
+            payloadEncoder:       Encoder,
+            payloadParser:        Parser,
             logRequestID:         true,
             returnRequestID:      null,
             trustForwardedFor:    false,
@@ -591,22 +605,16 @@ export class WebService<Context> {
 
                 if (method) {
                     return await method.call(rsrc, args!);
-                }
-                else if (webreq.method === 'OPTIONS') {
+                } else if (webreq.method === 'OPTIONS') {
                     return new WebResponse(WebStatus.OK, null, {
                         allow: WebService.makeAllowHeader(rsrc)
                     });
+                } else {
+                    WebService.rejectUnhandledMethod(webreq.method, rsrc);
                 }
-                else {
-                    throw new WebError(WebStatus.METHOD_NOT_ALLOWED, `This resource does not handle ${webreq.method} requests`, {
-                        allow: WebService.makeAllowHeader(rsrc)
-                    });
-                }
-            }
-            catch (err) {
+            } catch (err) {
                 return await this._handleError(err, (err) => rsrc?.catch?.(err));
-            }
-            finally {
+            } finally {
                 await rsrc?.close?.();
             }
         });
