@@ -5,6 +5,7 @@ import { WebError, WebStatus } from './error';
 import { WebRequest } from './request';
 import { WebResponse, WebResponses } from './response';
 import { WebServiceConfig } from './service';
+import { Precondition } from '@divine/uri';
 
 /**
  * A custom error handler.
@@ -271,7 +272,7 @@ export class WebArguments<Params extends ParamsBase = ParamsBase> {
         const rparams = Object.entries(request.params);
 
         this.params = Object.fromEntries([
-            ...urlargs.map(([k, v]) => ['$' + k, v]),
+            ...urlargs.map(([k, v]) => ['$' + k, v !== undefined ? decodeURIComponent(v) : v]),
             ...headers.map(([k, v]) => ['@' + k, v]),
             ...qparams.map(([k, v]) => ['?' + k, v]),
             ...rparams.map(([k, v]) => ['~' + k, typeof v === 'object' ? v : String(v)]),
@@ -281,6 +282,11 @@ export class WebArguments<Params extends ParamsBase = ParamsBase> {
     /** @returns An alias/shortcut for {@link WebRequest.log}, which in turn is based on {@link WebServiceConfig.console}. */
     get log(): Partial<Console> {
         return this.request.log;
+    }
+
+    /** @returns An alias/shortcut for {@link WebRequest.precondition}. */
+    get precondition(): Precondition | undefined {
+        return this.request.precondition;
     }
 
     /**

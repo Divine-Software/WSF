@@ -1,10 +1,13 @@
-import { BasicTypes, isReadableStream } from '@divine/commons';
+import { BasicTypes, isOneOf, isReadableStream } from '@divine/commons';
 import { Accept, AcceptCharset, ContentDisposition, ContentType, WWWAuthenticate } from '@divine/headers';
 import { BufferParser, URI } from '@divine/uri';
 import { Readable } from 'stream';
 import { URL } from 'url';
 import { WebStatus } from './error';
+import { concatHeader, parseETag, updateETag } from './private/etag';
 import { WebRequest } from './request';
+
+const errorHeaders = { 'content-type': 'text/plain; charset=utf-8', 'vary': '*' };
 
 /**
  * An HTTP response that is to be transmitted back to the client.
@@ -60,12 +63,9 @@ export class WebResponse<T extends BasicTypes = BasicTypes> {
      * @returns        This WebResponse.
      */
     async serialize(request: WebRequest): Promise<WebResponse<never>> {
-        const toString = (v: unknown) => v !== null && v !== undefined ? String(v) : undefined;
-
         // Normalize header names to lowercase strings and all values to strings
-        this.headers = Object.fromEntries(Object.entries(this.headers)
-            .map(([k, v]) => [k.toLowerCase(), Array.isArray(v) ? v.map(toString).filter(Boolean) : toString(v)])
-            .filter(([_, v]) => Boolean(v)));
+        const strHdr = (v: unknown) => v instanceof Date ? v.toUTCString() : v !== null && v !== undefined ? String(v) : undefined;
+        this.headers = Object.fromEntries(Object.entries(this.headers).map(([k, v]) => [k.toLowerCase(), Array.isArray(v) ? v.map(strHdr) : strHdr(v)]));
 
         if (this.body !== null && !Buffer.isBuffer(this.body) && !isReadableStream(this.body)) {
             const acceptedCharsets  = request.header('accept-charset', 'utf-8');
@@ -94,7 +94,7 @@ export class WebResponse<T extends BasicTypes = BasicTypes> {
 
             if (tr === null) {
                 this.status  = WebStatus.NOT_ACCEPTABLE;
-                this.headers = { 'content-type': 'text/plain; charset=utf-8', 'vary': '*' };
+                this.headers = errorHeaders;
                 this.body    = Buffer.from(`Cannot provide a response as ${accepteTypes} [${acceptedCharsets}]`);
             } else {
                 // Encode accoring to specified content-encoding, or negotiate based on Accept-Encoding headers if content-encoding is missing
@@ -112,25 +112,59 @@ export class WebResponse<T extends BasicTypes = BasicTypes> {
                 }
 
                 this.body = tr instanceof Buffer ? tr : Readable.from(tr);
+                this.headers['content-length']   = undefined;
                 this.headers['content-type']     = ct?.toString();
                 this.headers['content-encoding'] = en?.toString();
-                this.headers['vary']           ??= '*';
+                this.headers['vary']             = concatHeader(this.headers['vary'], 'accept', 'accept-charset', 'accept-encoding').join(', ');
             }
+        }
+
+        if (this.headers.etag) {
+            this.headers.etag = updateETag(this.headers.etag, this.headers);
+        }
+
+        if (isOneOf(this.status, [WebStatus.OK, WebStatus.PARTIAL_CONTENT]) && isOneOf(request.method, ['GET', 'HEAD']) && request.precondition?.evaluated === false) {
+            const etag = this.headers.etag && parseETag(request.precondition.mode === 'none-match', false, this.headers.etag);
+
+            if (!request.precondition.test(etag, this.headers['last-modified'])) {
+                if (isOneOf(request.precondition.mode, ['none-match', 'modified-since'])) {
+                    this.status  = WebStatus.NOT_MODIFIED;
+                    this.body    = null;
+                } else {
+                    this.status  = WebStatus.PRECONDITION_FAILED;
+                    this.headers = errorHeaders;
+                    this.body    = Buffer.from(`Precondition '${request.precondition.mode}' not met.`)
+                }
+            }
+        }
+
+        if (this.status >= WebStatus.OK && this.status < WebStatus.MULTIPLE_CHOICES && request.precondition?.evaluated === false) {
+            this.status  = WebStatus.NOT_IMPLEMENTED;
+            this.headers = errorHeaders;
+            this.body    = Buffer.from(`Preconditions were not evaluated for this request`);
         }
 
         if (request.webService.webServiceConfig.returnRequestID) {
             this.headers[request.webService.webServiceConfig.returnRequestID as keyof WebResponseHeaders] ??= request.id;
         }
 
+        this.headers['cache-control'] ??= 'no-cache';
+        this.headers['date']          ??= new Date().toUTCString();
+
         if (Buffer.isBuffer(this.body)) {
             this.headers['content-length'] = this.body.length.toString();
+        } else if (this.body === null && !isOneOf(this.status, [WebStatus.NO_CONTENT, WebStatus.NOT_MODIFIED])) {
+            this.headers['content-length'] = '0';
         }
 
-        if (this.status === WebStatus.OK && ['HEAD', 'GET'].includes(request.method) && request.header('if-none-match', '') === this.headers.etag?.toString()) {
-            this.status = WebStatus.NOT_MODIFIED;
+        if (request.method === 'HEAD') {
             this.body = null;
-        } else if (request.method === 'HEAD') {
-            this.body = null;
+        }
+
+        for (const k of Object.keys(this.headers) as Array<keyof WebResponseHeaders>) {
+            if (this.headers[k] === undefined) {
+                delete this.headers[k];
+            }
         }
 
         return this as WebResponse<any> as WebResponse<never>;

@@ -4,13 +4,10 @@ import { unblocked } from '@divine/commons';
 import { ContentType } from '@divine/headers';
 import { EventStreamEvent, Parser } from '@divine/uri';
 import { WebError, WebStatus } from './error';
+import { concatHeader } from './private/etag';
 import { WebArguments, WebFilter, WebResource } from './resource';
 import { WebResponse, WebResponseHeaders } from './response';
 import { PayloadEncoder, PayloadParser } from './service';
-
-function asSet(array: string | string[] | undefined): Set<string> {
-    return new Set(typeof array === 'string' ? array.split(/\s*,\s*/) : array ?? []);
-}
 
 /** Request parameters provided to the protected configuration methods in the {@link CORSFilter} helper class. */
 export interface CORSFilterParams {
@@ -46,11 +43,11 @@ export abstract class CORSFilter implements WebFilter {
             const method = args.string('@access-control-request-method', undefined);
 
             if (method !== undefined && args.request.method === 'OPTIONS') { // Preflight
-                const methods = asSet(response.headers.allow).add(method);
+                const methods = concatHeader(response.headers.allow, method);
                 const headers = args.string('@access-control-request-headers', '').toLowerCase().split(/\s*,\s*/);
 
                 response
-                    .setHeader('access-control-allow-methods',  [...methods].filter((h) => this.isMethodAllowed(h, params)).join(', '))
+                    .setHeader('access-control-allow-methods',  methods.filter((h) => this.isMethodAllowed(h, params)).join(', '))
                     .setHeader('access-control-allow-headers',  headers.filter((h) => this.isHeaderAllowed(h, params)).join(', '))
                     .setHeader('access-control-max-age',        this.getMaxAge(params));
                 }
@@ -62,7 +59,7 @@ export abstract class CORSFilter implements WebFilter {
             response
                 .setHeader('access-control-allow-origin',   origin)
                 .setHeader('access-control-expose-headers', exposed.filter((h) => this.isHeaderExposed(h, params)).join(', '))
-                .setHeader('vary',                          [...asSet(response.headers.vary).add('origin')].join(', '));
+                .setHeader('vary',                          concatHeader(response.headers.vary, 'origin').join(', '));
         }
 
         return response;

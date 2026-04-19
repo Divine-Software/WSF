@@ -168,7 +168,7 @@ describe(`a WebService's resources`, () => {
         const r = await dispatchRequest(ws, fakedReq('GET', '/GET/5'));
         expect(r.status).toBe(WebStatus.ACCEPTED);
         expect(r.body!.toString()).toBe('five');
-        expect(r.headers['etag']).toBe('V');
+        expect(r.headers['etag']).toMatch(/"V~.*"/);
         expect(r.headers['custom-header' as keyof WebResponseHeaders]).toBe('v');
     });
 

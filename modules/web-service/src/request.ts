@@ -1,6 +1,6 @@
 import { BasicTypes, Params, sizeLimited } from '@divine/commons';
 import { ContentType } from '@divine/headers';
-import { AuthSchemeRequest, FINALIZE, Finalizable, ParserError } from '@divine/uri';
+import { AuthSchemeRequest, FINALIZE, Finalizable, ParserError, Precondition } from '@divine/uri';
 import cuid from 'cuid';
 import { IncomingHttpHeaders, IncomingMessage } from 'http';
 import { Http2ServerRequest, Http2Session } from 'http2';
@@ -9,6 +9,7 @@ import { TLSSocket } from 'tls';
 import { UAParser } from 'ua-parser-js';
 import { URL } from 'url';
 import { WebError, WebStatus } from './error';
+import { createCondition } from './private/etag';
 import { CONNECTION_CLOSING, WithConnectionClosing, decorateConsole } from './private/utils';
 import { PayloadEncoder, PayloadParser, WebService, WebServiceConfig } from './service';
 
@@ -46,6 +47,9 @@ export class WebRequest implements AuthSchemeRequest {
 
     /** A reconstructed URL for this request */
     public readonly url: URL;
+
+    /** The precondition associated with the request, if any. */
+    public readonly precondition?: Precondition;
 
     /** When this request was created. */
     public readonly timestamp = Date.now();
@@ -93,6 +97,7 @@ export class WebRequest implements AuthSchemeRequest {
         this.remoteAddress = String((config.trustForwardedFor   ? this.header('x-forwarded-for',        '', false) : '') || incomingRemote);
         this.method        = String((config.trustMethodOverride ? this.header('x-http-method-override', '', false) : '') || incomingMethod);
         this.url           = new URL(`${scheme}://${server}${incomingMessage.url}`);
+        this.precondition  = createCondition(this.method, incomingMessage.headers);
         this.userAgent     = new UAParser(incomingMessage.headers['user-agent']).getResult() as UserAgent;
         this.id            = incomingReqID && REQUEST_ID.test(incomingReqID) ? incomingReqID : cuid();
         this.log           = config.logRequestID ? decorateConsole(config.console, `#${this.id}`) : config.console;
