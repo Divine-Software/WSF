@@ -99,7 +99,7 @@ public class DBConnectionBridge implements AutoCloseable {
 
     public void ping(int timeout) throws IOException, SQLException {
         if (!db.isValid(timeout)) {
-            throw new IOException("Connection is not valid");
+            throw new IOException("Connection is not valid.");
         }
     }
 
@@ -140,7 +140,7 @@ public class DBConnectionBridge implements AutoCloseable {
             result.rowKey   = getRowKey(ps);
 
             if (ps.getMoreResults()) {
-                throw new RuntimeException("Only one result set per query supported");
+                throw new RuntimeException("Only one result set per query supported.");
             }
 
             return result;
@@ -234,7 +234,7 @@ public class DBConnectionBridge implements AutoCloseable {
             }
 
             default:
-                throw new IllegalArgumentException("Invalid bridge type: " + type);
+                throw new IllegalArgumentException("Invalid bridge type '" + type + "'.");
         }
     }
 

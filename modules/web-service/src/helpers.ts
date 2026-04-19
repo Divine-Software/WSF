@@ -79,7 +79,7 @@ export abstract class CORSFilter implements WebFilter {
      *     if (origin === 'https://example.com') {
      *         return true;
      *     } else {
-     *         throw new WebError(WebStatus.FORBIDDEN, `CORS request from origin ${origin} denied`);
+     *         throw new WebError(WebStatus.FORBIDDEN, `CORS request from origin ${origin} denied.`);
      *     }
      * }
      * ```

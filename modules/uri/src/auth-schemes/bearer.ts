@@ -34,13 +34,13 @@ export class BearerAuthScheme extends AuthScheme<Credentials> {
         const identity = this._assertCompatibleAuthHeader(authorization)?.credentials;
 
         if (!identity) {
-            throw new AuthSchemeError(`No credentials provided`, await this._createChallenge(authorization));
+            throw new AuthSchemeError(`No credentials provided.`, await this._createChallenge(authorization));
         }
 
         const trusted = await this._getCredentials({ mode: 'verify', authScheme: this, identity, authorization, request});
 
         if (!trusted || !AuthScheme.safeCompare(identity, trusted.identity)) {
-            throw new AuthSchemeError(`Token not valid`, (await this._createChallenge(authorization)).setParam('error', 'invalid_token'));
+            throw new AuthSchemeError(`Token not valid.`, (await this._createChallenge(authorization)).setParam('error', 'invalid_token'));
         }
 
         return authorization;

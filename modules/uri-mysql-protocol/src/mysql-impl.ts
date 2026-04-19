@@ -84,7 +84,7 @@ class MyDatabaseConnection implements DBDriver.DBConnection {
                     return this._client!.escape(JSON.stringify(value));
                 }
                 else {
-                    throw new TypeError(`Cannot handle datatype ${typeof value}`);
+                    throw new TypeError(`Cannot handle datatype '${typeof value}'.`);
                 }
             });
 

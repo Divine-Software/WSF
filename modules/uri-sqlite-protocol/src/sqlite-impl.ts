@@ -56,7 +56,7 @@ class SQLiteDatabaseConnection implements DBDriver.DBConnection {
             throw typeof result.code === 'string' ? new SqliteError(result.message, result.code) : new Error(result.message);
         }
         else if (result.type !== message.type) {
-            throw new Error(`Unexpected result type ${result.type}`);
+            throw new Error(`Unexpected result type '${result.type}'.`);
         }
 
         return result as T;

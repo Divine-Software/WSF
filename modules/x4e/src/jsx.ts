@@ -98,14 +98,14 @@ export function createJSXElement<T extends JSX_Attributes>(tagName: JSX_TagName<
             return XMLList([]);
         }
         else {
-            throw new TypeError(`${node} is not XML`);
+            throw new TypeError(`${node} is not XML.`);
         }
     }
     else if (tagName === JSX_FRAGMENT) {
         return childList;
     }
     else {
-        throw new TypeError(`Cannot construct JSX element from ${tagName}`);
+        throw new TypeError(`Cannot construct JSX element from ${tagName}.`);
     }
 }
 

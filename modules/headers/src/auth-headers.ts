@@ -50,7 +50,7 @@ export abstract class AuthHeader {
         const scheme = groups?.scheme;
 
         if (!scheme) {
-            throw new TypeError(`Failed to parse AuthHeader '${unparsed}': Invalid format`);
+            throw new TypeError(`Failed to parse AuthHeader '${unparsed}': Invalid format.`);
         }
 
         this._scheme     = scheme;

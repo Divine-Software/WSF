@@ -50,7 +50,7 @@ export class FileURI extends URI {
             return result;
         }
         else {
-            throw new TypeError(`FileURI.create result was not actually a FileURI`)
+            throw new TypeError(`FileURI.create result was not actually a FileURI.`)
         }
     }
 
@@ -60,16 +60,16 @@ export class FileURI extends URI {
         super(uri);
 
         if (this.hostname !== '' && decodeURIComponent(this.hostname).toLowerCase() !== 'localhost' || this.port !== '') {
-            throw new TypeError(`URI ${this}: Host parts not allowed`);
+            throw new TypeError(`URI ${this}: Host parts not allowed.`);
         }
         else if (this.search !== '') {
-            throw new TypeError(`URI ${this}: Query parts not allowed`);
+            throw new TypeError(`URI ${this}: Query parts not allowed.`);
         }
         else if (this.hash !== '') {
-            throw new TypeError(`URI ${this}: Fragment parts not allowed`);
+            throw new TypeError(`URI ${this}: Fragment parts not allowed.`);
         }
         else if (/%2F/i.test(this.pathname) /* No encoded slashes */) {
-            throw new TypeError(`URI ${this}: Path must not contain encoded slashes`);
+            throw new TypeError(`URI ${this}: Path must not contain encoded slashes.`);
         }
 
         this._path = normalize(decodeURIComponent(this.pathname));
@@ -157,7 +157,7 @@ export class FileURI extends URI {
      */
     override async save<T, D = unknown>(data: D, sendCT?: ContentType | string, recvCT?: undefined): Promise<Wrap<T> & Metadata> {
         if (recvCT !== undefined) {
-            throw new TypeError(`URI ${this}: save: recvCT argument is not supported`);
+            throw new TypeError(`URI ${this}: save: recvCT argument is not supported.`);
         }
 
         try {
@@ -183,7 +183,7 @@ export class FileURI extends URI {
      */
     override async append<T, D = unknown>(data: D, sendCT?: ContentType | string, recvCT?: undefined): Promise<Wrap<T> & Metadata> {
         if (recvCT !== undefined) {
-            throw new TypeError(`URI ${this}: append: recvCT argument is not supported`);
+            throw new TypeError(`URI ${this}: append: recvCT argument is not supported.`);
         }
 
         try {
@@ -206,7 +206,7 @@ export class FileURI extends URI {
      */
     override async remove<T>(recvCT?: undefined): Promise<Wrap<T> & Metadata> {
         if (recvCT !== undefined) {
-            throw new TypeError(`URI ${this}: remove: recvCT argument is not supported`);
+            throw new TypeError(`URI ${this}: remove: recvCT argument is not supported.`);
         }
 
         try {
@@ -248,7 +248,7 @@ export class FileURI extends URI {
      * @yields           Change events.
      */
     override async* watch(): AsyncIterable<FileWatchEvent & Metadata> {
-        const chokidar = await _chokidar ?? throwError(new IOError(`watch() requires chokidar as a peer dependency`));
+        const chokidar = await _chokidar ?? throwError(new IOError(`watch() requires chokidar as a peer dependency.`));
         const adapter  = new AsyncIteratorAdapter<FileWatchEvent>();
         const watcher  = chokidar.watch(this._path, {
             atomic:        false,

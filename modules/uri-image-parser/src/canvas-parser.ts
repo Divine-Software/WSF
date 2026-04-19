@@ -6,7 +6,7 @@ export class ImageParser extends Parser {
         const buffer = await new BufferParser(this.contentType).parse(stream);
 
         const image  = new Image();
-        image.src    = buffer as any;
+        image.src    = buffer;
         const canvas = new Canvas(image.height, image.width);
         const ctx    = canvas.getContext('2d');
 
@@ -15,7 +15,7 @@ export class ImageParser extends Parser {
             return canvas;
         }
         else {
-            throw new ParserError('Failed to get a CanvasRenderingContext2D from Canvas', undefined, canvas);
+            throw new ParserError('Failed to get a CanvasRenderingContext2D from Canvas.', undefined, canvas);
         }
     }
 

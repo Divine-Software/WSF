@@ -61,7 +61,7 @@ parentPort?.on('message', (message: SQLiteWorkerMessage) => {
     try {
         if (message.type === 'open') {
             if (database) {
-                throw new Error(`Database '${database.name}' already open`);
+                throw new Error(`Database '${database.name}' already open.`);
             }
 
             database = new Database(message.dbPath, message.params)
@@ -71,7 +71,7 @@ parentPort?.on('message', (message: SQLiteWorkerMessage) => {
         }
         else if (message.type === 'close') {
             if (!database) {
-                throw new Error(`No database open`);
+                throw new Error(`No database open.`);
             }
 
             database.close();
@@ -81,7 +81,7 @@ parentPort?.on('message', (message: SQLiteWorkerMessage) => {
         }
         else if (message.type === 'execute') {
             if (!database) {
-                throw new Error(`No database open`);
+                throw new Error(`No database open.`);
             }
 
             const query = database.prepare(message.query);
@@ -105,7 +105,7 @@ parentPort?.on('message', (message: SQLiteWorkerMessage) => {
             database?.close();
         }
         else {
-            throw new Error(`Invalid action '${message['type']}'`);
+            throw new Error(`Invalid action '${message['type']}'.`);
         }
     }
     catch (err: any) {

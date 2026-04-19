@@ -60,17 +60,17 @@ export class BasicAuthScheme extends AuthScheme<PasswordCredentials> {
         const untrusted = BasicAuthScheme.decodeCredentials(this._assertCompatibleAuthHeader(authorization)?.credentials);
 
         if (!untrusted) {
-            throw new AuthSchemeError(`No credentials provided`, await this._createChallenge(authorization));
+            throw new AuthSchemeError(`No credentials provided.`, await this._createChallenge(authorization));
         }
 
         const trusted = await this._getCredentials({ mode: 'verify', authScheme: this, identity: untrusted.identity, authorization, request});
 
         if (!trusted) {
-            throw new AuthSchemeError(`User ${untrusted.identity} not found`, await this._createChallenge(authorization));
+            throw new AuthSchemeError(`User ${untrusted.identity} not found.`, await this._createChallenge(authorization));
         }
 
         if (!AuthScheme.safeCompare(BasicAuthScheme.encodeCredentials(untrusted), BasicAuthScheme.encodeCredentials(trusted))) {
-            throw new AuthSchemeError(`Invalid password`, await this._createChallenge(authorization));
+            throw new AuthSchemeError(`Invalid password.`, await this._createChallenge(authorization));
         }
 
         return authorization;

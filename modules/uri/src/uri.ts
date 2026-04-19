@@ -334,7 +334,7 @@ export class URI extends URL implements AsyncIterable<Buffer> {
      * @returns           An information record describing the resources.
      */
     async info<T extends DirectoryEntry>(): Promise<T & Metadata> {
-        throw new IOError(`URI ${this} does not support info()`);
+        throw new IOError(`URI ${this} does not support info().`);
     }
 
     /**
@@ -347,7 +347,7 @@ export class URI extends URL implements AsyncIterable<Buffer> {
      * @returns           An array of information record describing the subresources.
      */
     async list<T extends DirectoryEntry>(): Promise<T[] & Metadata> {
-        throw new IOError(`URI ${this} does not support list()`);
+        throw new IOError(`URI ${this} does not support list().`);
     }
 
     /**
@@ -368,7 +368,7 @@ export class URI extends URL implements AsyncIterable<Buffer> {
      */
     // eslint-disable-next-line @typescript-eslint/no-unused-vars
     async load<T>(recvCT?: ContentType | string): Promise<Wrap<T> & Metadata> {
-        throw new IOError(`URI ${this} does not support load()`);
+        throw new IOError(`URI ${this} does not support load().`);
     }
 
     /**
@@ -393,7 +393,7 @@ export class URI extends URL implements AsyncIterable<Buffer> {
      */
     // eslint-disable-next-line @typescript-eslint/no-unused-vars
     async save<T, D = unknown>(data: D, sendCT?: ContentType | string, recvCT?: ContentType | string): Promise<Wrap<T> & Metadata> {
-        throw new IOError(`URI ${this} does not support save()`);
+        throw new IOError(`URI ${this} does not support save().`);
     }
 
     /**
@@ -418,7 +418,7 @@ export class URI extends URL implements AsyncIterable<Buffer> {
      */
     // eslint-disable-next-line @typescript-eslint/no-unused-vars
     async append<T, D = unknown>(data: D, sendCT?: ContentType | string, recvCT?: ContentType | string): Promise<Wrap<T> & Metadata> {
-        throw new IOError(`URI ${this} does not support append()`);
+        throw new IOError(`URI ${this} does not support append().`);
     }
 
     /**
@@ -443,7 +443,7 @@ export class URI extends URL implements AsyncIterable<Buffer> {
      */
     // eslint-disable-next-line @typescript-eslint/no-unused-vars
     async modify<T, D = unknown>(data: D, sendCT?: ContentType | string, recvCT?: ContentType | string): Promise<Wrap<T> & Metadata> {
-        throw new IOError(`URI ${this} does not support modify()`);
+        throw new IOError(`URI ${this} does not support modify().`);
     }
 
     /**
@@ -465,7 +465,7 @@ export class URI extends URL implements AsyncIterable<Buffer> {
      */
     // eslint-disable-next-line @typescript-eslint/no-unused-vars
     async remove<T>(recvCT?: ContentType | string): Promise<Wrap<T> & Metadata> {
-        throw new IOError(`URI ${this} does not support remove()`);
+        throw new IOError(`URI ${this} does not support remove().`);
     }
 
     /**
@@ -482,7 +482,7 @@ export class URI extends URL implements AsyncIterable<Buffer> {
      */
     // eslint-disable-next-line @typescript-eslint/no-unused-vars
     async query<T>(...args: unknown[]): Promise<Wrap<T> & Metadata> {
-        throw new IOError(`URI ${this} does not support query()`);
+        throw new IOError(`URI ${this} does not support query().`);
     }
 
     /**
@@ -498,7 +498,7 @@ export class URI extends URL implements AsyncIterable<Buffer> {
      */
     // eslint-disable-next-line @typescript-eslint/no-unused-vars, require-yield
     async *watch(...args: unknown[]): AsyncIterable<object & Metadata> {
-        throw new IOError(`URI ${this} does not support watch()`);
+        throw new IOError(`URI ${this} does not support watch().`);
     }
 
     /**
@@ -552,7 +552,7 @@ export class URI extends URL implements AsyncIterable<Buffer> {
                     session.authScheme = AuthScheme.create(auth.selector.authScheme).setCredentialsProvider(auth.credentials);
                 }
                 else {
-                    throw new IOError(`Cannot send credentials preemptively without an authScheme selector`);
+                    throw new IOError(`Cannot send credentials preemptively without an authScheme selector.`);
                 }
             }
         }
@@ -616,6 +616,6 @@ function resolveURL(url?: string | URL | Url, base?: string | URL | Url | Params
         }
     }
     catch (err) {
-        throw new IOError(`Failed to construct URI`, err, metadata(err));
+        throw new IOError(`Failed to construct URI.`, err, metadata(err));
     }
 }

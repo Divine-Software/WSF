@@ -168,16 +168,16 @@ export class HTTPURI extends URI {
      */
     override async query<T, D = unknown>(method: string, headers?: StringParams | null, data?: D, sendCT?: ContentType | string, recvCT?: ContentType | string): Promise<Wrap<T> & Metadata> {
         if (typeof method !== 'string') {
-            throw new TypeError(`URI ${this}: query: 'method' argument missing/invalid`);
+            throw new TypeError(`URI ${this}: query: 'method' argument missing/invalid.`);
         }
         else if (headers !== undefined && !(headers instanceof Object)) {
-            throw new TypeError(`URI ${this}: query: 'headers' argument missing/invalid`);
+            throw new TypeError(`URI ${this}: query: 'headers' argument missing/invalid.`);
         }
         else if (sendCT !== undefined && !(sendCT instanceof ContentType) && typeof sendCT !== 'string') {
-            throw new TypeError(`URI ${this}: query: 'sendCT' argument invalid`);
+            throw new TypeError(`URI ${this}: query: 'sendCT' argument invalid.`);
         }
         else if (recvCT !== undefined && !(recvCT instanceof ContentType) && typeof recvCT !== 'string') {
-            throw new TypeError(`URI ${this}: query: 'recvCT' argument invalid`);
+            throw new TypeError(`URI ${this}: query: 'recvCT' argument invalid.`);
         }
 
         return await this._query(method, headers ?? {}, data, this._guessContentType(sendCT), recvCT);
@@ -188,7 +188,7 @@ export class HTTPURI extends URI {
         const status = result[STATUS];
 
         if (status && (status < 200 || status >= 300)) {
-            throw new IOError(`URI ${this} request failed: ${result[STATUS_TEXT]} [${status}]`, undefined, result);
+            throw new IOError(`URI ${this} request failed: ${result[STATUS_TEXT]} [${status}].`, undefined, result);
         }
         else {
             return result;
@@ -235,7 +235,7 @@ export class HTTPURI extends URI {
                 undefined;
 
             if (!request) {
-                throw new TypeError(`URI ${this}: Unexpected protocol: ${this.protocol}`);
+                throw new TypeError(`URI ${this}: Unexpected protocol '${this.protocol}'.`);
             }
 
             params.console?.debug?.(`${reqDesc} ▲ ${JSON.stringify(headers)}`);

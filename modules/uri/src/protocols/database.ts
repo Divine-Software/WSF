@@ -65,7 +65,7 @@ export function q(query: TemplateStringsArray | string, ...params: unknown[]): D
         return new DBQuery(query.split(invalidCharacter), values);
     }
     else {
-        throw new TypeError(`Arguments must be either a template string array, or a string with a params object`)
+        throw new TypeError(`Arguments must be either a template string array, or a string with a params object.`)
     }
 }
 
@@ -410,7 +410,7 @@ export class DBQuery {
      */
     constructor(query: ReadonlyArray<string>, params: unknown[]) {
         if (query.length !== params.length + 1) {
-            throw new TypeError(`Expected exactly ${query.length - 1} parameters`);
+            throw new TypeError(`Expected exactly ${query.length - 1} parameters.`);
         }
         else {
             const myQuery: string[] = [ query[0] ];
@@ -421,7 +421,7 @@ export class DBQuery {
 
                 if (param instanceof DBQuery) {
                     if (param._query.length !== param._params.length + 1) {
-                        throw new TypeError(`Nested DBQuery in param #${p} is not nestable`);
+                        throw new TypeError(`Nested DBQuery in param #${p} is not nestable.`);
                     }
 
                     myQuery[myQuery.length - 1] += param._query[0];
@@ -434,7 +434,7 @@ export class DBQuery {
                     myParams.push(param);
                 }
                 else {
-                    throw new TypeError(`Parameter #${p} is undefined`);
+                    throw new TypeError(`Parameter #${p} is undefined.`);
                 }
             }
 
@@ -698,7 +698,7 @@ export abstract class DBResult extends Array<unknown[]> {
         Object.defineProperty(result, FIELDS, { enumerable: false, value: fields ?? [ this ] });
 
         if (this.length !== 1) {
-            throw new TypeError(`toObject: expected 1 row, but found ${this.length} rows`);
+            throw new TypeError(`toObject: expected 1 row, but found ${this.length} rows.`);
         }
 
         for (let s = this[0], h = 0, hl = this.columns.length; h < hl; ++h) {
@@ -749,7 +749,7 @@ function toWrappedResult<T>(results: DBResult[], scope?: DBReference.Scope): Wra
                 ? Object.defineProperty<any>(wrap(result[FIELDS][0][0]?.[0]), FIELDS, { enumerable: false, value: result[FIELDS] })
                 : Object.defineProperty<any>(wrap(result[0]),                 FIELDS, { enumerable: false, value: result[FIELDS] });
         } else {
-            throw new IOError(`Scope '${scope}' used with a multi-row result set`, undefined, result);
+            throw new IOError(`Scope '${scope}' used with a multi-row result set.`, undefined, result);
         }
     } else {
         return result as unknown as Wrap<T> & DBMetadata;
@@ -993,7 +993,7 @@ export abstract class DatabaseURI extends URI {
             return result;
         }
         else {
-            throw new TypeError(`When using $ on a DatabaseURI, the URI type must not change`)
+            throw new TypeError(`When using $ on a DatabaseURI, the URI type must not change.`);
         }
     }
 
@@ -1216,7 +1216,7 @@ export abstract class DatabaseURI extends URI {
         } else if (isDBCallback<T & Metadata & WithFields<DBResult>>(first) && rest.length === 0) {
             return this._session(async (conn) => conn.transaction({}, first), false /* Do not wrap CB exceptions */);
         } else {
-            throw new TypeError(`Invalid query() arguments`);
+            throw new TypeError(`Invalid query() arguments.`);
         }
     }
 
@@ -1281,7 +1281,7 @@ export abstract class DatabaseURI extends URI {
         const barrier = new Barrier(2);
         const session = this._session(async (conn) => {
             if (!conn.watch) {
-                throw new IOError(`URI ${this} does not support watch()`);
+                throw new IOError(`URI ${this} does not support watch().`);
             }
 
             results.notify(conn.watch(query instanceof DBQuery ? query : q(query as any, ...rest)));

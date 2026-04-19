@@ -64,13 +64,13 @@ export class CacheURI extends URI {
         super(uri);
 
         if (this.username !== '' || this.password !== '' || this.hostname !== '' || this.port !== '' || this.search !== '' || this.hash !== '') {
-            throw new TypeError(`URI ${this}: Username/password/host/port/query/fragment parts not allowed`);
+            throw new TypeError(`URI ${this}: Username/password/host/port/query/fragment parts not allowed.`);
         }
 
         const parts = /^(.*),([0-9a-fA-F]{8}-[0-9a-fA-F]{4}-[0-9a-fA-F]{4}-[0-9a-fA-F]{4}-[0-9a-fA-F]{12})$/.exec(this.pathname);
 
         if (!parts) {
-            throw new TypeError(`URI ${this}: Malformed cache URI`);
+            throw new TypeError(`URI ${this}: Malformed cache URI.`);
         }
 
         this._type = new ContentType(parts[1]);

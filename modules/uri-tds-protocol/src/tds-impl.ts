@@ -146,7 +146,7 @@ class TDSDatabaseConnection implements DBDriver.DBConnection {
             const result = ISOLATION_LEVELS[level];
 
             if (result === undefined) {
-                throw new TypeError(`Invalid transaction options ${expr}; must match ${txOptions}`);
+                throw new TypeError(`Invalid transaction options '${expr}'; must match ${txOptions}.`);
             }
 
             return result;

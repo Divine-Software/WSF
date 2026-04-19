@@ -72,7 +72,7 @@ class WebServerBase {
      */
     constructor(public readonly url: URL, serverOptions: ServerOptions, private readonly _requestHandler: RequestHandler) {
         if (url.protocol !== 'http:' && url.protocol !== 'https:' || url.search || url.hash) {
-            throw new TypeError('Invalid listen URL');
+            throw new TypeError('Invalid listen URL.');
         }
 
         const onChannel = (channel: Socket | TLSSocket | http2.Http2Session, socket?: Socket | TLSSocket) => {
@@ -268,7 +268,7 @@ export class WebServer<InitialService extends WebService<any> = WebService<unkno
             url = new URL(`http://${url}:${serverOptions}/`);
             serverOptions = undefined;
         } else if (!(url instanceof URL) || serverOptions !== undefined && typeof serverOptions !== 'object') {
-            throw new TypeError('Invalid arguments');
+            throw new TypeError('Invalid arguments.');
         }
 
         const defaultService = webService && url.pathname === '/' ? webService : new WebService<unknown>(null);
@@ -364,7 +364,7 @@ export class WebServerProxy extends WebServerBase {
      */
     constructor(public readonly webServer: WebServer, url: URL, serverOptions?: ServerOptions) {
         if (url.pathname !== webServer.url.pathname) {
-            throw new TypeError(`Expected pathname in URL '${url}' to be '${webServer.url.pathname}'`);
+            throw new TypeError(`Expected pathname in URL '${url}' to be '${webServer.url.pathname}'.`);
         }
 
         super(url, serverOptions ?? {}, webServer['_requestHandler']);

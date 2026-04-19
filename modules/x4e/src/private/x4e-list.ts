@@ -175,6 +175,6 @@ export function ToXMLList(value: ConvertableTypes | ArrayLike<Node>, defaultName
         return asXMLList(value.$domNode());
     }
     else {
-        throw new TypeError(`Cannot convert ${value} to XML`);
+        throw new TypeError(`Cannot convert ${value} to XML.`);
     }
 }

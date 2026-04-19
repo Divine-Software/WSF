@@ -8,7 +8,7 @@ export class DataURI extends URI {
         super(uri);
 
         if (this.username !== '' || this.password !== '' || this.hostname !== '' || this.port !== '' || this.search !== '' || this.hash !== '') {
-            throw new TypeError(`URI ${this}: Username/password/host/port/query/fragment parts not allowed`);
+            throw new TypeError(`URI ${this}: Username/password/host/port/query/fragment parts not allowed.`);
         }
 
         this._decode();
@@ -33,7 +33,7 @@ export class DataURI extends URI {
 
     override async save<T, D = unknown>(data: D, sendCT?: ContentType | string, recvCT?: undefined): Promise<Wrap<T> & Metadata> {
         if (recvCT !== undefined) {
-            throw new TypeError(`URI ${this}: save: recvCT argument is not supported`);
+            throw new TypeError(`URI ${this}: save: recvCT argument is not supported.`);
         }
 
         await this._write(data, sendCT, false);
@@ -42,7 +42,7 @@ export class DataURI extends URI {
 
     override async append<T, D = unknown>(data: D, sendCT?: ContentType | string, recvCT?: undefined): Promise<Wrap<T> & Metadata> {
         if (recvCT !== undefined) {
-            throw new TypeError(`URI ${this}: append: recvCT argument is not supported`);
+            throw new TypeError(`URI ${this}: append: recvCT argument is not supported.`);
         }
 
         await this._write(data, sendCT, true);
@@ -53,7 +53,7 @@ export class DataURI extends URI {
         const parts = /^data:([^,]*),(.*)$/.exec(this.href);
 
         if (!parts) {
-            throw new TypeError(`URI ${this}: Malformed data URI`);
+            throw new TypeError(`URI ${this}: Malformed data URI.`);
         }
 
         const type = ContentType.create(decodeURI(parts[1]).replace(/;base64$/, '') || null, 'text/plain;charset=US-ASCII');

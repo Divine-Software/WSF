@@ -14,7 +14,7 @@ function singleNode<TNode extends Node>(x4e: X4E<TNode>, func: string): TNode & 
     const values = x4e[Value];
 
     if (values.length !== 1) {
-        throw new TypeError(`${func}() can only be used on one single node (found ${values.length})`);
+        throw new TypeError(`${func}() can only be used on one single node (found ${values.length}).`);
     }
 
     return values[0];
@@ -336,7 +336,7 @@ export function ToXML(value: ConvertableTypes, defaultNamespace: string, deepCop
             value = parent.childNodes[0];
         }
         else {
-            throw new SyntaxError(`XML objects can hold only one Node`);
+            throw new SyntaxError(`XML objects can hold only one Node.`);
         }
 
         deepCopy = false;
@@ -351,7 +351,7 @@ export function ToXML(value: ConvertableTypes, defaultNamespace: string, deepCop
             return asXML(deepCopy ? node.cloneNode(true) : node);
         }
         else {
-            throw new TypeError(`Cannot convert XMLList with length ${value.$length()} to XML`);
+            throw new TypeError(`Cannot convert XMLList with length ${value.$length()} to XML.`);
         }
     }
     else if (value instanceof X4E) {
@@ -361,6 +361,6 @@ export function ToXML(value: ConvertableTypes, defaultNamespace: string, deepCop
         return asXML(deepCopy ? value.cloneNode(true) : value);
     }
     else {
-        throw new TypeError(`Cannot convert ${value} to XML`);
+        throw new TypeError(`Cannot convert ${value} to XML.`);
     }
 }

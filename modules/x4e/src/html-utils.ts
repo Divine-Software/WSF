@@ -62,7 +62,7 @@ class XMLTreeAdapter implements AST.TreeAdapter<XMLTreeAdapterTypeMap> {
 
     createDocument(): Document {
         if (this._created) {
-            throw new Error('XMLTreeAdapter can only create one document per instance');
+            throw new Error('XMLTreeAdapter can only create one document per instance.');
         }
         else {
             this._created = true;

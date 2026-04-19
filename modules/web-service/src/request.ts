@@ -149,7 +149,7 @@ export class WebRequest implements AuthSchemeRequest {
 
         if (value === undefined) {
             if (def === undefined) {
-                throw new WebError(WebStatus.INTERNAL_SERVER_ERROR, `Custom parameter '${name}' is missing`); // See also WebArguments
+                throw new WebError(WebStatus.INTERNAL_SERVER_ERROR, `Custom parameter '${name}' is missing.`); // See also WebArguments
             }
 
             value = def;
@@ -175,7 +175,7 @@ export class WebRequest implements AuthSchemeRequest {
 
         if (value === undefined || value instanceof Array && value[0] === undefined) {
             if (def === undefined) {
-                throw new WebError(WebStatus.BAD_REQUEST, `Request header '${name}' is missing`); // See also WebArguments
+                throw new WebError(WebStatus.BAD_REQUEST, `Request header '${name}' is missing.`); // See also WebArguments
             }
 
             value = def;
@@ -210,7 +210,7 @@ export class WebRequest implements AuthSchemeRequest {
             if (!this._body) {
                 const encoder  = this._payloadEncoder ?? this.webService.webServiceConfig.payloadEncoder;
                 const parser   = this._payloadParser ?? this.webService.webServiceConfig.payloadParser;
-                const tooLarge = `Maximum (decompressed) payload size is ${maxContentLength} bytes`;
+                const tooLarge = `Maximum (decompressed) payload size is ${maxContentLength} bytes.`;
 
                 if (Number(this.header('content-length', '-1')) > maxContentLength) {
                     throw new WebError(WebStatus.PAYLOAD_TOO_LARGE, tooLarge);

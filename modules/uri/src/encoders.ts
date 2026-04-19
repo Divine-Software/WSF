@@ -104,7 +104,7 @@ export abstract class Encoder {
             return new (encoder as any)(type);
         }
         else {
-            throw new EncoderError(`Encoder '${type}' not available`);
+            throw new EncoderError(`Encoder '${type}' not available.`);
         }
     }
 
@@ -305,7 +305,7 @@ export class ZlibEncoder extends Encoder {
             case 'gzip':    return this._transform(stream, createGzip());
             case 'x-gzip':  return this._transform(stream, createGzip());
             case 'deflate': return this._transform(stream, createDeflate());
-            default:        throw new TypeError(`Unsupported compression type '${this.type}'`);
+            default:        throw new TypeError(`Unsupported compression type '${this.type}'.`);
         }
     }
 
@@ -315,7 +315,7 @@ export class ZlibEncoder extends Encoder {
             case 'gzip':    return this._transform(stream, createGunzip());
             case 'x-gzip':  return this._transform(stream, createGunzip());
             case 'deflate': return this._transform(stream, createInflate());
-            default:        throw new TypeError(`Unsupported compression type '${this.type}'`);
+            default:        throw new TypeError(`Unsupported compression type '${this.type}'.`);
         }
     }
 

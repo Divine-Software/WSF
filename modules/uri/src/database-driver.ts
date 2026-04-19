@@ -70,7 +70,7 @@ export abstract class DBConnectionPool<P extends DBParams = DBParams> {
             ++tls.ref;
 
             if (tls.conn.state !== 'open') {
-                throw new IOError(`This database connection has been closed`);
+                throw new IOError(`This database connection has been closed.`);
             }
 
             return await cb(tls.conn);
@@ -139,7 +139,7 @@ export abstract class DBConnectionPool<P extends DBParams = DBParams> {
             await this._idleCondition.wait(expires - Date.now())
         }
 
-        throw new IOError(`Failed to obtain a database connection within ${timeout} ms`, undefined, this._dbURI);
+        throw new IOError(`Failed to obtain a database connection within ${timeout} ms.`, undefined, this._dbURI);
     }
 
     private async _releaseConnection(conn: DBConnection, maybeDead: boolean): Promise<void> {
@@ -217,7 +217,7 @@ export class DBReference {
             this.params  = parts.params  ?? {};
         }
         catch (err: any) {
-            throw this._makeIOError(`Failed to parse fragment as DB reference: ${err.message}`, err);
+            throw this._makeIOError(`Failed to parse fragment as DB reference: ${err.message}.`, err);
         }
     }
 
@@ -260,7 +260,7 @@ export class DBReference {
             case 'gt':   return q`${this._quote(filter.column)} > ${filter.value}`;
         }
 
-        throw this._makeIOError(`Unexpected filter operator ${filter['op']}`);
+        throw this._makeIOError(`Unexpected filter operator '${filter['op']}'.`);
     }
 
     protected _getSortOrder(): [ column?: string, desc?: boolean ] {

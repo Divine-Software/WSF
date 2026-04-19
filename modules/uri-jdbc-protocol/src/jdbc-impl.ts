@@ -113,7 +113,7 @@ class JDBCDatabaseConnection implements DBDriver.DBConnection {
             const result = ISOLATION_LEVELS[level];
 
             if (result === undefined) {
-                throw new TypeError(`Invalid transaction options ${expr}; must match ${txOptions}`);
+                throw new TypeError(`Invalid transaction options '${expr}'; must match ${txOptions}.`);
             }
 
             return result;
@@ -208,7 +208,7 @@ function toBridgeType(value: unknown): BridgeType {
         return [ 'A', value.map(toBridgeType) ];
     }
     else {
-        throw new TypeError(`Cannot handle datatype ${typeof value}`);
+        throw new TypeError(`Cannot handle datatype '${typeof value}'.`);
     }
 }
 
@@ -222,5 +222,5 @@ function fromBridgeType(value: BridgeType): unknown {
         case 'A': return value[1].map((v: any) => fromBridgeType(v));
     }
 
-    throw new TypeError(`Invalid bridge type: ${value}`);
+    throw new TypeError(`Invalid bridge type '${value}'.`);
 }

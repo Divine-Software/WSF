@@ -551,7 +551,7 @@ export class WebArguments<Params extends ParamsBase = ParamsBase> {
         const value = this.params[param] as ParamsBase[ParamsKeys];
 
         if (value === undefined && required) {
-            throw this._makeWebError(param, 'is missing');
+            throw this._makeWebError(param, 'is missing.');
         }
         else {
             return value;

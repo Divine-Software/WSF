@@ -168,7 +168,7 @@ export abstract class Parser {
         }
 
         if (!parserClass) {
-            throw new ParserError(`Parser ${contentType.type} not available`, undefined, contentType);
+            throw new ParserError(`Parser '${contentType.type}' not available.`, undefined, contentType);
         }
 
         return new (parserClass as any)(contentType);
@@ -217,7 +217,7 @@ export abstract class Parser {
         if (!condition) {
             const type = data instanceof Object ? Object.getPrototypeOf(data).constructor.name : data === null ? 'null' : typeof data;
 
-            throw new ParserError(`${this.constructor.name} cannot serialize ${type} as ${this.contentType.type}`, cause, wrap(data));
+            throw new ParserError(`${this.constructor.name} cannot serialize '${type}' as '${this.contentType.type}'.`, cause, wrap(data));
         }
     }
 }

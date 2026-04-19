@@ -268,9 +268,9 @@ export class WebService<Context> {
      */
     protected _mount(mountPoint: string, webServer: WebServer): this {
         if (!mountPoint.startsWith('/') || !mountPoint.endsWith('/')) {
-            throw new TypeError(`Mount-point must both start and end with a slash; '${mountPoint}' does not`);
+            throw new TypeError(`Mount-point must both start and end with a slash; '${mountPoint}' does not.`);
         } else if (this._webServer !== null) {
-            throw new RangeError(`This WebService is already mounted on ${this.webServer}`);
+            throw new RangeError(`This WebService is already mounted on ${this.webServer}.`);
         }
 
         this._webServer = webServer;
@@ -288,7 +288,7 @@ export class WebService<Context> {
      */
     protected _unmount(webServer: WebServer): this {
         if (webServer !== this._webServer) {
-            throw new RangeError(`This WebService is mounted on ${this._webServer}, not ${webServer}`);
+            throw new RangeError(`This WebService is mounted on ${this._webServer}, not ${webServer}.`);
         }
 
         this._webServer = null;
@@ -484,7 +484,7 @@ export class WebService<Context> {
             }
 
             const resourceNotFound = async () => {
-                throw new WebError(WebStatus.NOT_FOUND, `No resource matches the path ${webreq.url.pathname}`);
+                throw new WebError(WebStatus.NOT_FOUND, `No resource matches the path '${webreq.url.pathname}'.`);
             };
 
             return await this._handleFilters(webreq, resourceNotFound, resourceNotFound);
@@ -614,11 +614,11 @@ export class WebService<Context> {
 
     private _validatePath(cls: string, source: string): void {
         if (source.startsWith('^') || source.endsWith('$')) {
-            throw new TypeError(`${cls}.path should not include the start-of-line token ^ or the end-of-line token $`);
+            throw new TypeError(`${cls}.path should not include the start-of-line token ^ or the end-of-line token $.`);
         }
 
         if (source.startsWith('\\/')) {
-            throw new TypeError(`${cls}.path should not include leading slashes`);
+            throw new TypeError(`${cls}.path should not include leading slashes.`);
         }
     }
 }

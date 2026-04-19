@@ -31,7 +31,7 @@ export function encodeFilePath(filepath: string, type?: 'posix' | 'windows'): st
         return filepath.split('/').map((part) => percentEncode(part)).join('/');
     }
     else {
-        throw new TypeError(`Invalid filepath type: ${type}`);
+        throw new TypeError(`Invalid filepath type '${type}'.`);
     }
 }
 

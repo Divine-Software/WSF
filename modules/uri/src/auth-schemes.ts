@@ -297,7 +297,7 @@ export abstract class AuthScheme<C extends Credentials> {
      */
     protected _assertCompatibleAuthHeader<H extends AuthHeader | undefined>(header: H): H {
         if (header !== undefined && header.scheme !== this.scheme) {
-            throw new AuthSchemeError(`Expected auth-scheme '${this.scheme}' in header, not '${header.scheme}'`);
+            throw new AuthSchemeError(`Expected auth-scheme '${this.scheme}' in header, not '${header.scheme}'.`);
         }
         else {
             return header;
@@ -314,7 +314,7 @@ export abstract class AuthScheme<C extends Credentials> {
      */
      protected _assertCompatibleCredentials<C extends Credentials | undefined>(credentials: C): C {
         if (credentials && !this._isCompatibleCredentials(credentials)) {
-            throw new AuthSchemeError(`Credentials ${credentials.constructor.name}(${Object.keys(credentials)}) is not compatible with ${this.constructor.name}`);
+            throw new AuthSchemeError(`Credentials ${credentials.constructor.name}(${Object.keys(credentials)}) is not compatible with ${this.constructor.name}.`);
         }
         else {
             return credentials;
@@ -332,15 +332,15 @@ export class UnknownAuthScheme extends AuthScheme<Credentials> {
     }
 
     async createAuthorization(_challenge?: WWWAuthenticate, _request?: AuthSchemeRequest, _payload?: Uint8Array): Promise<Authorization | undefined> {
-        throw new AuthSchemeError(`Not supported`);
+        throw new AuthSchemeError(`Not supported.`);
     }
 
     async verifyAuthorization<T extends Authorization | undefined>(_authorization: T, _request?: AuthSchemeRequest, _payload?: Uint8Array): Promise<T> {
-        throw new AuthSchemeError(`Not supported`);
+        throw new AuthSchemeError(`Not supported.`);
     }
 
     async verifyAuthenticationInfo<T extends AuthenticationInfo | ServerAuthorization | undefined>(_authentication: T, _request?: AuthSchemeRequest, _payload?: Uint8Array): Promise<T> {
-        throw new AuthSchemeError(`Not supported`);
+        throw new AuthSchemeError(`Not supported.`);
     }
 
     _isCompatibleCredentials(_credentials: Credentials): boolean {
