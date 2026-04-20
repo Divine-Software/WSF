@@ -26,7 +26,7 @@
     "@divine/commons": "workspace:^",
     "@divine/synchronization": "^1.2.1",
     "@iarna/toml": "^2.2.5",
-    "dicer": "~0.3.1",
+    "@indutny/dicer": "~0.3.2",
     "iconv-lite": "~0.6.3",
     "mime-types": "^2.1.35",
     "papaparse": "^5.5.2",
@@ -45,7 +45,6 @@
   },
   "devDependencies": {
     "@divine/headers": "workspace:^",
-    "@types/dicer": "~0.2.4",
     "@types/mime-types": "^2.1.4",
     "@types/node": "catalog:",
     "@types/papaparse": "^5.3.15",

@@ -1,7 +1,7 @@
 import { asError, StringParams } from '@divine/commons';
 import { ContentDisposition, ContentType } from '@divine/headers';
+import Dicer from '@indutny/dicer';
 import { randomBytes } from 'crypto';
-import Dicer from 'dicer';
 import { Readable } from 'stream';
 import { URLSearchParams } from 'url';
 import { Encoder } from '../encoders';
