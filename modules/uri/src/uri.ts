@@ -1,4 +1,4 @@
-import { asError, esxxEncoder, Params, percentEncode, toString } from '@divine/commons';
+import { asError, esxxEncoder, Params, percentEncode, Record, toString } from '@divine/commons';
 import { Authorization, ContentType, WWWAuthenticate } from '@divine/headers';
 import url, { Url, URL } from 'url';
 import { AuthScheme, AuthSchemeRequest } from './auth-schemes';
@@ -25,7 +25,7 @@ export class URIString extends String {}
  */
 export function uri(strings: TemplateStringsArray, ...values: unknown[]): URIString {
     const result = strings[0] + values.map((valueOrArray, i) => (Array.isArray(valueOrArray) ? valueOrArray : [valueOrArray]).map(value =>
-        (value instanceof URIString ? value.valueOf() : percentEncode(toString(value))) + strings[i + 1]).join(''))
+        (value instanceof URIString ? value.toString() : percentEncode(toString(value))) + strings[i + 1]).join(''))
         .join('');
 
     return uri.raw(result);
@@ -151,7 +151,7 @@ export class URI extends URL implements AsyncIterable<Buffer> {
      * @returns        A new URI subclass instance.
      */
     static $(strings: TemplateStringsArray, ...values: unknown[]): URI {
-        return new URI(uri(strings, ...values).valueOf());
+        return new URI(uri(strings, ...values).toString());
     }
 
     private static _protocols = new Map<string, typeof URI>();
@@ -274,7 +274,7 @@ export class URI extends URL implements AsyncIterable<Buffer> {
      * @returns        A new URI subclass instance.
      */
     $(strings: TemplateStringsArray, ...values: unknown[]): URI {
-        return new URI(uri(strings, ...values).valueOf(), this);
+        return new URI(uri(strings, ...values).toString(), this);
     }
 
     /**
@@ -552,7 +552,7 @@ export class URI extends URL implements AsyncIterable<Buffer> {
 
             if (auth && (challenge || auth.preemptive)) {
                 if (!session) {
-                    session = {};
+                    session = Record();
                     this.addSelector<AuthSessionSelector>({ states: session });
                 }
 
@@ -596,7 +596,7 @@ function metadata(_err: NodeJS.ErrnoException | unknown): Metadata {
     return {
         [STATUS]:      typeof err.errno === 'number' ? err.errno : -1,
         [STATUS_TEXT]: err.code ?? err.constructor?.name,
-        [HEADERS]:     Object.fromEntries(Object.entries(err).filter(([name]) => !/^(errno|code|message|stack)$/.test(name))),
+        [HEADERS]:     Record(Object.entries(err).filter(([name]) => !/^(errno|code|message|stack)$/.test(name))),
     };
 }
 

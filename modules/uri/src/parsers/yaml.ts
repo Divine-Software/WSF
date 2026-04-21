@@ -1,4 +1,4 @@
-import { BasicTypes } from '@divine/commons';
+import { BasicTypes, RecordReviver } from '@divine/commons';
 import YAML from 'yaml';
 import { Parser, StringParser } from '../parsers';
 import { FIELDS, WithFields, wrap } from '../uri-types';
@@ -14,14 +14,16 @@ import { FIELDS, WithFields, wrap } from '../uri-types';
 export class YAMLParser extends Parser {
     async parse(stream: AsyncIterable<Buffer>): Promise<object & WithFields<BasicTypes>> {
         const yaml = YAML.parseAllDocuments(await new StringParser(this.contentType).parse(stream));
-        const json = yaml.map((yaml) => yaml.toJSON() as BasicTypes);
+        const json = yaml.map((yaml) => yaml.toJS({ json: true, mapAsMap: false, reviver: RecordReviver }) as BasicTypes);
         const data = wrap(json[0]);
 
-        return json.length === 1 ? data : Object.defineProperty(data, FIELDS, { enumerable: false, value: json });
+        return json.length === 1 ? data : Object.defineProperty(data, FIELDS, { value: json });
     }
 
     serialize(data: BasicTypes): Buffer;
     serialize(data: BasicTypes & WithFields<BasicTypes>): Buffer {
+        this._assertSerializebleData(data !== undefined, data);
+
         try {
             const entries = data?.[FIELDS] ?? [data];
             const strings = entries.map((entry) => YAML.stringify(entry));

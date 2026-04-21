@@ -1,4 +1,4 @@
-import { copyStream, StringParams } from '@divine/commons';
+import { copyStream, Record, StringParams } from '@divine/commons';
 import { ContentType } from '@divine/headers';
 import { Agent, IncomingMessage, request as requestHTTP } from 'http';
 import { request as requestHTTPS } from 'https';
@@ -68,9 +68,9 @@ export class HTTPURI extends URI {
             length:  typeof length === 'string' ? Number(length) : undefined,
             updated: typeof modified === 'string' ? new Date(modified) : undefined,
         } as unknown as T & Metadata, {
-            [HEADERS]:     { enumerable: false, value: response[HEADERS]     },
-            [STATUS]:      { enumerable: false, value: response[STATUS]      },
-            [STATUS_TEXT]: { enumerable: false, value: response[STATUS_TEXT] },
+            [HEADERS]:     { value: response[HEADERS]     },
+            [STATUS]:      { value: response[STATUS]      },
+            [STATUS_TEXT]: { value: response[STATUS_TEXT] },
         });
     }
 
@@ -221,8 +221,7 @@ export class HTTPURI extends URI {
             headers['authorization'] = (await this._getAuthorization({ method, url: this, headers: Object.entries(headers)}, body))?.toString();
         }
 
-        // Bug workaround?
-        headers = Object.fromEntries(Object.entries(headers).filter(([, value]) => value !== undefined));
+        headers = Record(Object.entries(headers).filter(([, value]) => value !== undefined));
 
         const params  = this._getBestSelector<HTTPParamsSelector>(this.selectors.params)?.params ?? {};
         const options = { agent: params.agent, timeout: params.timeout };
@@ -256,9 +255,9 @@ export class HTTPURI extends URI {
                                                ContentType.create(recvCT, response.headers['content-type']))) as Wrap<unknown> & Metadata;
 
                         Object.defineProperties(result, {
-                            [HEADERS]:     { enumerable: false, value: convertHeaders(response) },
-                            [STATUS]:      { enumerable: false, value: response.statusCode },
-                            [STATUS_TEXT]: { enumerable: false, value: response.statusMessage },
+                            [HEADERS]:     { value: convertHeaders(response) },
+                            [STATUS]:      { value: response.statusCode },
+                            [STATUS_TEXT]: { value: response.statusMessage },
                         });
 
                         resolve(result);
@@ -314,7 +313,7 @@ export class HTTPURI extends URI {
 }
 
 function convertHeaders(response: IncomingMessage): StringParams {
-    const result: StringParams = {};
+    const result: StringParams = Record();
 
     for (const [name, value] of Object.entries({ ...response.headers, ...response.trailers })) {
         result[name] = Array.isArray(value) ? value.join(', ') : value;

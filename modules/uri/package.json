@@ -29,10 +29,10 @@
     "@indutny/dicer": "~0.3.2",
     "iconv-lite": "~0.6.3",
     "mime-types": "^2.1.35",
-    "papaparse": "^5.5.2",
+    "papaparse": "^5.5.3",
     "tslib": "catalog:",
     "xdg-portable": "^10.6.0",
-    "yaml": "^2.7.0"
+    "yaml": "^2.8.3"
   },
   "peerDependencies": {
     "@divine/headers": "workspace:^2.0.4",
@@ -47,7 +47,7 @@
     "@divine/headers": "workspace:^",
     "@types/mime-types": "^2.1.4",
     "@types/node": "catalog:",
-    "@types/papaparse": "^5.3.15",
+    "@types/papaparse": "^5.5.2",
     "chokidar": "^4.0.3",
     "peggy": "^4.2.0",
     "ts-pegjs": "^4.2.1"

@@ -1,3 +1,5 @@
+import { Record } from './private';
+
 export interface AuthHeaderParams {
     [name: string]: { name: string, value: string, quoted?: boolean } | undefined;
 }
@@ -35,13 +37,13 @@ export abstract class AuthHeader {
 
     private _scheme!: string;
     readonly credentials?: string;
-    readonly params: AuthHeaderParams = {};
+    readonly params: AuthHeaderParams = Record();
 
     protected constructor(unparsed: string | AuthHeader, public readonly headerName: string) {
         if (typeof unparsed !== 'string') {
             this._scheme     = unparsed._scheme;
             this.credentials = unparsed.credentials;
-            this.params      = JSON.parse(JSON.stringify(unparsed.params));
+            this.params      = Object.assign(this.params, JSON.parse(JSON.stringify(unparsed.params)));
             return;
         }
 
@@ -93,6 +95,10 @@ export abstract class AuthHeader {
 
     toString(): string {
         return `${this._scheme} ${this.credentials ?? this._formatParams()}`;
+    }
+
+    valueOf(): string {
+        return this.toString();
     }
 
     isProxyHeader(): boolean {

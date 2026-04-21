@@ -70,8 +70,8 @@ export function getChildElementsByTagName(parent: Node, name?: string): Element[
 
 export function domNodeList<TNode extends Node>(list: TNode[]): NodeListOf<TNode> {
     const nodeList = Object.create(list, {
-        item:    { enumerable: false , value: (i: number) => list[i] ?? null },
-        forEach: { enumerable: false , value: (cb: (value: TNode, key: number, parent: NodeListOf<TNode>) => void, thisArg?: any) => {
+        item:    { value: (i: number) => list[i] ?? null },
+        forEach: { value: (cb: (value: TNode, key: number, parent: NodeListOf<TNode>) => void, thisArg?: any) => {
             list.forEach((value, key) => cb.call(thisArg, value, key, nodeList));
         }}
     });

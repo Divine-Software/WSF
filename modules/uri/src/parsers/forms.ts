@@ -1,4 +1,4 @@
-import { asError, StringParams } from '@divine/commons';
+import { asError, isJSON, Record, StringParams } from '@divine/commons';
 import { ContentDisposition, ContentType } from '@divine/headers';
 import Dicer from '@indutny/dicer';
 import { randomBytes } from 'crypto';
@@ -8,7 +8,7 @@ import { Encoder } from '../encoders';
 import { Parser, StringParser } from '../parsers';
 import { CacheURI } from '../protocols/cache';
 import { URI } from '../uri';
-import { FIELDS, Finalizable, FINALIZE, WithFields } from '../uri-types';
+import { FIELDS, Finalizable, FINALIZE, unwrap, WithFields } from '../uri-types';
 
 /** A basic string key-value record. */
 export interface FormData extends WithFields<FormField> {
@@ -80,9 +80,9 @@ function makeBoundary() {
 export class FormParser extends Parser {
     async parse(stream: AsyncIterable<Buffer>): Promise<FormData> {
         const params = new URLSearchParams(await new StringParser(this.contentType).parse(stream));
-        const result: FormData = {
-            [FIELDS]: [...params.entries()].map(([name, value]) => ({ name, value }))
-        };
+        const result = Object.defineProperty(Record(), FIELDS, {
+            value: [...params.entries()].map(([name, value]) => ({ name, value }))
+        }) as FormData;
 
         for (const [name, value] of params.entries()) {
             result[name] ??= value;
@@ -92,7 +92,7 @@ export class FormParser extends Parser {
     }
 
     serialize(data: FormData | FormField[]): Buffer {
-        this._assertSerializebleData(data && typeof data === 'object' || data?.[FIELDS] && Array.isArray(data?.[FIELDS]), data);
+        this._assertSerializebleData(isJSON(data) || Array.isArray(data?.[FIELDS]), data);
 
         const entries = (Array.isArray(data) ? data : data[FIELDS])?.map<[string, string]>((f) => [f.name, f.value])
             ?? Object.fromEntries(Object.entries(data)) /* Remove symbols */;
@@ -136,7 +136,7 @@ export class MessageParser extends Parser {
     }
 
     async *serialize(data: MimeMessageLike): AsyncIterable<Buffer> {
-        this._assertSerializebleData(data && typeof data === 'object' || data?.[FIELDS] && Array.isArray(data?.[FIELDS]), data);
+        this._assertSerializebleData(isJSON(data) || Array.isArray(data?.[FIELDS]), data);
 
         // Serialize first, to give Parser a chance to update the content-type
         const value = (data.value as MultiPartData)?.[FIELDS] ?? data.value;
@@ -207,7 +207,7 @@ export class MultiPartParser extends Parser {
                     // eslint-disable-next-line no-async-promise-executor
                     values.push(new Promise(async (resolve, reject) => {
                         try {
-                            const headers     = Object.fromEntries(Object.entries(rawHeaders).map(([k, v]) => [k, v?.join(', ')]));
+                            const headers     = Record(Object.entries(rawHeaders).map(([k, v]) => [k, v?.join(', ')])) as StringParams;
                             const type        = ContentType.create(headers['content-type'], MultiPartParser.defaultContentType);
                             const disposition = headers['content-disposition'] && new ContentDisposition(headers['content-disposition']) || undefined;
                             const name        = disposition?.param('name');
@@ -217,13 +217,13 @@ export class MultiPartParser extends Parser {
                             const data: AsyncIterable<Buffer> = Encoder.decode(stream, headers['content-transfer-encoding'] ?? []);
 
                             if (parse) {
-                                const parsed = await Parser.parse(data, type);
+                                const parsed = await Parser.parse<string | MultiPartData>(data, type);
 
                                 if (parsed[FINALIZE]) {
                                     finalizers.push(parsed[FINALIZE]);
                                 }
 
-                                value = parsed.valueOf() as string | MultiPartData;
+                                value = unwrap<string | MultiPartData>(parsed);
                             }
                             else {
                                 value = await saveToCache(type, data);
@@ -266,10 +266,10 @@ export class MultiPartParser extends Parser {
     }
 
     private async *_serialize(data: MultiPartData | MultiPartField[]): AsyncIterable<Buffer> {
-        this._assertSerializebleData(data && typeof data === 'object' || Array.isArray(data?.[FIELDS]), data);
+        this._assertSerializebleData(isJSON(data) || Array.isArray(data?.[FIELDS]), data);
 
         const type     = MultiPartParser.defaultContentType;
-        const headers  = {};
+        const headers  = Record();
         const entries  = Array.isArray(data) ? data : data[FIELDS]
                          ?? Object.entries(data).map(([name, value]) => ({ name, value, type, headers }));
         const message  = new ContentType('message/*');

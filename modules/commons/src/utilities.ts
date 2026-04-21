@@ -1,3 +1,5 @@
+/* eslint-disable jsdoc/require-jsdoc */
+
 import { toString } from './strings';
 
 export function sleep(ms: number): Promise<void> {
@@ -50,6 +52,31 @@ export function isHTML(obj: unknown): boolean {
     }
 }
 
-export function isJSON(obj: unknown): boolean {
-    return !!obj && (Object.getPrototypeOf(obj) === Array.prototype || Object.getPrototypeOf(obj) === Object.prototype);
+export function isJSON(obj: unknown): obj is object | unknown[] {
+    return !!obj && (isOneOf(Object.getPrototypeOf(obj), [null, Array.prototype, Object.prototype]));
+}
+
+const recordDescriptors: PropertyDescriptorMap = {
+    // eslint-disable-next-line @typescript-eslint/unbound-method
+    [Symbol.toPrimitive]: { value: Object.prototype.toString },
+    [Symbol.toStringTag]: { value: 'Record' }
+};
+
+export function Record<T = any>(entries: Array<[PropertyKey, T]> | { [key: PropertyKey]: T } = []): { [k: string]: T; } {
+    entries = Array.isArray(entries) ? entries : Object.entries(entries);
+
+    const descriptors: PropertyDescriptorMap = {
+        ...Object.fromEntries(entries.map(([prop, value]) => [ prop, { value, configurable: true, enumerable: true, writable: true }])),
+        ...recordDescriptors,
+    }
+
+    return Object.create(null, descriptors);
+}
+
+export function RecordReviver(_key: unknown, value: unknown): unknown {
+    if (typeof value === 'object' && value !== null && Object.getPrototypeOf(value) === Object.prototype) {
+        return Object.defineProperties(Object.setPrototypeOf(value, null), recordDescriptors);
+    } else {
+        return value;
+    }
 }

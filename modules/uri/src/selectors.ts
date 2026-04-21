@@ -1,6 +1,6 @@
 /* eslint-disable jsdoc/require-jsdoc */
 
-import { StringParams, throwError } from '@divine/commons';
+import { Record, StringParams, throwError } from '@divine/commons';
 import { WWWAuthenticate } from '@divine/headers';
 import { URL } from 'url';
 import { AuthScheme, Credentials, CredentialsProvider } from './auth-schemes';
@@ -112,11 +112,11 @@ export function updateSelector(target: AnySelector, source: AnySelector, kind: '
             result.preemptive  = source.preemptive;
         }
     } else if (kind === 'headers') {
-        result.headers = merge ? { ...target.headers, ...source.headers } : source.headers;
+        result.headers = Record({ ...(merge ? target.headers : null), ...source.headers });
     } else if (kind === 'params') {
-        result.params = merge ? { ...target.params, ...source.params } : source.params;
+        result.params  = Record({ ...(merge ? target.params  : null), ...source.params  });
     } else if (kind === 'session') {
-        result.states = merge ? { ...target.states, ...source.states } : source.states;
+        result.states  = Record({ ...(merge ? target.states  : null), ...source.states  });
     } else {
         throw new TypeError(`Unknown selector kind '${kind}'.`);
     }

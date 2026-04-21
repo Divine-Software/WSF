@@ -79,13 +79,14 @@ export type Wrap<T>
 export function wrap<T>(value: T): Wrap<T> {
     if (value === undefined || value === null) {
         return Object.create(null, {
-            [UNWRAP]: { enumerable: false, value },
-            valueOf:  { enumerable: false, value: () => value },
+            [UNWRAP]:             { value },
+            [Symbol.toPrimitive]: { value: () => value },
+            [Symbol.toStringTag]: { value: `Wrap<${value}>` },
         });
     } else if (typeof value === 'object') {
         return value as Wrap<T>;
     } else {
-        return Object.defineProperty(Object(value), UNWRAP, { enumerable: false, value });
+        return Object.defineProperty(Object(value), UNWRAP, { value });
     }
 }
 

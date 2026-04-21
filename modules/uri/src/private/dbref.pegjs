@@ -19,7 +19,7 @@ expr_ops    = 'lt' / 'le' / 'eq' / 'ne' / 'ge' / 'gt'
 
 table_path  = head:word tail:('/' word)*                           { return [ head, ...tail.map(t => t[1]) ] }
 column_list = head:word tail:(',' word)*                           { return [ head, ...tail.map(t => t[1]) ] }
-param_list  = params:('&' param)+                                  { return Object.fromEntries(params.map(t => t[1])) }
+param_list  = params:('&' param)+                                  { return params.map(t => t[1]) }
 value_list  = head:value tail:(',' value)*                         { return [ head, ...tail.map(t => t[1]) ] }
 
 param       = key:param_key '=' value:value                        { return [ key, value ] }

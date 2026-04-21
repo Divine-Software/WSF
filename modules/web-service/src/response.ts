@@ -1,4 +1,4 @@
-import { BasicTypes, isOneOf, isReadableStream } from '@divine/commons';
+import { BasicTypes, isOneOf, isReadableStream, Record } from '@divine/commons';
 import { Accept, AcceptCharset, ContentDisposition, ContentType, WWWAuthenticate } from '@divine/headers';
 import { BufferParser, URI } from '@divine/uri';
 import { Readable } from 'stream';
@@ -7,7 +7,7 @@ import { WebStatus } from './error';
 import { concatHeader, parseETag, updateETag } from './private/etag';
 import { WebRequest } from './request';
 
-const errorHeaders = { 'content-type': 'text/plain; charset=utf-8', 'vary': '*' };
+const errorHeaders = Record([ ['content-type', 'text/plain; charset=utf-8'], ['vary', '*'] ]);
 
 /**
  * An HTTP response that is to be transmitted back to the client.
@@ -65,7 +65,7 @@ export class WebResponse<T extends BasicTypes = BasicTypes> {
     async serialize(request: WebRequest): Promise<WebResponse<never>> {
         // Normalize header names to lowercase strings and all values to strings
         const strHdr = (v: unknown) => v instanceof Date ? v.toUTCString() : v !== null && v !== undefined ? String(v) : undefined;
-        this.headers = Object.fromEntries(Object.entries(this.headers).map(([k, v]) => [k.toLowerCase(), Array.isArray(v) ? v.map(strHdr) : strHdr(v)]));
+        this.headers = Record(Object.entries(this.headers).map<[string, unknown]>(([k, v]) => [k.toLowerCase(), Array.isArray(v) ? v.map(strHdr) : strHdr(v)]));
 
         if (this.body !== null && !Buffer.isBuffer(this.body) && !isReadableStream(this.body)) {
             const acceptedCharsets  = request.header('accept-charset', 'utf-8');

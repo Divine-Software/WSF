@@ -1,4 +1,4 @@
-import { Params, throwError } from '@divine/commons';
+import { Params, Record, throwError } from '@divine/commons';
 import { Authorization, WWWAuthenticate } from '@divine/headers';
 import { Condition } from '@divine/synchronization';
 import { AsyncLocalStorage } from 'async_hooks';
@@ -217,7 +217,7 @@ export class DBReference {
             this.columns = parts.columns ?? undefined;
             this.scope   = parts.scope   ?? undefined;
             this.filter  = parts.filter  ?? undefined;
-            this.params  = parts.params  ?? {};
+            this.params  = Record(parts.params ?? [])
         }
         catch (err: any) {
             throw this._makeIOError(`Failed to parse fragment as DB reference: ${err.message}.`, err);

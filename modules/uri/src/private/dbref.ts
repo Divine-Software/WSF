@@ -407,7 +407,7 @@ function peg$parse(input, options) {
  return [ head, ...tail.map(t => t[1]) ] };// @ts-ignore
 
   var peg$f9 = function(params) {// @ts-ignore
- return Object.fromEntries(params.map(t => t[1])) };// @ts-ignore
+ return params.map(t => t[1]) };// @ts-ignore
 
   var peg$f10 = function(head, tail) {// @ts-ignore
  return [ head, ...tail.map(t => t[1]) ] };// @ts-ignore
@@ -2941,7 +2941,7 @@ export type ExprNot = { op: "not"; value: Expr };
 export type ExprOps = "lt" | "le" | "eq" | "ne" | "ge" | "gt";
 export type TablePath = [Word, ...Word[]];
 export type ColumnList = [Word, ...Word[]];
-export type ParamList = { [k: string]: any };
+export type ParamList = Param[];
 export type ValueList = [Value, ...Value[]];
 export type Param = [ParamKey, Value];
 export type ParamKey = "order" | "limit" | "offset" | "lock";

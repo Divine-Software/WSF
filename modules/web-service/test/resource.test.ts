@@ -1,5 +1,6 @@
-import { fakedReq } from './test-utils';
+import { Record } from '@divine/commons';
 import { WebArguments, WebError, WebResponse, WebStatus } from '../src';
+import { fakedReq } from './test-utils';
 
 const toml = `
 number  = 1
@@ -115,7 +116,7 @@ describe('the WebArguments class', () => {
         expect(() => args.object('@header')).toThrow(WebError);
         expect(() => args.object('.number')).toThrow(WebError);
         expect(() => args.object('.string')).toThrow(WebError);
-        expect(args.object('.object')).toStrictEqual({ string: 'member', array: [ 1, 2 ] });
+        expect(args.object('.object')).toStrictEqual(Record({ string: 'member', array: [ 1, 2 ] }));
         expect(args.object('.array')).toStrictEqual([ 3, 4 ]);
         expect(args.object('.date')).toStrictEqual(new Date('2020-03-10T13:39:00.000Z'))
         expect(() => args.object('.datestr')).toThrow(WebError);

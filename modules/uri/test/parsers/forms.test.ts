@@ -1,5 +1,6 @@
 import { ContentDisposition, ContentType } from '@divine/headers';
 import { Parser, FormData, FIELDS, MultiPartData, CacheURI, MimeMessage } from '../../src';
+import { Record } from '@divine/commons';
 
 describe('the FormParser class', () => {
     const ct = 'application/x-www-form-urlencoded';
@@ -88,7 +89,7 @@ const multipart = `preamble
 
 Headerless text
 --${boundary}
-content-type: text/csv;x-header="present"
+content-type: text/csv;header="present"
 
 name,value
 foo,bar
@@ -114,14 +115,17 @@ content-type: text/markdown\r
 describe('the MultiPartParser class', () => {
 
     it('decodes & re-encodes multipart data', async () => {
-        expect.assertions(6);
+        expect.assertions(8);
 
         const ct = `multipart/foobar; boundary=${boundary}`;
         const decoded = await Parser.parse<MultiPartData>(multipart, ct);
-        expect(decoded[FIELDS]![0].headers).toStrictEqual({});
+        expect(decoded[FIELDS]![0].headers).toStrictEqual(Record());
         expect(decoded[FIELDS]![0].value).toBe(`Headerless text`);
         expect(decoded[FIELDS]![1].value).toBeInstanceOf(CacheURI);
         expect(decoded[FIELDS]![2].value).toBeInstanceOf(Buffer);
+
+        expect(await (decoded[FIELDS]![1].value as CacheURI).load()).toStrictEqual([Record({ name: 'foo', value: 'bar' })]);
+        expect(await (decoded[FIELDS]![1].value as CacheURI).load('text/csv; header=absent')).toStrictEqual([[ 'name', 'value' ], [ 'foo', 'bar' ]]);
 
         const [ encoded1 ] = await Parser.serializeToBuffer(decoded, ct);
         expect(`preamble${encoded1}epilogue`).toBe(multipart.replace('Content-Type', 'content-type').replace('"present"', 'present'));

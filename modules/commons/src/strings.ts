@@ -1,9 +1,15 @@
+/* eslint-disable jsdoc/require-jsdoc */
+
 import { Params, ValueEncoder } from './types';
 
 /** Percent-encode everything except 0-9, A-Z, a-z, `-`, `_`, `.`, `!` and `~`. */
 export function percentEncode(str: string): string {
     return encodeURIComponent(str)
         .replace(/['()*]/g, c => "%" + c.charCodeAt(0).toString(16).toUpperCase());
+}
+
+export function toStringOrUndefined(value: unknown | null | undefined): string | undefined {
+    return value === null || value === undefined ? undefined : toString(value);
 }
 
 export function toString(value: unknown) {

@@ -1,4 +1,4 @@
-import { StringParams } from '@divine/commons';
+import { Record, StringParams, toStringOrUndefined } from '@divine/commons';
 import { ContentType } from '@divine/headers';
 import { strict as assert } from 'assert';
 import { WebError, WebStatus } from './error';
@@ -271,12 +271,12 @@ export class WebArguments<Params extends ParamsBase = ParamsBase> {
         const qparams = [...request.url.searchParams.entries()];
         const rparams = Object.entries(request.params);
 
-        this.params = Object.fromEntries([
+        this.params = Record([
             ...urlargs.map(([k, v]) => ['$' + k, v !== undefined ? decodeURIComponent(v) : v]),
             ...headers.map(([k, v]) => ['@' + k, v]),
             ...qparams.map(([k, v]) => ['?' + k, v]),
             ...rparams.map(([k, v]) => ['~' + k, typeof v === 'object' ? v : String(v)]),
-        ]);
+        ] as [string, unknown][]) as Partial<Params>;
     }
 
     /** @returns An alias/shortcut for {@link WebRequest.log}, which in turn is based on {@link WebServiceConfig.console}. */
@@ -359,7 +359,7 @@ export class WebArguments<Params extends ParamsBase = ParamsBase> {
      */
     boolean<T extends boolean | undefined | null>(param: keyof Params & ParamsKeys, def: T): boolean | T;
     boolean(param: keyof Params & ParamsKeys, def?: boolean | undefined | null): boolean | undefined | null {
-        const value = this._param(param, arguments.length === 1)?.toString();
+        const value = toStringOrUndefined(this._param(param, arguments.length === 1));
 
         if (value === undefined) {
             return def;
@@ -453,7 +453,7 @@ export class WebArguments<Params extends ParamsBase = ParamsBase> {
      */
     number<T extends number | undefined | null>(param: keyof Params & ParamsKeys, def: T): number | T;
     number(param: keyof Params & ParamsKeys, def?: number | undefined | null): number | undefined | null {
-        const value = this._param(param, arguments.length === 1)?.toString();
+        const value = toStringOrUndefined(this._param(param, arguments.length === 1));
 
         if (value === undefined) {
             return def;

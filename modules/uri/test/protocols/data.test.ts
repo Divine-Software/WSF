@@ -1,5 +1,6 @@
 import { ContentType } from '@divine/headers';
 import { URI } from '../../src';
+import { Record } from '@divine/commons';
 
 describe('data URIs', () => {
     const briefNote = new URI('data:,A%20brief%20note');
@@ -43,10 +44,10 @@ describe('data URIs', () => {
         expect.assertions(4);
 
         expect(String(await briefNote.load())).toStrictEqual('A brief note');
-        expect(await jsonNote.load()).toStrictEqual({
+        expect(await jsonNote.load()).toStrictEqual(Record({
             title: 'A brief note',
             body:  "Don't forget to buy milk on your way home.",
-        });
+        }));
         expect(String(await greekChar.load())).toStrictEqual('ΎΣΎ');
         expect(String(await typeParam.load())).toStrictEqual('Å');
     });

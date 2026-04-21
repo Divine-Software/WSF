@@ -1,5 +1,5 @@
 
-import { toString } from '@divine/commons';
+import { isJSON, Record, toString } from '@divine/commons';
 import iconv from 'iconv-lite';
 import * as Papa from 'papaparse';
 import { Readable } from 'stream';
@@ -39,7 +39,6 @@ export class CSVParser extends Parser {
 
             Papa.parse<string[] | object>(Readable.from(stream), {
                 encoding:   charset, // TODO: Encoding
-                header:     header === 'present',
                 newline:    eol as '\r' | '\n' | '\r\n',
                 delimiter:  separator,
                 quoteChar:  quote,
@@ -54,7 +53,17 @@ export class CSVParser extends Parser {
                 },
 
                 complete: (result) => {
-                    resolve(result.data);
+                    if (header === 'present') {
+                        const records = result.data as string[][];
+                        const columns = records.shift() ?? [];
+
+                        resolve(records.map((row) => columns.reduce((obj, column, index) => {
+                            obj[column] = row[index];
+                            return obj;
+                        }, Record())));
+                    } else {
+                        resolve(result.data);
+                    }
                 }
             });
         });
@@ -90,7 +99,7 @@ export class CSVParser extends Parser {
         }
 
         for (let row of data) {
-            this._assertSerializebleData(Array.isArray(row) || typeof row === 'object', row);
+            this._assertSerializebleData(isJSON(row), row);
 
             if (!Array.isArray(row)) {
                 if (!fields) {

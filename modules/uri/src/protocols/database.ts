@@ -1,4 +1,4 @@
-import { AsyncIteratorAdapter, BasicTypes, esxxEncoder, isOneOf, isTemplateStringsLike, mapped, Params } from '@divine/commons';
+import { AsyncIteratorAdapter, BasicTypes, esxxEncoder, isOneOf, isTemplateStringsLike, mapped, Params, Record } from '@divine/commons';
 import { ContentType } from '@divine/headers';
 import { Barrier, Signal } from '@divine/synchronization';
 import { SecureContextOptions } from 'tls';
@@ -721,7 +721,7 @@ export abstract class DBResult extends Array<unknown[]> {
 
         if (columns) {
             const colInfo = await this._db.query`select * from information_schema.columns where ${ q.join('or', columns) }`;
-            const infomap: { [key: string]: InformationSchema | undefined } = {};
+            const infomap: { [key: string]: InformationSchema | undefined } = Record();
 
             for (const _ci of colInfo) {
                 const ci = this._fixColumnInfo(_ci);
@@ -747,7 +747,7 @@ export abstract class DBResult extends Array<unknown[]> {
      * @returns             A DBColumnInfo.
      */
     protected _fixColumnInfo(columnRow: object): Partial<DBColumnInfo> {
-        const ci: InformationSchema = {};
+        const ci: InformationSchema = Record();
 
         for (const [_k, _v] of Object.entries(columnRow) ) {
             const k = _k.toLowerCase() as keyof InformationSchema;
@@ -794,8 +794,7 @@ export abstract class DBResult extends Array<unknown[]> {
      *                      set.
      */
     toObject<T extends object>(fields?: DBResult[]): T & DBMetadata {
-        const result: any = {};
-        Object.defineProperty(result, FIELDS, { enumerable: false, value: fields ?? [ this ] });
+        const result = Object.defineProperty(Record(), FIELDS, { value: fields ?? [ this ] }) as any;
 
         if (this.length !== 1) {
             throw new TypeError(`toObject: expected 1 row, but found ${this.length} rows.`);
@@ -823,11 +822,11 @@ export abstract class DBResult extends Array<unknown[]> {
      */
     toObjects<T extends object>(fields?: DBResult[]): T[] & DBMetadata {
         const result: T[] & WithFields<DBResult> = Array<T>(this.length);
-        Object.defineProperty(result, FIELDS, { enumerable: false, value: fields ?? [ this ] });
+        Object.defineProperty(result, FIELDS, { value: fields ?? [ this ] });
 
         for (let r = 0, rl = result.length, hl = this.columns.length; r < rl; ++r) {
             const s = this[r];
-            const d = result[r] = {} as any;
+            const d = result[r] = Record() as any;
 
             for (let h = 0; h < hl; ++h) {
                 d[this.columns[h].label || h] = s[h];
@@ -843,11 +842,11 @@ function toWrappedResult<T>(results: DBResult[], scope?: DBReference.Scope): Wra
 
     if (scope === 'scalar' || scope === 'one') {
         if (result.length === 0) {
-            return Object.defineProperty<any>(wrap(undefined), FIELDS, { enumerable: false, value: result[FIELDS] });
+            return Object.defineProperty<any>(wrap(undefined), FIELDS, { value: result[FIELDS] });
         } else if (result.length === 1) {
             return scope === 'scalar'
-                ? Object.defineProperty<any>(wrap(result[FIELDS][0][0]?.[0]), FIELDS, { enumerable: false, value: result[FIELDS] })
-                : Object.defineProperty<any>(wrap(result[0]),                 FIELDS, { enumerable: false, value: result[FIELDS] });
+                ? Object.defineProperty<any>(wrap(result[FIELDS][0][0]?.[0]), FIELDS, { value: result[FIELDS] })
+                : Object.defineProperty<any>(wrap(result[0]),                 FIELDS, { value: result[FIELDS] });
         } else {
             throw new IOError(`Scope '${scope}' used with a multi-row result set.`, undefined, result);
         }
@@ -1428,7 +1427,7 @@ export abstract class DatabaseURI extends URI {
             let states = this._getBestSelector<DBSessionSelector>(this.selectors.session)?.states;
 
             if (!states) {
-                states = {};
+                states = Record();
                 this.addSelector({ selector: { uri: this.href.replace(/#.*/, '') }, states });
             }
 

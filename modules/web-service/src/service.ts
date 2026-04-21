@@ -1,4 +1,4 @@
-import { asError, BasicTypes, escapeRegExp, isAsyncIterable, isReadableStream, StringParams } from '@divine/commons';
+import { asError, BasicTypes, escapeRegExp, isAsyncIterable, isReadableStream, Record, StringParams } from '@divine/commons';
 import { ContentType } from '@divine/headers';
 import { AuthSchemeError, Encoder, Finalizable, Parser } from '@divine/uri';
 import { IncomingMessage, ServerResponse, OutgoingHttpHeaders } from 'http';
@@ -135,7 +135,7 @@ function getMethods(obj: any, top = obj): string[] {
 }
 
 function regExpParams(match: RegExpExecArray, offset: number, count: number, prefix: string) {
-    const params: StringParams = {};
+    const params: StringParams = Record();
 
     for (let i = 1; i <= count; ++i) {
         params[i] = match[offset + i];

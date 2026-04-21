@@ -108,7 +108,7 @@ for await (const ev of dbURI.watch`listen order_channel`) {
       all means, use those great tools instead of our database abstractions. Nothing in the WSF depends on how data is
       persisted or by what methods the data is accessed.
 [^2]: Yes, `String`, not `string`. Since the URI methods also return [Metadata]/[DBMetadata], it cannot return primitive
-      values. To explicitly convert the object to a `string`, use `toString` or `valueOf`.
+      values. To explicitly convert the object to a `string`, use `unwrap()` (or maybe `.toString()`/`.valueOf()`).
 [^3]: For this reason, [save] is unfortunately not available for MySQL: it updates on *any* duplicate key conflict, not
       just on primary key conflicts. This is very dangerous and a potential security issue, so we do not support this.
 

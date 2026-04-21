@@ -23,11 +23,11 @@ ways[^3].
 
 ```ts
 import { ContentType } from '@divine/headers';
-import { URI } from '@divine/uri';
+import { URI, unwrap } from '@divine/uri';
 
 const latin1 = new URI('latin1-file.txt');
 const buffer = await latin1.load<Buffer>(ContentType.bytes);
-const string = (await latin1.load('text/plain; charset=iso-8859-1')).valueOf();
+const string = unwrap(await latin1.load('text/plain; charset=iso-8859-1'));
 const stream: Buffer[] = [];
 
 for await (const chunk of latin1 /* or latin1.load<AsyncIterator<Buffer>>(ContentType.stream) */ ) {

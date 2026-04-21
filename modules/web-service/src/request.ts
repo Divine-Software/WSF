@@ -1,4 +1,4 @@
-import { BasicTypes, Params, sizeLimited } from '@divine/commons';
+import { BasicTypes, Params, Record, sizeLimited } from '@divine/commons';
 import { ContentType } from '@divine/headers';
 import { AuthSchemeRequest, FINALIZE, Finalizable, ParserError, Precondition } from '@divine/uri';
 import cuid from 'cuid';
@@ -70,7 +70,7 @@ export class WebRequest implements AuthSchemeRequest {
     public readonly log: Partial<Console>;
 
     /** Custom parameters from filters etc may be stored here. */
-    public readonly params: Params = {}
+    public readonly params: Params = Record();
 
     private _payloadEncoder?: PayloadEncoder;
     private _payloadParser?: PayloadParser;

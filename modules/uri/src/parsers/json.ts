@@ -1,4 +1,4 @@
-import type { BasicTypes } from '@divine/commons';
+import { RecordReviver, type BasicTypes } from '@divine/commons';
 import { Parser, StringParser } from '../parsers';
 
 /**
@@ -7,7 +7,7 @@ import { Parser, StringParser } from '../parsers';
  */
 export class JSONParser extends Parser {
     async parse(stream: AsyncIterable<Buffer>): Promise<BasicTypes> {
-        return JSON.parse(await new StringParser(this.contentType).parse(stream));
+        return JSON.parse(await new StringParser(this.contentType).parse(stream), RecordReviver);
     }
 
     serialize(data: unknown): Buffer {

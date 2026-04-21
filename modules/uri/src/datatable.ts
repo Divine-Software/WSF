@@ -164,7 +164,7 @@ export abstract class DataTableBase<K extends string, E extends object, T extend
     async info(): Promise<Wrap<undefined> & DTMetadata> {
         const rsrcMetadata = await this.tableMetadata(true);
 
-        return Object.defineProperty(wrap(undefined) as Wrap<undefined> & DTMetadata, DT_METADATA, { enumerable: false, configurable: true, value: {
+        return Object.defineProperty(wrap(undefined) as Wrap<undefined> & DTMetadata, DT_METADATA, { configurable: true, value: {
             timestamp:  rsrcMetadata.timestamp,
             totalCount: rsrcMetadata.totalCount,
             version:    rsrcMetadata.version,
@@ -175,7 +175,7 @@ export abstract class DataTableBase<K extends string, E extends object, T extend
         return await this.dtbTransaction('read', async () => {
             const rsrcMetadata = await this.tableMetadata(false);
             const listResponse = await this.dtbList(filter).catch(err => this.dtbError(err));
-            const listMetadata = (list: T[]) => Object.defineProperty(list as T[] & DTMetadata, DT_METADATA, { enumerable: false, configurable: true, value: {
+            const listMetadata = (list: T[]) => Object.defineProperty(list as T[] & DTMetadata, DT_METADATA, { configurable: true, value: {
                 timestamp:  rsrcMetadata.timestamp,
                 totalCount: listResponse.totalCount,
                 version:    rsrcMetadata.version,
@@ -259,7 +259,7 @@ export abstract class DataTableBase<K extends string, E extends object, T extend
                 return await this._recordMetadata(record, false) ?? throwError('dtbModify did not return a record.');
             } else {
                 await this.dtbRemove(key).catch(err => this.dtbError(err));
-                return Object.defineProperty(wrap(null) as Wrap<null> & DTMetadata, DT_METADATA, { enumerable: false, value: { version: null} });
+                return Object.defineProperty(wrap(null) as Wrap<null> & DTMetadata, DT_METADATA, { value: { version: null} });
             }
         });
     }
@@ -268,7 +268,7 @@ export abstract class DataTableBase<K extends string, E extends object, T extend
         if (record) {
             const md = await this.recordMetadata(record);
 
-            return Object.defineProperty(record as T & DTMetadata, DT_METADATA, { enumerable: false, configurable: true, value: {
+            return Object.defineProperty(record as T & DTMetadata, DT_METADATA, { configurable: true, value: {
                 created:    created,
                 timestamp:  md.timestamp,
                 version:    md.version,

@@ -1,15 +1,17 @@
+import { Record } from './private';
+
 export interface ContentHeaderParams {
     [name: string]: { name: string, value: string } | undefined;
 }
 
 export abstract class ContentHeader {
     private _type: string;
-    readonly params: ContentHeaderParams = {};
+    readonly params: ContentHeaderParams = Record();
 
     constructor(unparsed: string | ContentHeader, public readonly headerName?: string) {
         if (typeof unparsed !== 'string') {
             this._type  = unparsed._type;
-            this.params = JSON.parse(JSON.stringify(unparsed.params));
+            this.params = Object.assign(this.params, JSON.parse(JSON.stringify(unparsed.params)));
             return;
         }
 

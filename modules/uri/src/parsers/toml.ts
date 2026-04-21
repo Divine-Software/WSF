@@ -1,5 +1,18 @@
 import TOML from '@iarna/toml';
 import { Parser, StringParser } from '../parsers';
+import { RecordReviver } from '@divine/commons';
+
+function recordify<T>(obj: T): T {
+    if (typeof obj === 'object' && obj !== null) {
+        if (Array.isArray(obj)) {
+            obj.forEach((v, i, a) => a[i] = recordify(v));
+        } else {
+            Object.entries(obj).forEach(([k, v]) => obj[k as keyof T] = recordify(v));
+        }
+    }
+
+    return RecordReviver('', obj) as T;
+}
 
 /**
  * The `application/toml` parser handles [TOML](https://toml.io) using
@@ -7,7 +20,7 @@ import { Parser, StringParser } from '../parsers';
  */
 export class TOMLParser extends Parser {
     async parse(stream: AsyncIterable<Buffer>): Promise<TOML.JsonMap> {
-        return TOML.parse(await new StringParser(this.contentType).parse(stream));
+        return recordify(TOML.parse(await new StringParser(this.contentType).parse(stream)));
     }
 
     serialize(data: unknown): Buffer {

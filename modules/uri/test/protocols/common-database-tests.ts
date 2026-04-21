@@ -4,8 +4,9 @@
 /* eslint-disable jsdoc/require-jsdoc */
 
 import { createHash } from 'crypto';
-import { DatabaseURI, DBError, DBParamsSelector, DBQuery, dbRef, FIELDS, q, unwrap, URI, wrap } from '../../src';
+import { DatabaseURI, DBError, DBParamsSelector, DBQuery, dbRef, FIELDS, q, UNWRAP, unwrap, URI, wrap } from '../../src';
 import { DBDataTable, DT_METADATA, DTError, DTRecordMetadata, DTTableMetadata, noAuth, Precondition } from '../../src/datatable';
+import { Record } from '@divine/commons';
 
 export interface CommonDBTestParams {
     name:        string;
@@ -138,7 +139,7 @@ export function describeCommonDBTest(def: CommonDBTestParams): void {
         const db = def.uri.addSelector<DBParamsSelector>({ params: {
             dbRefExtensionHandler(table, fn, args) {
                 if (table.join('.') === 'dt' && fn === 'get' && args.length === 1) {
-                    return q`text = ${args[0]}`;
+                    return q`"text" = ${args[0]}`;
                 } else {
                     return undefined;
                 }
@@ -265,9 +266,9 @@ export function describeCommonDBTest(def: CommonDBTestParams): void {
                 where "text" = ${'j'}`;
 
             expect(res).toHaveLength(1);
-            expect(res[0].text).toBe('j')
-            expect(Number(res[0].first)).toBe(10)
-            expect(Number(res[0].second)).toBe(10)
+            expect(res[0].text).toBe('j');
+            expect(Number(res[0].first)).toBe(10);
+            expect(Number(res[0].second)).toBe(10);
             def.enableDT.tstz ? expect(res[0].now).toBeInstanceOf(Date) : expect(typeof res[0].now).toBe('string');
 
             const { columns } = res[FIELDS][0];
@@ -288,12 +289,12 @@ export function describeCommonDBTest(def: CommonDBTestParams): void {
             expect(columns[0].table_name).toBe(def.schemaInfo ? 'dt' : undefined);
             expect(columns[1].table_name).toBe(def.schemaInfo ? 'dt' : undefined);
             expect(columns[2].table_name).toBe(def.schemaInfo ? 'j'  : undefined);
-            expect(columns[3].table_name).toBeUndefined()
+            expect(columns[3].table_name).toBeUndefined();
 
             expect(columns[0].column_name).toBe(def.schemaInfo ? 'text' : undefined);
             expect(columns[1].column_name).toBe(def.schemaInfo ? 'int'  : undefined);
             expect(columns[2].column_name).toBe(def.schemaInfo ? 'col'  : undefined);
-            expect(columns[3].column_name).toBeUndefined()
+            expect(columns[3].column_name).toBeUndefined();
 
             const h2 = db.pathname.startsWith('h2:'); // H2 quirk
             expect(typeof columns[0].data_type).toBe(def.schemaInfo ? 'string' : 'undefined');
@@ -317,7 +318,7 @@ export function describeCommonDBTest(def: CommonDBTestParams): void {
 
                 const t1a = await db.$`#dt(text);scalar?{eq,text,🦮 1.1}`.load();
                 expect(t1a).toBeInstanceOf(String);
-                expect(t1a.valueOf()).toBe('🦮 1.1');
+                expect(unwrap(t1a)).toBe('🦮 1.1');
 
                 throw new SyntaxError('Force failure');
             })).rejects.toThrow(SyntaxError);
@@ -327,7 +328,7 @@ export function describeCommonDBTest(def: CommonDBTestParams): void {
             // Transaction #1 should be rolled back completely
             const t1b = await db.$`#dt(text);scalar?{eq,text,🦮 1.1}`.load();
             expect(t1b).toStrictEqual(wrap(undefined));
-            expect(t1b.valueOf()).toBe(undefined);
+            expect(t1b[UNWRAP]).toBe(undefined);
             expect(unwrap(t1b)).toBe(undefined);
 
             const t2a = await db.query(async () => {
@@ -346,7 +347,7 @@ export function describeCommonDBTest(def: CommonDBTestParams): void {
                         expect(t2d).toHaveLength(3);
 
                         throw new Error('SP reject');
-                    })).rejects.toThrow('SP reject')
+                    })).rejects.toThrow('SP reject');
 
                     return db.query`select "text" from "dt" where "text" like ${'🦮 2.%'}`;
                 });
@@ -452,7 +453,7 @@ export function describeCommonDBTest(def: CommonDBTestParams): void {
 
             expect(k1).toBeDefined();
             expect(k2).toBeDefined();
-            expect(a1).toMatchObject(def.returning ? { serial: k1, text: 'dbref1' } : wrap(undefined));
+            def.returning ? expect(a1).toMatchObject({ serial: k1, text: 'dbref1' }) : expect(a1).toStrictEqual(wrap(undefined));
             expect(a2).toHaveLength(def.returning ? 2 : 0);
             expect(a1[FIELDS][0].rowCount).toBe(1);
             expect(a2[FIELDS][0].rowCount).toBe(2);
@@ -476,9 +477,9 @@ export function describeCommonDBTest(def: CommonDBTestParams): void {
             const l2 = await db.$`#dt;one?{and{gt,text,dbref}{lt,text,dbref9}}`.load<DataTypes>();
             const l3 = await db.$`#dt?{eq,real,${l1}}`.load<DataTypes[]>();
 
-            expect(l1.valueOf()).toBe(1337);
-            expect(l2.real.valueOf()).toBe(1337);
-            expect(l3[0].real.valueOf()).toBe(1337);
+            expect(unwrap(l1)).toBe(1337);
+            expect(unwrap(l2.real)).toBe(1337);
+            expect(unwrap(l3[0].real)).toBe(1337);
             expect(l3).toHaveLength(1);
             expect(l1[FIELDS][0][0][0]).toBe(1337);
             expect(l2[FIELDS][0][0][4]).toBe(1337);
@@ -526,11 +527,11 @@ export function describeCommonDBTest(def: CommonDBTestParams): void {
 
             expect(l1.filter((r) => r.text === 'dbref-load')).toHaveLength(6);
             expect(l2.filter((r) => r.text === 'dbref-load')).toHaveLength(5);
-            expect([...l3]).toStrictEqual([{ real: 1 }, { real: 2 }, { real: 3 }, { real: 4 }, { real: 5 }, { real: 5 } ]);
-            expect([...l4]).toStrictEqual([{ real: 1 }, { real: 2 }, { real: 3 }, { real: 4 }, { real: 5 }, { real: 5 } ].reverse());
-            expect([...l5]).toStrictEqual([{ real: 1 }, { real: 2 } ]);
-            expect([...l6]).toStrictEqual([{ real: 3 }, { real: 4 }, { real: 5 }, { real: 5 } ]);
-            expect([...l7]).toStrictEqual([{ real: 4 }, { real: 5 } ]);
+            expect([...l3]).toStrictEqual([Record({ real: 1 }), Record({ real: 2 }), Record({ real: 3 }), Record({ real: 4 }), Record({ real: 5 }), Record({ real: 5 }) ]);
+            expect([...l4]).toStrictEqual([Record({ real: 1 }), Record({ real: 2 }), Record({ real: 3 }), Record({ real: 4 }), Record({ real: 5 }), Record({ real: 5 }) ].reverse());
+            expect([...l5]).toStrictEqual([Record({ real: 1 }), Record({ real: 2 }) ]);
+            expect([...l6]).toStrictEqual([Record({ real: 3 }), Record({ real: 4 }), Record({ real: 5 }), Record({ real: 5 }) ]);
+            expect([...l7]).toStrictEqual([Record({ real: 4 }), Record({ real: 5 }) ]);
 
             expect(l3[FIELDS][0].totalCount).toBe(hasTC ? 6 : undefined);
             expect(l4[FIELDS][0].totalCount).toBe(hasTC ? 6 : undefined);
@@ -619,17 +620,17 @@ export function describeCommonDBTest(def: CommonDBTestParams): void {
             await expect(dv.load(noAuth, 'entity')).rejects.toThrow('not-found');
 
             const s1 = await dv.save(noAuth, 'entity', { req: 'req1', opt: 'opt1' });
-            expect(s1).toStrictEqual({ id: 'entity', date: expect.any(String), req: 'req1', opt: 'opt1' });
+            expect(s1).toStrictEqual(Record({ id: 'entity', date: expect.any(String), req: 'req1', opt: 'opt1' }));
             expect(s1[DT_METADATA].timestamp).toBeInstanceOf(Date);
             expect(await dv.load(noAuth, 'entity')).toStrictEqual(s1);
 
             const s2 = await dv.save(noAuth, 'entity', { req: 'req2', opt: 'opt2' });
-            expect(s2).toStrictEqual({ id: 'entity', date: expect.any(String), req: 'req2', opt: 'opt2' });
+            expect(s2).toStrictEqual(Record({ id: 'entity', date: expect.any(String), req: 'req2', opt: 'opt2' }));
             expect(s2[DT_METADATA].timestamp).toBeInstanceOf(Date);
             expect(await dv.load(noAuth, 'entity')).toStrictEqual(s2);
 
             const s3 = await dv.save(noAuth, 'entity', { req: 'req3', date: new Date(0).toISOString() });
-            expect(s3).toStrictEqual({ id: 'entity', date: '1970-01-01T00:00:00.000Z', req: 'req3', opt: 'Def' });
+            expect(s3).toStrictEqual(Record({ id: 'entity', date: '1970-01-01T00:00:00.000Z', req: 'req3', opt: 'Def' }));
             expect(s3[DT_METADATA].timestamp).toStrictEqual(new Date(0));
             expect(await dv.load(noAuth, 'entity')).toStrictEqual(s3);
 
@@ -642,20 +643,20 @@ export function describeCommonDBTest(def: CommonDBTestParams): void {
             expect(await dv.load(noAuth, 'entity')).toStrictEqual(s3);
 
             const s6 = await dv.save(noAuth, 'entity', { id: 'ignored', date: null, req: 'req6' } as CDTEntity);
-            expect(s6).toStrictEqual({ id: 'entity', date: null, req: 'req6', opt: 'Def' });
+            expect(s6).toStrictEqual(Record({ id: 'entity', date: null, req: 'req6', opt: 'Def' }));
             expect(s6[DT_METADATA].timestamp).toBeUndefined();
             expect(await dv.load(noAuth, 'entity')).toStrictEqual(s6);
 
             const m1 = await dv.modify(noAuth, 'entity', { id: 'ignored', date: undefined, req: 'req1', opt: 'opt1' } as Partial<CDTEntity>);
-            expect(m1).toStrictEqual({ id: 'entity', date: expect.any(String), req: 'req1', opt: 'opt1' });
+            expect(m1).toStrictEqual(Record({ id: 'entity', date: expect.any(String), req: 'req1', opt: 'opt1' }));
             expect(await dv.load(noAuth, 'entity')).toStrictEqual(m1);
 
             const m2 = await dv.modify(noAuth, 'entity', { id: undefined, date: null, opt: undefined } as Partial<CDTEntity>);
-            expect(m2).toStrictEqual({ id: 'entity', date: null, req: 'req1', opt: 'Def' });
+            expect(m2).toStrictEqual(Record({ id: 'entity', date: null, req: 'req1', opt: 'Def' }));
             expect(await dv.load(noAuth, 'entity')).toStrictEqual(m2);
 
             const m3 = await dv.modify(noAuth, 'entity', async (row) => ({ ...row, date: new Date(0).toISOString(), req: row.req + '*', opt: undefined }));
-            expect(m3).toStrictEqual({ id: 'entity', date: '1970-01-01T00:00:00.000Z', req: 'req1*', opt: 'Def' });
+            expect(m3).toStrictEqual(Record({ id: 'entity', date: '1970-01-01T00:00:00.000Z', req: 'req1*', opt: 'Def' }));
             expect(m3[DT_METADATA].timestamp).toStrictEqual(new Date(0));
             expect(await dv.load(noAuth, 'entity')).toStrictEqual(m3);
 
@@ -697,10 +698,10 @@ export function describeCommonDBTest(def: CommonDBTestParams): void {
             expect(l1[DT_METADATA].timestamp).toBeUndefined();
 
             const a1 = await dv.append(noAuth, { req: 'list1' });
-            expect(a1).toStrictEqual({ id: expect.any(String), req: 'list1', date: expect.any(String), opt: 'Def' })
+            expect(a1).toStrictEqual(Record({ id: expect.any(String), req: 'list1', date: expect.any(String), opt: 'Def' }));
 
             const a2 = await dv.append(noAuth, { id: 'ignored', req: 'list2', date: null, opt: 'opt2' } as CDTEntity);
-            expect(a2).toStrictEqual({ id: expect.any(String), req: 'list2', date: null, opt: 'opt2' })
+            expect(a2).toStrictEqual(Record({ id: expect.any(String), req: 'list2', date: null, opt: 'opt2' }));
             expect(a2.id).not.toBe('ignored');
 
             await Promise.all(Array(7).fill(0).map((_, i) => dv.append(noAuth, { req: 'list' + (i + 3) })));
@@ -788,11 +789,11 @@ export function describeCommonDBTest(def: CommonDBTestParams): void {
 
             // Legacy conditions should be ignored, since resource has no timestamp
             await dv.append(noAuth, { req: 'cond-list2' }, new Precondition('modified-since', new Date()));
-            await dv.append(noAuth, { req: 'cond-list3' }, new Precondition('unmodified-since', new Date(0)))
+            await dv.append(noAuth, { req: 'cond-list3' }, new Precondition('unmodified-since', new Date(0)));
 
             dv.tableMetadataStatus = true;
 
-            await dv.append(noAuth, { req: 'cond-list4' }, new Precondition('present'))
+            await dv.append(noAuth, { req: 'cond-list4' }, new Precondition('present'));
             await expect(dv.append(noAuth, { req: 'cond-list' }, new Precondition('absent'))).rejects.toThrow('precondition-failed');
 
             const list = await dv.list(noAuth, { order: 'req', limit: 1 });
