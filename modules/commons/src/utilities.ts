@@ -73,10 +73,15 @@ export function Record<T = any>(entries: Array<[PropertyKey, T]> | { [key: Prope
     return Object.create(null, descriptors);
 }
 
-export function RecordReviver(_key: unknown, value: unknown): unknown {
-    if (typeof value === 'object' && value !== null && Object.getPrototypeOf(value) === Object.prototype) {
-        return Object.defineProperties(Object.setPrototypeOf(value, null), recordDescriptors);
-    } else {
-        return value;
+export function recordify<T>(value: T): T {
+    if (typeof value === 'object' && value !== null) {
+        if (Array.isArray(value)) {
+            value.forEach((v, i, a) => a[i] = recordify(v));
+        } else if (Object.getPrototypeOf(value) === Object.prototype) {
+            Object.entries(value).forEach(([k, v]) => value[k as keyof T] = recordify(v));
+            Object.defineProperties(Object.setPrototypeOf(value, null), recordDescriptors);
+        }
     }
+
+    return value;
 }

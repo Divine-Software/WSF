@@ -25,11 +25,11 @@
   "dependencies": {
     "@divine/commons": "workspace:^",
     "@divine/synchronization": "^1.2.1",
-    "@iarna/toml": "^2.2.5",
     "@indutny/dicer": "~0.3.2",
     "iconv-lite": "~0.6.3",
     "mime-types": "^2.1.35",
     "papaparse": "^5.5.3",
+    "smol-toml": "^1.6.1",
     "tslib": "catalog:",
     "xdg-portable": "^10.6.0",
     "yaml": "^2.8.3"

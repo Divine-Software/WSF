@@ -1,38 +1,24 @@
-import TOML from '@iarna/toml';
+import { isJSON, recordify } from '@divine/commons';
+import TOML, { TomlTable } from 'smol-toml';
 import { Parser, StringParser } from '../parsers';
-import { RecordReviver } from '@divine/commons';
-
-function recordify<T>(obj: T): T {
-    if (typeof obj === 'object' && obj !== null) {
-        if (Array.isArray(obj)) {
-            obj.forEach((v, i, a) => a[i] = recordify(v));
-        } else {
-            Object.entries(obj).forEach(([k, v]) => obj[k as keyof T] = recordify(v));
-        }
-    }
-
-    return RecordReviver('', obj) as T;
-}
 
 /**
  * The `application/toml` parser handles [TOML](https://toml.io) using
- * [@iarna/toml](https://www.npmjs.com/package/@iarna/toml) and {@link StringParser}.
+ * [smol-toml](https://www.npmjs.com/package/smol-toml) and {@link StringParser}.
+ *
+ * All parsed objects will have a `null` prototype and all integer numbers will be parsed as `bigint`. Plain `number`
+ * values will be serialized with a `.0` suffix to ensure they are parsed as `bigint` on the receiving end.
  */
 export class TOMLParser extends Parser {
-    async parse(stream: AsyncIterable<Buffer>): Promise<TOML.JsonMap> {
-        return recordify(TOML.parse(await new StringParser(this.contentType).parse(stream)));
+    async parse(stream: AsyncIterable<Buffer>): Promise<TomlTable> {
+        return recordify(TOML.parse(await new StringParser(this.contentType).parse(stream), { integersAsBigInt: true }));
     }
 
     serialize(data: unknown): Buffer {
-        this._assertSerializebleData(data !== null && data !== undefined && !(data instanceof Date), data);
+        this._assertSerializebleData(isJSON(data) && !Array.isArray(data), data);
 
         try {
-            if (typeof data === 'object' && !Array.isArray(data)) {
-                data = TOML.stringify(data as TOML.JsonMap);
-            }
-            else {
-                data = TOML.stringify.value(data as TOML.AnyJson);
-            }
+            data = TOML.stringify(data, { numbersAsFloat: true });
         }
         catch (ex) {
             this._assertSerializebleData(false, data, ex);
