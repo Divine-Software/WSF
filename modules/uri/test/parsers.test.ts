@@ -54,17 +54,17 @@ describe('the Parser class', () => {
     it.each(['application/json', 'application/toml', 'application/yaml'])('roundtrips supported datatypes exactly in %s messages', async (ct) => {
         expect.assertions(7);
 
-        const data = {
+        const data = recordify({
             arrays:    [],
             boolean:   [true, false],
             date:      new Date(),
             integer:   { small: 32n, big: 10000000000000000000000000000000000000000000000000000000000000000000000000000n },
-            // nested:    [[{}]],
+            nested:    [[{}]],
             null:      null,
             numbers:   { int: 42, decimal: 3.14, large: 1e20, exp: 1e32, max: Number.MAX_VALUE, nan: NaN, inf: -Infinity },
             undefined: undefined,
             unicode:   "Hi there 🫥 🙋🏼‍♀️",
-        };
+        });
 
         const serdes = await Parser.parse<typeof data>(...Parser.serialize(data, ct))
 
@@ -87,6 +87,6 @@ describe('the Parser class', () => {
         expect(serdes).not.toHaveProperty('undefined');
         serdes.undefined = undefined;
 
-        expect(serdes).toStrictEqual(recordify(data));
+        expect(serdes).toStrictEqual(data);
     });
 })

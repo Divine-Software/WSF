@@ -310,7 +310,7 @@ export class WebArguments<Params extends ParamsBase = ParamsBase> {
             const params = this.params as Record<string, string | object | null>;
 
             for (const [k, v] of Object.entries(body)) {
-                if (typeof v === 'string' || typeof v === 'number' || typeof v === 'boolean') {
+                if (typeof v === 'string' || typeof v === 'number' || typeof v === 'bigint' || typeof v === 'boolean') {
                     params['.' + k] = String(v);
                 }
                 else if (typeof v === 'object') {
@@ -423,6 +423,47 @@ export class WebArguments<Params extends ParamsBase = ParamsBase> {
             else {
                 throw this._makeWebError(param, 'is not a valid date');
             }
+        }
+    }
+
+
+    /**
+     * Returns the value of a parameter parsed as an integer.
+     *
+     * Any number supported by `BigInt()` is accepted. This means that `0x`, `0b` and `0o` prefices are respected.
+     *
+     * @param param The name of the parameter to fetch (must include the desired prefix).
+     * @throws      A {@link WebError}({@link WebStatus.BAD_REQUEST}) if a non-body parameter is missing or cannot be
+     *              parsed.
+     * @throws      A {@link WebError}({@link WebStatus.UNPROCESSABLE_ENTITY}) if a body parameter is missing or cannot
+     *              be parsed.
+     * @returns     The parameter parsed as a bigint.
+     */
+    integer(param: keyof Params & ParamsKeys): bigint;
+    /**
+     * Returns the value of a parameter parsed as an integer.
+     *
+     * Any number supported by `BigInt()` is accepted. This means that `0x`, `0b` and `0o` prefices are respected.
+     *
+     * @template T  The type of the {@link def} parameter.
+     * @param param The name of the parameter to fetch (must include the desired prefix).
+     * @param def   The value that should be returned if the parameter could not be found.
+     * @throws      A {@link WebError}({@link WebStatus.BAD_REQUEST}) if a non-body parameter cannot be parsed.
+     * @throws      A {@link WebError}({@link WebStatus.UNPROCESSABLE_ENTITY}) if a body parameter cannot be parsed.
+     * @returns     The parameter parsed as an integer, or the value of `def`.
+     */
+    integer<T extends bigint | undefined | null>(param: keyof Params & ParamsKeys, def: T): bigint | T;
+    integer(param: keyof Params & ParamsKeys, def?: bigint | undefined | null): bigint | undefined | null {
+        const value = toStringOrUndefined(this._param(param, arguments.length === 1));
+
+        if (value === undefined) {
+            return def;
+        }
+
+        try {
+            return BigInt(value);
+        } catch {
+            throw this._makeWebError(param, 'is not a valid integer');
         }
     }
 

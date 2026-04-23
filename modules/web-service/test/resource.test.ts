@@ -3,7 +3,8 @@ import { WebArguments, WebError, WebResponse, WebStatus } from '../src';
 import { fakedReq } from './test-utils';
 
 const toml = `
-number  = 1
+number  = 1.0
+integer = 2
 string  = 'STRING'
 array   =  [ 3, 4 ]
 date    = 2020-03-10T13:39:00.000Z
@@ -13,7 +14,7 @@ false   = false
 
 [object]
 string  = 'member'
-array   = [ 1, 2 ]
+array   = [ 1, 2.0, 3.5 ]
 `;
 
 describe('the WebArguments class', () => {
@@ -25,7 +26,7 @@ describe('the WebArguments class', () => {
     const body = args.body();
 
     it('handles boolean arguments', async () => {
-        expect.assertions(17);
+        expect.assertions(18);
         await body;
 
         expect(() => args.boolean('$urlparam')).toThrow(WebError);
@@ -38,6 +39,7 @@ describe('the WebArguments class', () => {
         expect(args.boolean('?f2')).toBe(false);
         expect(() => args.boolean('@header')).toThrow(WebError);
         expect(() => args.boolean('.number')).toThrow(WebError);
+        expect(() => args.boolean('.integer')).toThrow(WebError);
         expect(() => args.boolean('.string')).toThrow(WebError);
         expect(() => args.boolean('.object')).toThrow(WebError);
         expect(() => args.boolean('.array')).toThrow(WebError);
@@ -48,7 +50,7 @@ describe('the WebArguments class', () => {
     });
 
     it('handles date arguments', async () => {
-        expect.assertions(14);
+        expect.assertions(16);
         await body;
 
         expect(() => args.date('$urlparam')).toThrow(WebError);
@@ -58,17 +60,19 @@ describe('the WebArguments class', () => {
         expect(() => args.date('?large')).toThrow(WebError);
         expect(() => args.date('@header')).toThrow(WebError);
         expect(() => args.date('.number')).toThrow(WebError);
+        expect(() => args.date('.integer')).toThrow(WebError);
         expect(() => args.date('.string')).toThrow(WebError);
         expect(() => args.date('.object')).toThrow(WebError);
         expect(() => args.date('.array')).toThrow(WebError);
-        expect(args.date('.date')).toStrictEqual(new Date('2020-03-10T13:39:00.000Z'))
-        expect(args.date('.datestr')).toStrictEqual(new Date('2020-03-10T13:39:00.000Z'))
+        expect(args.date('.date')).toBeInstanceOf(Date /* TomlDate */);
+        expect(args.date('.date').toISOString()).toBe('2020-03-10T13:39:00.000Z');
+        expect(args.date('.datestr')).toStrictEqual(new Date('2020-03-10T13:39:00.000Z'));
         expect(() => args.date('.true')).toThrow(WebError);
         expect(() => args.date('.false')).toThrow(WebError);
     });
 
     it('handles number arguments', async () => {
-        expect.assertions(13);
+        expect.assertions(14);
         await body;
 
         expect(() => args.number('$urlparam')).toThrow(WebError);
@@ -77,6 +81,7 @@ describe('the WebArguments class', () => {
         expect(() => args.number('?date')).toThrow(WebError);
         expect(() => args.number('@header')).toThrow(WebError);
         expect(args.number('.number')).toBe(1);
+        expect(args.number('.integer')).toBe(2);
         expect(() => args.number('.string')).toThrow(WebError);
         expect(() => args.number('.object')).toThrow(WebError);
         expect(() => args.number('.array')).toThrow(WebError);
@@ -86,8 +91,28 @@ describe('the WebArguments class', () => {
         expect(() => args.number('.false')).toThrow(WebError);
     });
 
+    it('handles integer arguments', async () => {
+        expect.assertions(14);
+        await body;
+
+        expect(() => args.integer('$urlparam')).toThrow(WebError);
+        expect(args.integer('?num')).toBe(1n);
+        expect(() => args.integer('?str')).toThrow(WebError);
+        expect(() => args.integer('?date')).toThrow(WebError);
+        expect(() => args.integer('@header')).toThrow(WebError);
+        expect(args.integer('.number')).toBe(1n);
+        expect(args.integer('.integer')).toBe(2n);
+        expect(() => args.integer('.string')).toThrow(WebError);
+        expect(() => args.integer('.object')).toThrow(WebError);
+        expect(() => args.integer('.array')).toThrow(WebError);
+        expect(() => args.integer('.date')).toThrow(WebError);
+        expect(() => args.integer('.datestr')).toThrow(WebError);
+        expect(() => args.integer('.true')).toThrow(WebError);
+        expect(() => args.integer('.false')).toThrow(WebError);
+    });
+
     it('handles string arguments', async () => {
-        expect.assertions(13);
+        expect.assertions(14);
         await body;
 
         expect(args.string('$urlparam')).toBe('url');
@@ -96,6 +121,7 @@ describe('the WebArguments class', () => {
         expect(args.string('?date')).toBe('2020-03-10');
         expect(args.string('@header')).toBe('value1, value2');
         expect(args.string('.number')).toBe('1');
+        expect(args.string('.integer')).toBe('2');
         expect(args.string('.string')).toBe('STRING');
         expect(() => args.string('.object')).toThrow(WebError);
         expect(() => args.string('.array')).toThrow(WebError);
@@ -106,7 +132,7 @@ describe('the WebArguments class', () => {
     });
 
     it('handles object arguments', async () => {
-        expect.assertions(13);
+        expect.assertions(15);
         await body;
 
         expect(() => args.object('$urlparam')).toThrow(WebError);
@@ -115,10 +141,12 @@ describe('the WebArguments class', () => {
         expect(() => args.object('?date')).toThrow(WebError);
         expect(() => args.object('@header')).toThrow(WebError);
         expect(() => args.object('.number')).toThrow(WebError);
+        expect(() => args.object('.integer')).toThrow(WebError);
         expect(() => args.object('.string')).toThrow(WebError);
-        expect(args.object('.object')).toStrictEqual(Record({ string: 'member', array: [ 1, 2 ] }));
-        expect(args.object('.array')).toStrictEqual([ 3, 4 ]);
-        expect(args.object('.date')).toStrictEqual(new Date('2020-03-10T13:39:00.000Z'))
+        expect(args.object('.object')).toStrictEqual(Record({ string: 'member', array: [ 1n, 2, 3.5 ] }));
+        expect(args.object('.array')).toStrictEqual([ 3n, 4n ]);
+        expect(args.object('.date')).toBeInstanceOf(Date /* TomlDate */);
+        expect(args.object<Date>('.date').toISOString()).toBe('2020-03-10T13:39:00.000Z');
         expect(() => args.object('.datestr')).toThrow(WebError);
         expect(() => args.object('.true')).toThrow(WebError);
         expect(() => args.object('.false')).toThrow(WebError);
@@ -140,12 +168,13 @@ describe('the WebArguments class', () => {
     });
 
     it('handles missing values', async () => {
-        expect.assertions(21);
+        expect.assertions(25);
         await body;
 
         expect(() => args.boolean('?missing')).toThrow(`Query parameter 'missing' is missing.`);
         expect(() => args.date('missing' as any)).toThrow(`Invalid parameter 'missing' is missing.`);
         expect(() => args.number('.missing')).toThrow(`Entity parameter 'missing' is missing.`);
+        expect(() => args.integer('.missing')).toThrow(`Entity parameter 'missing' is missing.`);
         expect(() => args.string('@missing')).toThrow(`Request header 'missing' is missing.`);
         expect(() => args.object('$missing')).toThrow(`URL parameter 'missing' is missing.`);
         expect(() => args.object('~missing')).toThrow(`Custom parameter 'missing' is missing.`);
@@ -162,6 +191,10 @@ describe('the WebArguments class', () => {
         expect(args.number('?missing', 13)).toBe(13);
         expect(args.number('?missing', null)).toBeNull();
         expect(args.number('?missing', undefined)).toBeUndefined();
+
+        expect(args.integer('?missing', 14n)).toBe(14n);
+        expect(args.integer('?missing', null)).toBeNull();
+        expect(args.integer('?missing', undefined)).toBeUndefined();
 
         expect(args.string('?missing', 'def')).toBe('def');
         expect(args.string('?missing', null)).toBeNull();

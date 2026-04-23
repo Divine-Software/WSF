@@ -105,7 +105,7 @@ describe(`a WebService's resources`, () => {
                 switch (this._digit) {
                     case 0: return null;
                     case 1: return '1';
-                    case 2: return [2];
+                    case 2: return [2n];
                     case 3: return { value: 3 };
                     case 4: return new WebResponse(WebStatus.ACCEPTED, null);
                     case 5: return new WebResponse(WebStatus.ACCEPTED, 'five', { etag: 'V'}).setHeader('Custom-Header', 'v');
@@ -157,7 +157,7 @@ describe(`a WebService's resources`, () => {
 
         const r = await dispatchRequest(ws, fakedReq('GET', '/GET/3'));
         expect(r.status).toBe(WebStatus.OK);
-        expect(r.body!.toString()).toBe(JSON.stringify({ value: 3 }));
+        expect(r.body!.toString()).toBe("{\"value\":3.0}");
         expect(r.headers['content-type']?.toString()).toBe('application/json');
     })
 
