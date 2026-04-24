@@ -6,7 +6,7 @@ import { URL } from 'url';
 import { PostgresSQLState as SQLState } from './postgres-errors';
 import { PostgresParams } from './postgres-protocol';
 
-const parseBigIntArray = types.getTypeParser(1016);
+const parseBigIntArray = types.getTypeParser(1016 as any);
 const deadlocks = [ SQLState.SERIALIZATION_FAILURE, SQLState.DEADLOCK_DETECTED ] as string[];
 const listenFields: FieldDef[] = [
     { name: 'channel', tableID: 0, columnID: 0, dataTypeID: types.builtins.TEXT, dataTypeSize: -1, dataTypeModifier: -1, format: 'text' },
@@ -43,8 +43,7 @@ class PGDatabaseConnection implements DBDriver.DBConnection {
         this._client = new Client({
             connectionString: dbURL.href,
             types: {
-                // @ts-expect-error: Target signature provides too few arguments. Expected 2 or more, but got 1.ts(2322)
-                getTypeParser: (id, format) =>
+                getTypeParser: (id: any, format) =>
                     id === 20   ? BigInt :
                     id === 1016 ? (value: string) => (parseBigIntArray(value) as any).map(BigInt) :
                     types.getTypeParser(id, format as 'text' & 'binary'),

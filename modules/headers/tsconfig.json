@@ -4,6 +4,7 @@
         "src/**/*.ts", "test/**/*.ts"
     ],
     "compilerOptions": {
+        "types": ["jest"],
         "outDir": "build"
     }
 }

@@ -118,7 +118,7 @@ for await (const ev of dbURI.watch`listen order_channel`) {
 
 [Metadata]:        ../api/@divine/uri/interfaces/Metadata.md
 [DBMetadata]:      ../api/@divine/uri/interfaces/DBMetadata.md
-[DBResult.rowKey]: ../api/@divine/uri/classes/DBResult.md#rowkey
+[DBResult.rowKey]: ../api/@divine/uri/classes/DBResult.md#property-rowkey
 [DatabaseURI]:     ../api/@divine/uri/classes/DatabaseURI.md
 [DB references]:   ../api/@divine/uri/classes/DatabaseURI.md#crud-row-operations-with-db-references
 [load]:            ../api/@divine/uri/classes/DatabaseURI.md#load

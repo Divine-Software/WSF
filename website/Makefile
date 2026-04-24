@@ -18,7 +18,7 @@ build-deps:									## Build all dependencies
 
 test:
 
-clean:	prepare									## Clean all build artifacts (but not dependencies)
+clean:										## Clean all build artifacts (but not dependencies)
 	-pnpm run clear
 	rm -rf build docs/api
 

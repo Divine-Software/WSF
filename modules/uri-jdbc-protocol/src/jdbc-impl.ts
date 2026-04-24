@@ -2,14 +2,12 @@ import { toString } from '@divine/commons';
 import { DatabaseURI, DBColumnInfo, DBDriver, DBError, DBParams, DBQuery, DBResult, DBTransactionParams, PasswordCredentials, q } from '@divine/uri';
 import assert from 'assert';
 import java from 'java';
-import { promisify } from 'util';
 
 export const classpath = java.classpath;
 
 java.classpath.push(__dirname);
 java.options.push('-Xrs');
 java.asyncOptions = {
-    promisify,
     asyncSuffix:   undefined,
     syncSuffix:    'Sync',
     promiseSuffix: ''

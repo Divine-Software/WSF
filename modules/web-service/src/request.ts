@@ -1,12 +1,12 @@
 import { BasicTypes, Params, Record, sizeLimited } from '@divine/commons';
 import { ContentType } from '@divine/headers';
 import { AuthSchemeRequest, FINALIZE, Finalizable, ParserError, Precondition } from '@divine/uri';
-import cuid from 'cuid';
 import { IncomingHttpHeaders, IncomingMessage } from 'http';
 import { Http2ServerRequest, Http2Session } from 'http2';
 import { Socket } from 'net';
 import { TLSSocket } from 'tls';
 import { UAParser } from 'ua-parser-js';
+import { ulid } from 'ulid';
 import { URL } from 'url';
 import { WebError, WebStatus } from './error';
 import { createCondition } from './private/etag';
@@ -99,7 +99,7 @@ export class WebRequest implements AuthSchemeRequest {
         this.url           = new URL(`${scheme}://${server}${incomingMessage.url}`);
         this.precondition  = createCondition(this.method, incomingMessage.headers);
         this.userAgent     = new UAParser(incomingMessage.headers['user-agent']).getResult() as UserAgent;
-        this.id            = incomingReqID && REQUEST_ID.test(incomingReqID) ? incomingReqID : cuid();
+        this.id            = incomingReqID && REQUEST_ID.test(incomingReqID) ? incomingReqID : ulid().toLowerCase();
         this.log           = config.logRequestID ? decorateConsole(config.console, `#${this.id}`) : config.console;
 
         this._maxContentLength = config.maxContentLength;

@@ -26,8 +26,8 @@
     "@divine/commons": "workspace:^",
     "@divine/synchronization": "^1.2.1",
     "@indutny/dicer": "~0.3.2",
-    "iconv-lite": "~0.6.3",
-    "mime-types": "^2.1.35",
+    "iconv-lite": "~0.7.2",
+    "mime-types": "^3.0.2",
     "papaparse": "^5.5.3",
     "smol-toml": "^1.6.1",
     "tslib": "catalog:",
@@ -45,11 +45,11 @@
   },
   "devDependencies": {
     "@divine/headers": "workspace:^",
-    "@types/mime-types": "^2.1.4",
+    "@types/mime-types": "^3.0.1",
     "@types/node": "catalog:",
     "@types/papaparse": "^5.5.2",
-    "chokidar": "^4.0.3",
-    "peggy": "^4.2.0",
+    "chokidar": "^5.0.0",
+    "peggy": "^5.1.0",
     "ts-pegjs": "^4.2.1"
   },
   "engines": {

@@ -27,7 +27,7 @@
   },
   "dependencies": {
     "@divine/commons": "workspace:^",
-    "tedious": "^18.6.1",
+    "tedious": "^19.2.1",
     "tslib": "catalog:"
   },
   "devDependencies": {

@@ -246,10 +246,10 @@ export class WebServer<InitialService extends WebService<any> = WebService<unkno
      *
      * @param host           The host name or IP address to listen on.
      * @param port           The port number to listen on.
-     * @param defaultService The default {@link WebService} to mount at the root path. If not provided, a default
+     * @param initialService The default {@link WebService} to mount at the root path. If not provided, a default
      *                       service will be created and mounted (accessible via the {@link defaultService} property).
      */
-    constructor(host: string, port: number, defaultService?: InitialService);
+    constructor(host: string, port: number, initialService?: InitialService);
     /**
      * Creates a new WebServer instance, optionally mounting a {@link WebService} at the path specified by the listen
      * URL.

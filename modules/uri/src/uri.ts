@@ -70,7 +70,7 @@ export interface DirectoryEntry {
  */
 export class IOError<D extends object = object> extends URIError {
     /** The Error that caused this exception to be thrown. */
-    public cause?: Error;
+    override cause?: Error;
 
     /**
      * Constructs a new IOError exception.
@@ -174,19 +174,19 @@ export class URI extends URL implements AsyncIterable<Buffer> {
     };
 
     /** This URI's string representation. Unlike in URL, this property may not be changed/updated. */
-    override readonly href!: string;
+    declare readonly href: string;
 
     /** This URI's origin. Unlike in URL, this property may not be changed/updated. */
-    override readonly origin!: string;
+    declare readonly origin: string;
 
     /** This URI's protocol. Unlike in URL, this property may not be changed/updated. */
-    override readonly protocol!: string;
+    declare readonly protocol: string;
 
     /** This URI's username. Unlike in URL, this property is always empty and may not be changed/updated. Use selectors instead. */
-    override readonly username!: '';
+    declare readonly username: '';
 
     /** This URI's password. Unlike in URL, this property is always empty and may not be changed/updated. Use selectors instead. */
-    override readonly password!: '';
+    declare readonly password: '';
 
     /**
      * Constructs a new URI subclass. The URI constructor is a bit unusual, as it will always return an URI subclass and

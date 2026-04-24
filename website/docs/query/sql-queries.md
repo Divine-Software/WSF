@@ -65,9 +65,9 @@ result set (all which can be accessed via [FIELDS]).
 [selector]:            ../api/@divine/uri/classes/URI.md#addselector
 [DBParamsSelector]:    ../api/@divine/uri/interfaces/DBParamsSelector.md
 [DBResult]:            ../api/@divine/uri/classes/DBResult.md
-[DBResult.columns]:    ../api/@divine/uri/classes/DBResult.md#columns
-[DBResult.rowCount]:   ../api/@divine/uri/classes/DBResult.md#rowcount
-[DBResult.rowKey]:     ../api/@divine/uri/classes/DBResult.md#rowkey
+[DBResult.columns]:    ../api/@divine/uri/classes/DBResult.md#property-columns
+[DBResult.rowCount]:   ../api/@divine/uri/classes/DBResult.md#property-rowcount
+[DBResult.rowKey]:     ../api/@divine/uri/classes/DBResult.md#property-rowkey
 [FIELDS]:              ../api/@divine/uri/index.md#fields
 [WithFields]:          ../api/@divine/uri/interfaces/WithFields.md
 [DBMetadata]:          ../api/@divine/uri/interfaces/DBMetadata.md

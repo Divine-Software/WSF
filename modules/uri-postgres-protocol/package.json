@@ -27,13 +27,13 @@
   },
   "dependencies": {
     "@divine/commons": "workspace:^",
-    "pg": "^8.13.1",
+    "pg": "^8.20.0",
     "tslib": "catalog:"
   },
   "devDependencies": {
     "@divine/uri": "workspace:^",
     "@types/node": "catalog:",
-    "@types/pg": "^8.11.11"
+    "@types/pg": "^8.20.0"
   },
   "engines": {
     "node": ">= 22"

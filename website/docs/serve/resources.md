@@ -118,7 +118,7 @@ In the future, the WSF will automatically negotiate the media type based on the 
 [regular expression]:   https://developer.mozilla.org/en-US/docs/Web/JavaScript/Guide/Regular_Expressions
 [named capture groups]: https://developer.mozilla.org/en-US/docs/Web/JavaScript/Guide/Regular_Expressions/Groups_and_Ranges#using_named_groups
 
-[path]:                 ../api/@divine/web-service/interfaces/WebResourceCtor.md#path
+[path]:                 ../api/@divine/web-service/interfaces/WebResourceCtor.md#property-path
 [init]:                 ../api/@divine/web-service/interfaces/WebResource.md#init
 [HEAD]:                 ../api/@divine/web-service/interfaces/WebResource.md#head
 [GET]:                  ../api/@divine/web-service/interfaces/WebResource.md#get

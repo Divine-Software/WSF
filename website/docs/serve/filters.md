@@ -27,7 +27,6 @@ parameters on the request via [WebRequest.setParam], or fetch a reference to the
 Filters can generate responses in the [same way](./resources.md#generating-responses) as resources do, but usually just
 pass along the return value from `next`.
 
-[WebArguments]:         ../api/@divine/web-service/classes/WebArguments.md
 [WebFilter]:            ../api/@divine/web-service/interfaces/WebFilter.md
 [WebFilterCtor]:        ../api/@divine/web-service/interfaces/WebFilterCtor.md#constructor
 [WebResource]:          ../api/@divine/web-service/interfaces/WebResource.md

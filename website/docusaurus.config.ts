@@ -11,6 +11,8 @@ const config: Config = {
   tagline: 'A divine collection of awesome web-related Node.js modules',
   favicon: 'img/favicon.png',
 
+  organizationName: 'Divine-Software',
+
   url: 'https://divine-software.github.io/',
   baseUrl: '/WSF/',
   projectName: 'WSF',
@@ -18,12 +20,11 @@ const config: Config = {
 
   onBrokenAnchors: 'warn',
   onBrokenLinks: 'throw',
-  onBrokenMarkdownLinks: 'throw',
   onDuplicateRoutes: 'throw',
-  organizationName: 'Divine-Software',
 
   future: {
-    experimental_faster: true,
+    faster: true,
+    v4: true,
   },
 
   i18n: {
@@ -33,6 +34,9 @@ const config: Config = {
 
   markdown: {
     format: 'detect',
+    hooks: {
+      onBrokenMarkdownLinks: 'throw',
+    },
   },
 
   themeConfig: {
@@ -143,7 +147,7 @@ const config: Config = {
     [
       'docusaurus-plugin-typedoc', {
         entryPointStrategy: "packages",
-        entryPoints: yamlParse(readFileSync('../pnpm-workspace.yaml').toString()).packages.filter(pkg => pkg.startsWith('modules/')).map(pkg => `../${pkg}`),
+        entryPoints: yamlParse(readFileSync('../pnpm-workspace.yaml').toString()).packages.filter((pkg: string) => pkg.startsWith('modules/')).map((pkg: string) => `../${pkg}`),
         excludePrivate: true,
         excludeInternal: true,
         excludeExternals: true,
@@ -172,7 +176,7 @@ const config: Config = {
             const typedocSidebar = await import('./docs/api/typedoc-sidebar.cjs');
 
             return (await defaultSidebarItemsGenerator(args)).map((item) =>
-              item.type === 'category' && 'id' in item.link && item.link.id === 'api/index'
+              item.type === 'category' && 'id' in item.link! && item.link.id === 'api/index'
                 ? { ...item, label: 'Framework APIs', items: typedocSidebar }
                 : item
             );

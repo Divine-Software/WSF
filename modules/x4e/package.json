@@ -23,8 +23,8 @@
     "collectCoverage": true
   },
   "dependencies": {
-    "@xmldom/xmldom": "~0.9.7",
-    "parse5": "^7.2.1",
+    "@xmldom/xmldom": "~0.9.10",
+    "parse5": "^7.3.0",
     "tslib": "catalog:"
   },
   "devDependencies": {

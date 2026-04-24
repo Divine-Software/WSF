@@ -27,12 +27,12 @@
   },
   "dependencies": {
     "@divine/commons": "workspace:^",
-    "java": "~0.14.0",
+    "java": "~0.18.0",
     "tslib": "catalog:"
   },
   "devDependencies": {
     "@divine/uri": "workspace:^",
-    "@types/java": "~0.9.5",
+    "@types/java": "~0.9.6",
     "@types/node": "catalog:"
   },
   "engines": {
