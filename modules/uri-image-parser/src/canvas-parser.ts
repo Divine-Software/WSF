@@ -3,10 +3,13 @@ import { Canvas, Image } from 'canvas';
 
 export class ImageParser extends Parser {
     async parse(stream: AsyncIterable<Buffer>): Promise<Canvas> {
-        const buffer = await new BufferParser(this.contentType).parse(stream);
-
         const image  = new Image();
-        image.src    = buffer;
+        await new Promise<void>(async (resolve, reject) => {
+            image.onload  = () => resolve();
+            image.onerror = (err) => reject(new ParserError('Failed to parse image.', err));
+            image.src     = await new BufferParser(this.contentType).parse(stream);
+        });
+
         const canvas = new Canvas(image.height, image.width);
         const ctx    = canvas.getContext('2d');
 

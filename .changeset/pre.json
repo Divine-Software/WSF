@@ -1,0 +1,20 @@
+{
+  "mode": "pre",
+  "tag": "v2",
+  "initialVersions": {
+    "@divine/commons": "1.0.0",
+    "@divine/headers": "2.0.4",
+    "@divine/uri": "1.0.0",
+    "@divine/uri-image-parser": "1.0.0",
+    "@divine/uri-jdbc-protocol": "1.0.0",
+    "@divine/uri-mysql-protocol": "1.0.0",
+    "@divine/uri-postgres-protocol": "1.0.0",
+    "@divine/uri-sqlite-protocol": "1.0.0",
+    "@divine/uri-tds-protocol": "1.0.0",
+    "@divine/uri-x4e-parser": "1.0.0",
+    "@divine/web-service": "1.0.0",
+    "@divine/x4e": "1.0.0",
+    "website": "0.0.0"
+  },
+  "changesets": []
+}
