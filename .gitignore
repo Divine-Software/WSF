@@ -1,7 +1,5 @@
-/modules/*/build
 /.vscode
+/modules/*/build
+/tmp*
 coverage
 node_modules
-npm-debug.log
-.pnpm-debug.log
-yarn-error.log

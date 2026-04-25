@@ -26,6 +26,7 @@
     "@divine/uri": "workspace:^1.0.0"
   },
   "dependencies": {
+    "@divine/commons": "workspace:^",
     "canvas": "^3.2.3",
     "tslib": "catalog:"
   },

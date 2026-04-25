@@ -1,4 +1,4 @@
-SUB_PACKAGES	= $(shell awk '/^ *-/ { print $$2 }' pnpm-workspace.yaml)
+SUB_PACKAGES	= $(shell pnpm config get packages | tail -1 | tr , ' ')
 NODE_MODULES	= node_modules/.modules.yaml $(foreach package,$(SUB_PACKAGES),$(package)/node_modules)
 
 help:
@@ -8,7 +8,7 @@ all:	build									## Build all packages (alias for build)
 
 prepare:	$(NODE_MODULES)							## Build and install all dependencies
 
-$(NODE_MODULES):package.json modules/*/package.json website/package.json pnpm-lock.yaml pnpm-workspace.yaml .npmrc
+$(NODE_MODULES):package.json modules/*/package.json website/package.json pnpm-lock.yaml pnpm-workspace.yaml
 	pnpm install --frozen-lockfile
 	touch $(NODE_MODULES)
 

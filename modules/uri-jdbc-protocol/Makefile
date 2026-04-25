@@ -20,4 +20,4 @@ clean:
 distclean:	clean
 	rm -rf node_modules
 
-.PHONY:		all prepare build test clean distclean
+.PHONY:		all prepare build build-deps test clean distclean
