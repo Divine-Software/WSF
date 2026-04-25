@@ -1,5 +1,44 @@
 # @divine/uri-tds-protocol
 
+## 2.0.0-v2.0
+
+### Major Changes
+
+- c457bd7: Require NodeJS 22.
+- 3391e7d: Renamed DB-reference params count => limit, sort => order. Added totalCount support.
+
+### Minor Changes
+
+- 11ed76a: Bumped deps.
+- 487ac86: Expose underlying type of DBParams.connectOptions.
+- 4d879fc: Bumped deps, including TS.
+
+### Patch Changes
+
+- 5c8ba4d: Bumped dev deps (incl. eslint, typescript).
+- Updated dependencies [edb2b71]
+- Updated dependencies [c457bd7]
+- Updated dependencies [5355c29]
+- Updated dependencies [9693bef]
+- Updated dependencies [3391e7d]
+- Updated dependencies [e3a4d2e]
+- Updated dependencies [0ecbe14]
+- Updated dependencies [487ac86]
+- Updated dependencies [4d879fc]
+- Updated dependencies [3cf79fb]
+- Updated dependencies [f6e8c96]
+- Updated dependencies [6177c73]
+- Updated dependencies [0a57e8d]
+- Updated dependencies [69bc813]
+- Updated dependencies [6d08a9d]
+- Updated dependencies [d9d41a4]
+- Updated dependencies [fdc19f2]
+- Updated dependencies [5c8ba4d]
+- Updated dependencies [b04f74c]
+- Updated dependencies [a07c7b5]
+  - @divine/uri@2.0.0-v2.0
+  - @divine/commons@2.0.0-v2.0
+
 ## 1.0.0
 
 ### Patch Changes

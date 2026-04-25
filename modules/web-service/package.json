@@ -1,6 +1,6 @@
 {
   "name": "@divine/web-service",
-  "version": "1.0.0",
+  "version": "2.0.0-v2.0",
   "description": "The Divine Web Service Library",
   "author": "Martin Blom <martin@blom.org>",
   "license": "Apache-2.0",
@@ -29,8 +29,8 @@
     "ulid": "^3.0.2"
   },
   "peerDependencies": {
-    "@divine/headers": "workspace:^2.0.4",
-    "@divine/uri": "workspace:^1.0.0"
+    "@divine/headers": "workspace:^2.1.0-v2.0",
+    "@divine/uri": "workspace:^2.0.0-v2.0"
   },
   "devDependencies": {
     "@divine/headers": "workspace:^",

@@ -1,5 +1,17 @@
 # @divine/headers
 
+## 2.1.0-v2.0
+
+### Minor Changes
+
+- 69bc813: All untrusted Record/hash objects now have a null prototype instead of being Objects.
+- a5dffeb: Added Accept\* headers.
+
+### Patch Changes
+
+- 4d879fc: Bumped deps, including TS.
+- 5c8ba4d: Bumped dev deps (incl. eslint, typescript).
+
 ## 2.0.4
 
 ### Patch Changes

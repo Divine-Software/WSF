@@ -1,5 +1,21 @@
 # @divine/x4e
 
+## 2.0.0-v2.0
+
+### Major Changes
+
+- c457bd7: Require NodeJS 22.
+
+### Minor Changes
+
+- 4d879fc: Bumped deps, including TS.
+- 00b713d: Bumped deps.
+
+### Patch Changes
+
+- 69bc813: All untrusted Record/hash objects now have a null prototype instead of being Objects.
+- 5c8ba4d: Bumped dev deps (incl. eslint, typescript).
+
 ## 1.0.0
 
 - Version bump.

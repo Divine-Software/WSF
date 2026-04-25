@@ -1,5 +1,55 @@
 # @divine/web-service
 
+## 2.0.0-v2.0
+
+### Major Changes
+
+- c457bd7: Require NodeJS 22.
+- 9693bef: JSON/TOML/YAML now use bigint for all integers and number for floats.
+- 0f7427a: "public" protected members no longer use a leading underscore.
+
+### Minor Changes
+
+- 1fb49e1: Parameterized WebArguments.
+- 8e58733: RESTResource.
+- 4d879fc: Bumped deps, including TS.
+- f6e8c96: Added support for content negotiation.
+- 04b7c7c: Added WebArguments.integer() for bigint params.
+- 9d2fa9a: Bumped deps.
+- 4d68b7c: Now using Partial<Console> for loggers.
+- 265d76d: Precondition handling.
+- 881cb26: Added WebServier.initialService property.
+
+### Patch Changes
+
+- c21dc0a: Improved initialService typing.
+- 5c8ba4d: Bumped dev deps (incl. eslint, typescript).
+- b04f74c: Replaced toObject/toPrimitive with wrap/unwrap/Wrap<T>/Unwrappable<T>.
+- Updated dependencies [edb2b71]
+- Updated dependencies [c457bd7]
+- Updated dependencies [5355c29]
+- Updated dependencies [9693bef]
+- Updated dependencies [3391e7d]
+- Updated dependencies [e3a4d2e]
+- Updated dependencies [0ecbe14]
+- Updated dependencies [487ac86]
+- Updated dependencies [4d879fc]
+- Updated dependencies [3cf79fb]
+- Updated dependencies [f6e8c96]
+- Updated dependencies [6177c73]
+- Updated dependencies [0a57e8d]
+- Updated dependencies [69bc813]
+- Updated dependencies [6d08a9d]
+- Updated dependencies [d9d41a4]
+- Updated dependencies [fdc19f2]
+- Updated dependencies [a5dffeb]
+- Updated dependencies [5c8ba4d]
+- Updated dependencies [b04f74c]
+- Updated dependencies [a07c7b5]
+  - @divine/uri@2.0.0-v2.0
+  - @divine/commons@2.0.0-v2.0
+  - @divine/headers@2.1.0-v2.0
+
 ## 1.0.0
 
 ### Minor Changes

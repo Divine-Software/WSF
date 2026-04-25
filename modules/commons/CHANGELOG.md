@@ -1,5 +1,23 @@
 # @divine/commons
 
+## 2.0.0-v2.0
+
+### Major Changes
+
+- c457bd7: Require NodeJS 22.
+- f6e8c96: Added support for content negotiation.
+- d9d41a4: Symbol properties are now non-enumerable.
+
+### Minor Changes
+
+- 4d879fc: Bumped deps, including TS.
+- 3cf79fb: isOneOf is now a type guard. Added asError.
+- 69bc813: All untrusted Record/hash objects now have a null prototype instead of being Objects.
+
+### Patch Changes
+
+- 5c8ba4d: Bumped dev deps (incl. eslint, typescript).
+
 ## 1.0.0
 
 - Version bump.

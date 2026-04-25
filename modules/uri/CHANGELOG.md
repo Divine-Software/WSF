@@ -1,5 +1,44 @@
 # @divine/uri
 
+## 2.0.0-v2.0
+
+### Major Changes
+
+- c457bd7: Require NodeJS 22.
+- 9693bef: JSON/TOML/YAML now use bigint for all integers and number for floats.
+- 3391e7d: Renamed DB-reference params count => limit, sort => order. Added totalCount support.
+- 0ecbe14: uri`...` now return URIString to prevent double encoding. Added uri.raw().
+- 6177c73: Use {} in DB-reference filters instead of ().
+- 69bc813: All untrusted Record/hash objects now have a null prototype instead of being Objects.
+- b04f74c: Replaced toObject/toPrimitive with wrap/unwrap/Wrap<T>/Unwrappable<T>.
+
+### Minor Changes
+
+- 5355c29: Added DBParams.sessionInit for custom DB connection setup.
+- e3a4d2e: DataTable.
+- 487ac86: Expose underlying type of DBParams.connectOptions.
+- 4d879fc: Bumped deps, including TS.
+- 0a57e8d: Bumped deps.
+- 6d08a9d: URI.addSelector() now replaces or merges existing selectors if identical.
+- d9d41a4: Symbol properties are now non-enumerable.
+- fdc19f2: DB references operators 'in', 'null' and custom extension functions added. Utility function dbRef().
+
+### Patch Changes
+
+- edb2b71: Switch to Signals fork @indutny/dicer of Dicer.
+- 5c8ba4d: Bumped dev deps (incl. eslint, typescript).
+- a07c7b5: Use commmon toString() to ensure Date is always ISO-encoded.
+- Updated dependencies [c457bd7]
+- Updated dependencies [4d879fc]
+- Updated dependencies [3cf79fb]
+- Updated dependencies [f6e8c96]
+- Updated dependencies [69bc813]
+- Updated dependencies [d9d41a4]
+- Updated dependencies [a5dffeb]
+- Updated dependencies [5c8ba4d]
+  - @divine/commons@2.0.0-v2.0
+  - @divine/headers@2.1.0-v2.0
+
 ## 1.0.0
 
 - Version bump.
