@@ -166,6 +166,16 @@ export class JDBCResult extends DBResult {
 }
 
 export class JDBCReference extends DBDriver.DBReference {
+    protected override _getPagingClause(): DBQuery {
+        const [ limit, offset ] = this._getLimitAndOffset();
+
+        if (this._dbURI.pathname.startsWith('h2:') && limit === undefined && offset !== undefined) {
+            return q`offset ${q.raw(offset ?? 0)} rows`
+        } else {
+            return super._getPagingClause();
+        }
+    }
+
     override getSaveQuery(value: unknown): DBQuery {
         if (this._dbURI.pathname.startsWith('h2:')) {
             const [ columns, objects, keys ] = this._checkSaveArguments(value, false);

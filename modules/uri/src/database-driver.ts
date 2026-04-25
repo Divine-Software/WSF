@@ -311,7 +311,7 @@ export class DBReference {
         return limit !== undefined || offset !== undefined
             ? q`offset ${q.raw(offset ?? 0)} rows fetch next ${q.raw(limit ?? 'null')} rows only`
             : q``;
-        }
+    }
 
     protected _getLockClause(): DBQuery {
         const lock = this.params.lock;

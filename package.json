@@ -19,7 +19,7 @@
       {
         "groupId": "com.h2database",
         "artifactId": "h2",
-        "version": "1.4.200"
+        "version": "2.4.240"
       }
     ]
   },

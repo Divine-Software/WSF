@@ -296,10 +296,9 @@ export function describeCommonDBTest(def: CommonDBTestParams): void {
             expect(columns[2].column_name).toBe(def.schemaInfo ? 'col'  : undefined);
             expect(columns[3].column_name).toBeUndefined();
 
-            const h2 = db.pathname.startsWith('h2:'); // H2 quirk
             expect(typeof columns[0].data_type).toBe(def.schemaInfo ? 'string' : 'undefined');
-            expect(typeof columns[1].data_type).toBe(def.schemaInfo && !h2 ? 'string' : 'undefined');
-            expect(typeof columns[2].data_type).toBe(def.schemaInfo && !h2 ? 'string' : 'undefined');
+            expect(typeof columns[1].data_type).toBe(def.schemaInfo ? 'string' : 'undefined');
+            expect(typeof columns[2].data_type).toBe(def.schemaInfo ? 'string' : 'undefined');
             // `data_type` for non-table columns may or may not be available, so don't test
 
             expect(columns[0].column_comment?.replace(/'/g, '')).toBe(def.comments ? 'This is plain text' : undefined);
@@ -598,16 +597,14 @@ export function describeCommonDBTest(def: CommonDBTestParams): void {
             keyedUpsert && await db.$`#d[key]`.save([{ key: 121, def: null }, { key: 122, def: undefined }]);
             primeUpsert && await db.$`#d`.save([{ key: 131, def: null }, { key: 132, def: undefined }]);
 
-            const Def = db.pathname.startsWith('h2:') ? 'null' : 'Def'; // h2database/h2database#3183
-
             const r2 = await db.query<any[]>`select * from "d" where "key" between 100 and 1000 order by "key"`;
             const v2 = Object.fromEntries(r2.map((r) => [ r.key, String(r.def) ]));
             expect(r2).toHaveLength(6 + (keyedUpsert ? 3 : 0) + (primeUpsert ? 3 : 0));
             expect(v2).toMatchObject({
                                     '100': 'Def', '101': 'null', '102': 'Def',
                                     '110': 'Def', '111': 'null', '112': 'Def',
-                ...(keyedUpsert ? { '120': 'Def', '121': 'null', '122':  Def } : {}),
-                ...(primeUpsert ? { '130': 'Def', '131': 'null', '132':  Def } : {}),
+                ...(keyedUpsert ? { '120': 'Def', '121': 'null', '122': 'Def' } : {}),
+                ...(primeUpsert ? { '130': 'Def', '131': 'null', '132': 'Def' } : {}),
             });
         });
 
