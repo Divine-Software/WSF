@@ -1,9 +1,10 @@
 /* eslint-disable jsdoc/require-jsdoc */
 
-import { Record, StringParams, throwError } from '@divine/commons';
+import { Record, throwError } from '@divine/commons';
 import { WWWAuthenticate } from '@divine/headers';
 import { URL } from 'url';
 import { AuthScheme, Credentials, CredentialsProvider } from './auth-schemes';
+import { StringParams } from './uri-types';
 
 /**
  * A set of rules that must all match a given URL or authentication parameters for it to be valid or active.

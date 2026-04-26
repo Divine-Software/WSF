@@ -1,6 +1,9 @@
 /* eslint-disable @typescript-eslint/no-wrapper-object-types */
 
-import { BasicTypes, StringParams } from '@divine/commons';
+export type BasicTypes = boolean | number | bigint | string | object | null;
+
+export interface Params extends Record<string, BasicTypes | undefined> {}
+export interface StringParams extends Record<string, string | undefined> {}
 
 /** Used in {@link WithFields} to attach field metadata to an object. */
 export const FIELDS      = Symbol('FIELDS');

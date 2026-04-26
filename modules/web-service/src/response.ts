@@ -1,6 +1,6 @@
-import { BasicTypes, isOneOf, isReadableStream, Record } from '@divine/commons';
+import { isOneOf, isReadableStream, Record } from '@divine/commons';
 import { Accept, AcceptCharset, ContentDisposition, ContentType, WWWAuthenticate } from '@divine/headers';
-import { BufferParser, URI } from '@divine/uri';
+import { BasicTypes, BufferParser, URI } from '@divine/uri';
 import { Readable } from 'stream';
 import { URL } from 'url';
 import { WebStatus } from './error';

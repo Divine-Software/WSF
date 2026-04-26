@@ -1,7 +1,7 @@
-import { BasicTypes, recordify } from '@divine/commons';
+import { recordify } from '@divine/commons';
 import YAML from 'yaml';
 import { Parser, StringParser } from '../parsers';
-import { FIELDS, WithFields, wrap } from '../uri-types';
+import { BasicTypes, FIELDS, WithFields, wrap } from '../uri-types';
 
 /**
  * The `application/yaml`, `application/x-yaml`, `text/vnd.yaml`, `text/x-yaml` and `text/yaml` parser handles

@@ -1,4 +1,4 @@
-import { Params, Record, throwError } from '@divine/commons';
+import { Record, throwError } from '@divine/commons';
 import { Authorization, WWWAuthenticate } from '@divine/headers';
 import { Condition } from '@divine/synchronization';
 import { AsyncLocalStorage } from 'async_hooks';
@@ -8,6 +8,7 @@ import { parse as parseDBRef } from './private/dbref';
 import { DBParams, DBParamsSelector, DBQuery, DBResult, DBTransactionParams, DatabaseURI, q } from './protocols/database';
 import { getBestSelector } from './selectors';
 import { IOError } from './uri';
+import { Params } from './uri-types';
 
 const als = new AsyncLocalStorage<{ ref: number, conn: DBConnection, failed: boolean }>();
 

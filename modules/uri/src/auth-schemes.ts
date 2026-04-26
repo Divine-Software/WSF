@@ -1,4 +1,3 @@
-import type { Constructor } from '@divine/commons';
 import { AuthenticationInfo, AuthHeader, Authorization, ServerAuthorization, WWWAuthenticate } from '@divine/headers';
 import { URL } from 'url';
 import { IOError } from './uri';
@@ -102,7 +101,7 @@ export abstract class AuthScheme<C extends Credentials> {
      * @param    authScheme  The AuthScheme subclass to register.
      * @returns              The AuthScheme base class (for method chaining).
      */
-    static register<C extends Credentials>(scheme: string, authScheme: Constructor<AuthScheme<C>>): typeof AuthScheme {
+    static register<C extends Credentials>(scheme: string, authScheme: typeof AuthScheme<C>): typeof AuthScheme {
         AuthScheme._authSchemes.set(scheme, authScheme as unknown as typeof UnknownAuthScheme);
         return AuthScheme;
     }

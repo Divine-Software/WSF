@@ -1,11 +1,11 @@
-import { Record, StringParams, toStringOrUndefined } from '@divine/commons';
+import { Record, toStringOrUndefined } from '@divine/commons';
 import { ContentType } from '@divine/headers';
+import { Precondition, StringParams } from '@divine/uri';
 import { strict as assert } from 'assert';
 import { WebError, WebStatus } from './error';
 import { WebRequest } from './request';
 import { WebResponse, WebResponses } from './response';
 import { WebServiceConfig } from './service';
-import { Precondition } from '@divine/uri';
 
 /**
  * A custom error handler.

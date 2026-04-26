@@ -1,10 +1,10 @@
-import { asError, esxxEncoder, Params, percentEncode, Record, toString } from '@divine/commons';
+import { asError, esxxEncoder, percentEncode, Record, toString } from '@divine/commons';
 import { Authorization, ContentType, WWWAuthenticate } from '@divine/headers';
 import url, { Url, URL } from 'url';
 import { AuthScheme, AuthSchemeRequest } from './auth-schemes';
 import { guessContentType } from './file-utils';
 import { AuthSelector, AuthSessionSelector, getBestSelector, HeadersSelector, isAuthSelector, isHeadersSelector, isParamsSelector, isSameSelector, isSessionSelector, ParamsSelector, SelectorBase, SessionSelector, updateSelector } from './selectors';
-import { HEADERS, Metadata, STATUS, STATUS_TEXT, Wrap } from './uri-types';
+import { HEADERS, Metadata, Params, STATUS, STATUS_TEXT, Wrap } from './uri-types';
 
 export { AuthSelector, HeadersSelector, ParamsSelector, Selector } from './selectors';
 

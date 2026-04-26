@@ -1,4 +1,4 @@
-import { copyStream, Record, StringParams } from '@divine/commons';
+import { copyStream, Record } from '@divine/commons';
 import { ContentType } from '@divine/headers';
 import { Agent, IncomingMessage, request as requestHTTP } from 'http';
 import { request as requestHTTPS } from 'https';
@@ -11,7 +11,7 @@ import { Encoder } from '../encoders';
 import { Parser } from '../parsers';
 import { URIParams } from '../selectors';
 import { DirectoryEntry, IOError, ParamsSelector, URI } from '../uri';
-import { HEADERS, Metadata, STATUS, STATUS_TEXT, wrap, Wrap } from '../uri-types';
+import { HEADERS, Metadata, STATUS, STATUS_TEXT, StringParams, wrap, Wrap } from '../uri-types';
 
 /** HTTP configuration parameters. */
 export interface HTTPParams extends URIParams {

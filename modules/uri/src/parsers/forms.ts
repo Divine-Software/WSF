@@ -1,4 +1,4 @@
-import { asError, isJSON, Record, StringParams } from '@divine/commons';
+import { asError, isJSON, Record } from '@divine/commons';
 import { ContentDisposition, ContentType } from '@divine/headers';
 import Dicer from '@indutny/dicer';
 import { randomBytes } from 'crypto';
@@ -8,7 +8,7 @@ import { Encoder } from '../encoders';
 import { Parser, StringParser } from '../parsers';
 import { CacheURI } from '../protocols/cache';
 import { URI } from '../uri';
-import { FIELDS, Finalizable, FINALIZE, unwrap, WithFields } from '../uri-types';
+import { FIELDS, Finalizable, FINALIZE, StringParams, unwrap, WithFields } from '../uri-types';
 
 /** A basic string key-value record. */
 export interface FormData extends WithFields<FormField> {

@@ -1,6 +1,6 @@
-import { BasicTypes, Params, Record, sizeLimited } from '@divine/commons';
+import { Record, sizeLimited } from '@divine/commons';
 import { ContentType } from '@divine/headers';
-import { AuthSchemeRequest, FINALIZE, Finalizable, ParserError, Precondition } from '@divine/uri';
+import { AuthSchemeRequest, BasicTypes, FINALIZE, Finalizable, Params, ParserError, Precondition } from '@divine/uri';
 import { IncomingHttpHeaders, IncomingMessage } from 'http';
 import { Http2ServerRequest, Http2Session } from 'http2';
 import { Socket } from 'net';

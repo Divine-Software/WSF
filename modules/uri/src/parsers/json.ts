@@ -1,5 +1,6 @@
-import { recordify, type BasicTypes } from '@divine/commons';
+import { recordify } from '@divine/commons';
 import { Parser, StringParser } from '../parsers';
+import { BasicTypes } from '../uri-types';
 
 /**
  * The `application/json` and `application/*+json` parser handles [JSON](https://www.json.org) using {@link JSON.parse},

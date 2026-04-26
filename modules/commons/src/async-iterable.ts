@@ -1,3 +1,5 @@
+/* eslint-disable jsdoc/require-jsdoc */
+
 import { Queue } from '@divine/synchronization';
 import { toString } from './strings';
 import { sleep, throwError } from './utilities';

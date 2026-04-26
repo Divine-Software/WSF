@@ -1,8 +1,5 @@
 /* eslint-disable jsdoc/require-jsdoc */
 
-import { Params, ValueEncoder } from './types';
-
-/** Percent-encode everything except 0-9, A-Z, a-z, `-`, `_`, `.`, `!` and `~`. */
 export function percentEncode(str: string): string {
     return encodeURIComponent(str)
         .replace(/['()*]/g, c => "%" + c.charCodeAt(0).toString(16).toUpperCase());
@@ -21,7 +18,7 @@ export function toString(value: unknown) {
     }
 }
 
-export function esxxEncoder(template: string, params: Params, encoder: ValueEncoder): string {
+export function esxxEncoder(template: string, params: Record<string, unknown>, encoder: (value: string, key: string | number) => string): string {
     return template.replace(/(^|[^\\])(\\\\)*{([^{}[\]()"'`\s]+)}/g, (match) => {
         const start = match.lastIndexOf('{');
         const param = match.substring(start + 1, match.length - 1);

@@ -1,3 +1,5 @@
+/* eslint-disable jsdoc/require-jsdoc */
+
 import { EventEmitter } from 'events';
 import { pipeline, Readable } from 'stream';
 import { toAsyncIterable } from './async-iterable';
