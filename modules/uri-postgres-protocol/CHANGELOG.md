@@ -1,5 +1,11 @@
 # @divine/uri-postgres-protocol
 
+## 2.0.0-v2.1
+
+### Patch Changes
+
+- afb5c96: Moved referenced types to prod dependencies.
+
 ## 2.0.0-v2.0
 
 ### Major Changes
