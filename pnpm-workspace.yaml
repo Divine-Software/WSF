@@ -19,6 +19,9 @@ catalog:
   "typescript": ~6.0.3
 enableGlobalVirtualStore: true
 minimumReleaseAge: 10080
+minimumReleaseAgeExclude:
+  - '@algolia/client-search@5.51.0'
+  - '@typescript-eslint/eslint-plugin@8.59.0'
 allowBuilds:
   '@swc/core@1.15.30': true
   better-sqlite3@12.9.0: true

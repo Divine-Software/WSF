@@ -27,12 +27,12 @@
   },
   "dependencies": {
     "@divine/commons": "workspace:^",
+    "@types/better-sqlite3": "^7.6.13",
     "better-sqlite3": "^12.9.0",
     "tslib": "catalog:"
   },
   "devDependencies": {
     "@divine/uri": "workspace:^",
-    "@types/better-sqlite3": "^7.6.13",
     "@types/node": "catalog:"
   },
   "engines": {

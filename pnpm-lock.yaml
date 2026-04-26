@@ -199,6 +199,9 @@ importers:
       '@divine/commons':
         specifier: workspace:^
         version: link:../commons
+      '@types/pg':
+        specifier: ^8.20.0
+        version: 8.20.0
       pg:
         specifier: ^8.20.0
         version: 8.20.0
@@ -212,15 +215,15 @@ importers:
       '@types/node':
         specifier: 'catalog:'
         version: 22.19.17
-      '@types/pg':
-        specifier: ^8.20.0
-        version: 8.20.0
 
   modules/uri-sqlite-protocol:
     dependencies:
       '@divine/commons':
         specifier: workspace:^
         version: link:../commons
+      '@types/better-sqlite3':
+        specifier: ^7.6.13
+        version: 7.6.13
       better-sqlite3:
         specifier: ^12.9.0
         version: 12.9.0
@@ -231,9 +234,6 @@ importers:
       '@divine/uri':
         specifier: workspace:^
         version: link:../uri
-      '@types/better-sqlite3':
-        specifier: ^7.6.13
-        version: 7.6.13
       '@types/node':
         specifier: 'catalog:'
         version: 22.19.17
