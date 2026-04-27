@@ -298,7 +298,7 @@ export abstract class DBDataTable<K extends string, E extends object, T extends 
         super();
     }
 
-    protected _dbRef(scope: 'one' | 'all', filter?: K | DBDTFilter, lock?: 'write' | 'read'): DatabaseURI {
+    protected dbRef(scope: 'one' | 'all', filter?: K | DBDTFilter, lock?: 'write' | 'read'): DatabaseURI {
         let query = uri`#${this._table};${scope}`;
 
         if (typeof filter === 'string') {
@@ -328,30 +328,45 @@ export abstract class DBDataTable<K extends string, E extends object, T extends 
         return this._db.$`${query}`;
     }
 
+    protected dbRecordToRow(record: T): object {
+        return record;
+    }
+
+    protected dbRowToRecord(row: object): T {
+        return row as T;
+    }
+
     protected override async dtbTransaction<T>(mode: 'write' | 'read', cb: () => Promise<T>): Promise<T> {
         return this._db.query<T>((_retries) => cb());
     }
 
     protected override async dtbList(filter?: DBDTFilter): Promise<{ records: T[]; totalCount?: number }> {
-        return await this._dbRef('all', filter).load<T[]>().then(records => ({ records, totalCount: records[FIELDS][0]?.totalCount }));
+        return await this.dbRef('all', filter).load<object[]>().then(records => ({
+            records:    records.map(r => this.dbRowToRecord(r)),
+            totalCount: records[FIELDS][0]?.totalCount
+        }));
     }
 
     protected override async dtbLoad(key: K, lock?: 'write' | 'read'): Promise<T | null> {
-        return unwrap(await this._dbRef('one', key, lock).load<T>()) as T | undefined ?? null;
+        const row = unwrap(await this.dbRef('one', key, lock).load<object | undefined>());
+        return row ? this.dbRowToRecord(row) : null;
     }
 
     protected override async dtbModify(key: K, record: T): Promise<T> {
-        return unwrap(await this._dbRef('one', key).modify<T>(record)) as T | undefined ?? await this.dtbLoad(key) ?? throwError('Failed to reload modified entity.');
+        const row = unwrap(await this.dbRef('one', key).modify<object | undefined>(this.dbRecordToRow(record)))
+        return row ? this.dbRowToRecord(row) : await this.dtbLoad(key) ?? throwError('Failed to reload modified entity.');
     }
 
     protected override async dtbAppend(record: T): Promise<T> {
-        const rs = await this._dbRef('one').append<T>(record);
-        const rk = () => (record[this._pk as unknown as keyof T] ?? rs[FIELDS][0].rowKey) as K ?? throwError('Unknown primary key for appended entity.');
+        const rr = this.dbRecordToRow(record);
+        const rs = await this.dbRef('one').append<object | undefined>(rr);
+        const rk = () => (rr[this._pk as keyof object] ?? rs[FIELDS][0].rowKey) as K ?? throwError('Unknown primary key for appended entity.');
 
-        return unwrap(rs) as T | undefined ?? await this.dtbLoad(rk()) ?? throwError('Failed to reload appended entity.');
+        const row = unwrap(rs);
+        return row ? this.dbRowToRecord(row) : await this.dtbLoad(rk()) ?? throwError('Failed to reload appended entity.');
     }
 
     protected override async dtbRemove(key: K): Promise<void> {
-        await this._dbRef('one', key).remove();
+        await this.dbRef('one', key).remove();
     }
 }
