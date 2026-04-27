@@ -1,5 +1,12 @@
 # @divine/uri
 
+## 2.0.0-v2.1
+
+### Patch Changes
+
+- 4347979: Export BasicTypes, Params and StringParams from @divine/uri.
+- 2065903: Added an record translation layer to DBDataTable.
+
 ## 2.0.0-v2.0
 
 ### Major Changes
