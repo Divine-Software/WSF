@@ -1,5 +1,11 @@
 # @divine/web-service
 
+## 2.0.0-v2.2
+
+### Patch Changes
+
+- a82593a: RESTResource.append() is an abstract method, not a property.
+
 ## 2.0.0-v2.1
 
 ### Patch Changes

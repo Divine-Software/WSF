@@ -1,5 +1,15 @@
 # @divine/uri
 
+## 2.0.0-v2.2
+
+### Minor Changes
+
+- 54102e2: Added DataTableBase.subset().
+
+### Patch Changes
+
+- a86ff50: DataTable keys may also be number or bigint, in addition to string.
+
 ## 2.0.0-v2.1
 
 ### Patch Changes
