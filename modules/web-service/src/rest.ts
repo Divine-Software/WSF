@@ -20,7 +20,7 @@ export abstract class RESTResource<Context, K extends string, E extends object, 
     protected abstract dataTable: DataTable<K, E, T>;
     protected abstract key: K | null;
 
-    protected abstract authorize: DTAuthorizer<K, T | T[]>;
+    protected abstract authorize<V extends T | T[]>(key: K | null, current: V & DTMetadata | null, next?: () => Promise<V | null>): Promise<V | null>;
     protected abstract location(record: T): string | URL;
 
     protected filter(): DTFilter {
