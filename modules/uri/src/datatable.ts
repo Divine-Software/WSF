@@ -1,5 +1,5 @@
 import { isOneOf, throwError } from '@divine/commons';
-import { DatabaseURI } from './protocols/database';
+import { DatabaseURI, DBResult } from './protocols/database';
 import { uri, URIString } from './uri';
 import { FIELDS, Metadata, unwrap, Wrap, wrap } from './uri-types';
 
@@ -80,10 +80,11 @@ export interface DTFilter {
     offset?: number;
 }
 
-export type DTAuthorizer<K extends string, T extends object> = ((key: K | null, current: T & DTMetadata | null, next?: () => Promise<T | null>) => Promise<T | null>);
+export type DTKey = string | number | bigint;
+export type DTAuthorizer<K extends DTKey, T extends object> = ((key: K | null, current: T & DTMetadata | null, next?: () => Promise<T | null>) => Promise<T | null>);
 export const noAuth: DTAuthorizer<string, any> = (_key, current, next) => next ? next() : Promise.resolve(current);
 
-export interface DataTable<K extends string, E extends object, T extends object = E> {
+export interface DataTable<K extends DTKey, E extends object, T extends object = E> {
     info?(): Promise<Wrap<undefined> & DTMetadata>;
     list?(authorize: DTAuthorizer<K, T[]>, filter?: DTFilter): Promise<T[] & DTMetadata>;
     load?(authorize: DTAuthorizer<K, T>, key: K): Promise<T & DTMetadata>;
@@ -93,22 +94,22 @@ export interface DataTable<K extends string, E extends object, T extends object 
     remove?(authorize: DTAuthorizer<K, T>, key: K, precondition?: Precondition): Promise<T & DTMetadata | Wrap<null> & DTMetadata>;
 }
 
-export interface DataTableView<K extends string, E extends object, T extends object, DT extends DataTable<string, object, object>> {
-    info:   (DT['info']   extends (...args: never) => unknown ? never: undefined) | Required<DataTable<K, E, T>>['info'];
-    list:   (DT['list']   extends (...args: never) => unknown ? never: undefined) | Required<DataTable<K, E, T>>['list'];
-    load:   (DT['load']   extends (...args: never) => unknown ? never: undefined) | Required<DataTable<K, E, T>>['load'];
-    save:   (DT['save']   extends (...args: never) => unknown ? never: undefined) | Required<DataTable<K, E, T>>['save'];
-    append: (DT['append'] extends (...args: never) => unknown ? never: undefined) | Required<DataTable<K, E, T>>['append'];
-    modify: (DT['modify'] extends (...args: never) => unknown ? never: undefined) | Required<DataTable<K, E, T>>['modify'];
-    remove: (DT['remove'] extends (...args: never) => unknown ? never: undefined) | Required<DataTable<K, E, T>>['remove'];
-}
+// export interface DataTableView<K extends DTKey, E extends object, T extends object, DT extends DataTable<DTKey, object, object>> {
+//     info:   (DT['info']   extends (...args: never) => unknown ? never: undefined) | Required<DataTable<K, E, T>>['info'];
+//     list:   (DT['list']   extends (...args: never) => unknown ? never: undefined) | Required<DataTable<K, E, T>>['list'];
+//     load:   (DT['load']   extends (...args: never) => unknown ? never: undefined) | Required<DataTable<K, E, T>>['load'];
+//     save:   (DT['save']   extends (...args: never) => unknown ? never: undefined) | Required<DataTable<K, E, T>>['save'];
+//     append: (DT['append'] extends (...args: never) => unknown ? never: undefined) | Required<DataTable<K, E, T>>['append'];
+//     modify: (DT['modify'] extends (...args: never) => unknown ? never: undefined) | Required<DataTable<K, E, T>>['modify'];
+//     remove: (DT['remove'] extends (...args: never) => unknown ? never: undefined) | Required<DataTable<K, E, T>>['remove'];
+// }
 
-export interface DataTableViewMappers {
-    fromSourceType?<S, T>(source: S & DTMetadata): T & DTMetadata;
-    toSourceType?<S, T>(type: T): S;
-    fromSourceEntity?<S, E>(source: S & DTMetadata): E & DTMetadata;
-    toSourceEntity?<S, E>(entity: E): S;
-}
+// export interface DataTableViewMappers {
+//     fromSourceType?<S, T>(source: S & DTMetadata): T & DTMetadata;
+//     toSourceType?<S, T>(type: T): S;
+//     fromSourceEntity?<S, E>(source: S & DTMetadata): E & DTMetadata;
+//     toSourceEntity?<S, E>(entity: E): S;
+// }
 
 // type TypeParameters<G> = G extends DataTable<infer K, infer E, infer T> ? [K, E, T] : never;
 
@@ -145,7 +146,7 @@ export interface DTTableMetadata extends DTRecordMetadata {
     totalCount?: number;
 }
 
-export abstract class DataTableBase<K extends string, E extends object, T extends object = E> implements DataTable<K, E, T> {
+export abstract class DataTableBase<K extends DTKey, E extends object, T extends object = E> implements DataTable<K, E, T> {
     protected abstract makeRecord(key: K | null, current: Readonly<T> | null, entity: E | T): T;
     protected abstract recordMetadata(record: Readonly<T>): DTRecordMetadata | Promise<DTRecordMetadata>;
     protected abstract tableMetadata(extended: boolean): DTTableMetadata | Promise<DTTableMetadata>;
@@ -293,15 +294,17 @@ export interface DBDTFilter extends DTFilter {
     where?: URIString;
 }
 
-export abstract class DBDataTable<K extends string, E extends object, T extends object = E> extends DataTableBase<K, E, T> {
-    constructor(protected _db: DatabaseURI, protected _table: string, protected _pk: K) {
+export abstract class DBDataTable<K extends DTKey, E extends object, T extends object = E> extends DataTableBase<K, E, T> {
+    constructor(protected _db: DatabaseURI, protected _table: string | URIString, protected _pk: K) {
         super();
     }
 
-    protected dbRef(scope: 'one' | 'all', filter?: K | DBDTFilter, lock?: 'write' | 'read'): DatabaseURI {
+    protected dbRef(scope: 'one' | 'all', filter?: K | DBDTFilter | URIString, lock?: 'write' | 'read'): DatabaseURI {
         let query = uri`#${this._table};${scope}`;
 
-        if (typeof filter === 'string') {
+        if (filter instanceof URIString) {
+            query = uri`${query}?${filter}`;
+        } else if (typeof filter === 'string' || typeof filter === 'number' || typeof filter === 'bigint') {
             query = uri`${query}?{eq,${this._pk},${filter}}`;
         } else if (filter) {
             if (filter.where?.length) {
@@ -336,6 +339,10 @@ export abstract class DBDataTable<K extends string, E extends object, T extends 
         return row as T;
     }
 
+    protected dbInsertedKey(record: T, dbResult: DBResult): K {
+        return (record[this._pk as unknown as keyof T] ?? dbResult.rowKey) as K ?? throwError('Unable to get key of inserted record.');
+    }
+
     protected override async dtbTransaction<T>(mode: 'write' | 'read', cb: () => Promise<T>): Promise<T> {
         return this._db.query<T>((_retries) => cb());
     }
@@ -358,12 +365,9 @@ export abstract class DBDataTable<K extends string, E extends object, T extends 
     }
 
     protected override async dtbAppend(record: T): Promise<T> {
-        const rr = this.dbRecordToRow(record);
-        const rs = await this.dbRef('one').append<object | undefined>(rr);
-        const rk = () => (rr[this._pk as keyof object] ?? rs[FIELDS][0].rowKey) as K ?? throwError('Unknown primary key for appended entity.');
-
-        const row = unwrap(rs);
-        return row ? this.dbRowToRecord(row) : await this.dtbLoad(rk()) ?? throwError('Failed to reload appended entity.');
+        const res = await this.dbRef('one').append<object | undefined>(this.dbRecordToRow(record));
+        const row = unwrap(res);
+        return row ? this.dbRowToRecord(row) : await this.dtbLoad(this.dbInsertedKey(record, res[FIELDS][0])) ?? throwError('Failed to reload appended entity.');
     }
 
     protected override async dtbRemove(key: K): Promise<void> {
