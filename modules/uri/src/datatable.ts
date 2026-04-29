@@ -162,6 +162,18 @@ export abstract class DataTableBase<K extends DTKey, E extends object, T extends
         throw err;
     }
 
+    subset(...ops: Array<keyof DataTable<K, E, T>>): DataTable<K, E, T> {
+        const dt = Object.create(this) as DataTable<K, E, T>;
+
+        for (const op of ['info', 'list', 'load', 'save', 'append', 'modify', 'remove'] as const) {
+            if (!ops.includes(op)) {
+                dt[op] = undefined;
+            }
+        }
+
+        return dt;
+    }
+
     async info(): Promise<Wrap<undefined> & DTMetadata> {
         const rsrcMetadata = await this.tableMetadata(true);
 
