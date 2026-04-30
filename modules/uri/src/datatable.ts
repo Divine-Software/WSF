@@ -162,10 +162,10 @@ export abstract class DataTableBase<K extends DTKey, E extends object, T extends
         throw err;
     }
 
-    subset(...ops: Array<keyof DataTable<K, E, T>>): DataTable<K, E, T> {
-        const dt = Object.create(this) as DataTable<K, E, T>;
+    subset<M extends keyof DataTable<K, E, T>>(...ops: M[]): Required<Pick<DataTable<K, E, T>, M>> {
+        const dt = Object.create(this) as Required<Pick<DataTable<K, E, T>, M>>
 
-        for (const op of ['info', 'list', 'load', 'save', 'append', 'modify', 'remove'] as const) {
+        for (const op of ['info', 'list', 'load', 'save', 'append', 'modify', 'remove'] as M[]) {
             if (!ops.includes(op)) {
                 dt[op] = undefined;
             }
