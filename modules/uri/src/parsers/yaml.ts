@@ -4,6 +4,57 @@ import { Parser, StringParser } from '../parsers';
 import { BasicTypes, FIELDS, WithFields, wrap } from '../uri-types';
 
 /**
+ * Utility function to parse YAML with standard WSF behavior.
+ *
+ * Only the first document in a multi-document YAML file is returned when parsing. To access all documents, use the
+ * {@link FIELDS} property.
+ *
+ * All parsed objects will have a `null` prototype and all integer numbers will be parsed as `bigint`. Plain `number`
+ * values will be serialized with a `.0` suffix to ensure they are parsed as `bigint` on the receiving end.
+ *
+ * @param text A valid YAML string.
+ * @returns    A parsed YAML document.
+ */
+export function parseYAML(text: string): object & WithFields<BasicTypes> {
+    const yaml = YAML.parseAllDocuments(text, { intAsBigInt: true });
+    const json = yaml.map((yaml) => yaml.toJS({ mapAsMap: false, reviver: (_, value) =>  recordify(value) }) as BasicTypes);
+    const data = wrap(json[0]);
+
+    return json.length === 1 ? data : Object.defineProperty(data, FIELDS, { value: json });
+}
+
+/**
+ * Utility function to serialize YAML with standard WSF behavior.
+ *
+ * Only the first document in a multi-document YAML file is returned when parsing. To access all documents, use the
+ * {@link FIELDS} property.
+ *
+ * All parsed objects will have a `null` prototype and all integer numbers will be parsed as `bigint`. Plain `number`
+ * values will be serialized with a `.0` suffix to ensure they are parsed as `bigint` on the receiving end.
+ *
+ * @param value The value to serialize.
+ * @returns     A YAML string.
+ */
+export function serializeYAML(value: BasicTypes & WithFields<BasicTypes>): string {
+    const stringify = (value: unknown) => {
+        const doc = new YAML.Document(value);
+
+        YAML.visit(doc, (key, node) => {
+            if (key === 'value' && node instanceof YAML.Scalar && typeof node.value === 'number' && /^[-+0-9]+$/.test(JSON.stringify(node.value))) {
+                node.minFractionDigits ??= 1;
+            }
+        });
+
+        return doc.toString();
+    };
+
+    const entries = value?.[FIELDS] ?? [value];
+    const strings = entries.map((entry) => stringify(entry));
+
+    return strings.join('---\n');
+}
+
+/**
  * The `application/yaml`, `application/x-yaml`, `text/vnd.yaml`, `text/x-yaml` and `text/yaml` parser handles
  * [YAML](https://yaml.org/) using [yaml](https://eemeli.org/yaml/) and {@link StringParser}.
  *
@@ -16,11 +67,7 @@ import { BasicTypes, FIELDS, WithFields, wrap } from '../uri-types';
  */
 export class YAMLParser extends Parser {
     async parse(stream: AsyncIterable<Buffer>): Promise<object & WithFields<BasicTypes>> {
-        const yaml = YAML.parseAllDocuments(await new StringParser(this.contentType).parse(stream), { intAsBigInt: true });
-        const json = yaml.map((yaml) => yaml.toJS({ mapAsMap: false, reviver: (_, value) =>  recordify(value) }) as BasicTypes);
-        const data = wrap(json[0]);
-
-        return json.length === 1 ? data : Object.defineProperty(data, FIELDS, { value: json });
+        return parseYAML(await new StringParser(this.contentType).parse(stream));
     }
 
     serialize(data: BasicTypes): Buffer;
@@ -28,22 +75,7 @@ export class YAMLParser extends Parser {
         this._assertSerializebleData(data !== undefined, data);
 
         try {
-            const stringify = (value: unknown) => {
-                const doc = new YAML.Document(value);
-
-                YAML.visit(doc, (key, node) => {
-                    if (key === 'value' && node instanceof YAML.Scalar && typeof node.value === 'number' && /^[-+0-9]+$/.test(JSON.stringify(node.value))) {
-                        node.minFractionDigits ??= 1;
-                    }
-                });
-
-                return doc.toString();
-            };
-
-            const entries = data?.[FIELDS] ?? [data];
-            const strings = entries.map((entry) => stringify(entry));
-
-            return new StringParser(this.contentType).serialize(strings.join('---\n'));
+            return new StringParser(this.contentType).serialize(serializeYAML(data));
         }
         catch (ex) {
             this._assertSerializebleData(false, data, ex);

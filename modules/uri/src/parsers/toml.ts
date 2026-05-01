@@ -1,6 +1,32 @@
 import { isJSON, recordify } from '@divine/commons';
-import TOML, { TomlTable } from 'smol-toml';
+import TOML from 'smol-toml';
 import { Parser, StringParser } from '../parsers';
+
+/**
+ * Utility function to parse TOML with standard WSF behavior.
+ *
+ * All parsed objects will have a `null` prototype and all integer numbers will be parsed as `bigint`. Plain `number`
+ * values will be serialized with a `.0` suffix to ensure they are parsed as `bigint` on the receiving end.
+ *
+ * @param text A valid TOML string.
+ * @returns    A parsed TOML table.
+ */
+export function parseTOML(text: string): object {
+    return recordify(TOML.parse(text, { integersAsBigInt: true }));
+}
+
+/**
+ * Utility function to serialize TOML with standard WSF behavior.
+ *
+ * All parsed objects will have a `null` prototype and all integer numbers will be parsed as `bigint`. Plain `number`
+ * values will be serialized with a `.0` suffix to ensure they are parsed as `bigint` on the receiving end.
+ *
+ * @param value The value to serialize.
+ * @returns     A TOML string.
+ */
+export function serializeTOML(value: object): string {
+    return TOML.stringify(value, { numbersAsFloat: true });
+}
 
 /**
  * The `application/toml` parser handles [TOML](https://toml.io) using
@@ -10,15 +36,15 @@ import { Parser, StringParser } from '../parsers';
  * values will be serialized with a `.0` suffix to ensure they are parsed as `bigint` on the receiving end.
  */
 export class TOMLParser extends Parser {
-    async parse(stream: AsyncIterable<Buffer>): Promise<TomlTable> {
-        return recordify(TOML.parse(await new StringParser(this.contentType).parse(stream), { integersAsBigInt: true }));
+    async parse(stream: AsyncIterable<Buffer>): Promise<object> {
+        return parseTOML(await new StringParser(this.contentType).parse(stream));
     }
 
     serialize(data: unknown): Buffer {
         this._assertSerializebleData(isJSON(data) && !Array.isArray(data), data);
 
         try {
-            data = TOML.stringify(data, { numbersAsFloat: true });
+            data = serializeTOML(data);
         }
         catch (ex) {
             this._assertSerializebleData(false, data, ex);
