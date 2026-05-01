@@ -1,4 +1,4 @@
-import { DataTable, DT_METADATA, DTAuthorizer, Precondition, DTError, DTFilter, DTMetadata, unwrap, Wrap } from '@divine/uri';
+import { DataTable, DT_METADATA, DTAuthorizer, Precondition, DTError, DTFilter, DTMetadata, unwrap, Wrap, URIString } from '@divine/uri';
 import { WebError, WebStatus } from './error';
 import { WebResource, WebResourceBase } from './resource';
 import { WebResponse } from './response';
@@ -21,7 +21,7 @@ export abstract class RESTResource<Context, K extends string, E extends object, 
     protected abstract key: K | null;
 
     protected abstract authorize<V extends T | T[]>(key: K | null, current: V & DTMetadata | null, next?: () => Promise<V | null>): Promise<V | null>;
-    protected abstract location(record: T): string | URL;
+    protected abstract location(record: T): string | URIString |URL;
 
     protected filter(): DTFilter {
         return {};
