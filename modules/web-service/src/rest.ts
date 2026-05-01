@@ -36,7 +36,19 @@ export abstract class RESTResource<Context, K extends string, E extends object, 
     }
 
     protected async transform(current: T): Promise<T> {
-        return Object.assign(current, await this.args.body());
+        const patch = (o: Record<string | number, unknown>, p: object) => {
+            for (const [k, v] of Object.entries(p)) {
+                if (v !== null && typeof v === 'object' && !Array.isArray(v) && o[k] !== null && typeof o[k] === 'object') {
+                    o[k] = patch(o[k] as typeof o, v);
+                } else {
+                    o[k] = v;
+                }
+            }
+
+            return Array.isArray(o) ? Object.values(o) /* No sparse arrays allowed! */ : o;
+        }
+
+        return patch(current as Record<string | number, unknown>, await this.args.body()) as T;
     }
 
     private _authorize: DTAuthorizer<K, any> = (key, current, next) => this.authorize(key, current, next);
