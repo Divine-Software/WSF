@@ -1,5 +1,15 @@
 # @divine/uri
 
+## 2.0.0-v2.3
+
+### Minor Changes
+
+- a5748d6: Export sync utility functions to parse/serialize JSON/TOML/YAML the WSF v2 way.
+
+### Patch Changes
+
+- 8ebb671: Better typing of DataTableBase.subset().
+
 ## 2.0.0-v2.2
 
 ### Minor Changes
