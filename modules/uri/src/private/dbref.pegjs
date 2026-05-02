@@ -8,10 +8,11 @@ scope       = $('scalar' / 'one' / 'unique' / 'all')
 filter      = expr
 params      = param_list
 
-expr        =  expr_rel / expr_in / expr_null /expr_fn / expr_bool / expr_not
+expr        =  expr_rel / expr_in / expr_null /expr_fn / expr_const / expr_bool / expr_not
 expr_rel    = '{' op:$expr_ops ',' column:word ',' value:value '}' { return { op, column, value } }
 expr_in     = '{' op:$'in' ','column:word ',' value:value_list?'}' { return { op, column, value: value ?? [] } }
 expr_null   = '{' op:$'null' ',' column:word '}'                   { return { op, column } }
+expr_const  = '{' op:$('true' / 'false') '}'                       { return { op  } }
 expr_fn     = '{' fn:word '[' value:value_list? ']}'               { return { op: 'fn', fn, value: value ?? [] } }
 expr_bool   = '{' op:$('and' / 'or') value:expr+ '}'               { return { op, value } }
 expr_not    = '{' op:$'not' value:expr '}'                         { return { op, value } }

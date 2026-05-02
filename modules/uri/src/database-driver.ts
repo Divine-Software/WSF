@@ -189,6 +189,7 @@ export namespace DBReference {
         { op: 'lt' | 'le' | 'eq' | 'ne' | 'ge' | 'gt', column: string, value: string } |
         { op: 'in', column: string, value: string[] } |
         { op: 'null', column: string } |
+        { op: 'true' | 'false' } |
         { op: 'fn', fn: string, value: string[] } |
         { op: 'and' | 'or', value: Filter[] } |
         { op: 'not',        value: Filter };
@@ -253,17 +254,19 @@ export class DBReference {
 
     protected _getFilter(filter: DBReference.Filter): DBQuery {
         switch (filter.op) {
-            case 'and':  return q.join('and', filter.value.map((f) => q`(${this._getFilter(f)})`));
-            case 'or':   return q.join('or',  filter.value.map((f) => q`(${this._getFilter(f)})`));
-            case 'not':  return q`not (${this._getFilter(filter.value)})`;
-            case 'lt':   return q`${this._quote(filter.column)} < ${filter.value}`;
-            case 'le':   return q`${this._quote(filter.column)} <= ${filter.value}`;
-            case 'eq':   return q`${this._quote(filter.column)} = ${filter.value}`;
-            case 'ne':   return q`${this._quote(filter.column)} <> ${filter.value}`;
-            case 'ge':   return q`${this._quote(filter.column)} >= ${filter.value}`;
-            case 'gt':   return q`${this._quote(filter.column)} > ${filter.value}`;
-            case 'in':   return filter.value.length ? q`${this._quote(filter.column)} in ${q.list(filter.value)}` : q`1=0`;
-            case 'null': return q`${this._quote(filter.column)} is null`;
+            case 'and':   return q.join('and', filter.value.map((f) => q`(${this._getFilter(f)})`));
+            case 'or':    return q.join('or',  filter.value.map((f) => q`(${this._getFilter(f)})`));
+            case 'not':   return q`not (${this._getFilter(filter.value)})`;
+            case 'lt':    return q`${this._quote(filter.column)} < ${filter.value}`;
+            case 'le':    return q`${this._quote(filter.column)} <= ${filter.value}`;
+            case 'eq':    return q`${this._quote(filter.column)} = ${filter.value}`;
+            case 'ne':    return q`${this._quote(filter.column)} <> ${filter.value}`;
+            case 'ge':    return q`${this._quote(filter.column)} >= ${filter.value}`;
+            case 'gt':    return q`${this._quote(filter.column)} > ${filter.value}`;
+            case 'in':    return filter.value.length ? q`${this._quote(filter.column)} in ${q.list(filter.value)}` : q`1=0`;
+            case 'null':  return q`${this._quote(filter.column)} is null`;
+            case 'true':  return q`1=1`;
+            case 'false': return q`1=0`;
             case 'fn': {
                 const handler = (getBestSelector(this._dbURI.selectors.params, this._dbURI)?.params as DBParams | undefined)?.dbRefExtensionHandler;
                 return handler?.(this.table, filter.fn, filter.value) ?? throwError(this._makeIOError(`Unknown filter function '${filter.fn}'.`));

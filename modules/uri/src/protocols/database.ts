@@ -260,6 +260,13 @@ export function dbRef(op: 'in', column: string, ...value: unknown[]): URIString;
  */
 export function dbRef(op: 'null', column: string): URIString;
 /**
+ * Utility function for constructing constant *DB reference* filters for use in {@link DatabaseURI} fragments.
+ *
+ * @param op      `true` or `false`
+ * @returns       The constructed filter, escaped correctly.
+ */
+export function dbRef(op: 'true' | 'false'): URIString;
+/**
  * Utility function for calling *DB reference* extendsion functions for use in {@link DatabaseURI} fragments.
  *
  * @param op      `fn`, to indicate an extension function.
@@ -303,6 +310,12 @@ export function dbRef(op: string, ...args: unknown[]): URIString {
         }
 
         return uri`{${op},${args[0]}}`;
+    } else if (isOneOf(op, ['true', 'false'])) {
+        if (args.length !== 0) {
+            throw new TypeError(`No arguments must be provided for operator '${op}'.`);
+        }
+
+        return uri`{${op}}`;
     } else if (op === 'fn') {
         return uri`{${args[0]}[${uri.raw(args.slice(1).map(arg => uri`${arg}`).join(','))}]}`;
     } else {
