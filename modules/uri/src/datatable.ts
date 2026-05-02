@@ -143,7 +143,7 @@ export interface DTRecordMetadata {
 }
 
 export interface DTTableMetadata extends DTRecordMetadata {
-    totalCount?: number;
+    totalCount?: number | bigint;
 }
 
 export abstract class DataTableBase<K extends DTKey, E extends object, T extends object = E> implements DataTable<K, E, T> {
@@ -152,7 +152,7 @@ export abstract class DataTableBase<K extends DTKey, E extends object, T extends
     protected abstract tableMetadata(extended: boolean): DTTableMetadata | Promise<DTTableMetadata>;
 
     protected abstract dtbTransaction<T>(mode: 'write' | 'read', cb: () => Promise<T>): Promise<T>;
-    protected abstract dtbList(filter?: DTFilter): Promise<{ records: T[], totalCount?: number }>;
+    protected abstract dtbList(filter?: DTFilter): Promise<{ records: T[], totalCount?: number | bigint }>;
     protected abstract dtbLoad(key: K, lock?: 'write' | 'read'): Promise<T | null>;
     protected abstract dtbAppend(record: T): Promise<T>;
     protected abstract dtbModify(key: K, record: T): Promise<T>;
@@ -179,7 +179,7 @@ export abstract class DataTableBase<K extends DTKey, E extends object, T extends
 
         return Object.defineProperty(wrap(undefined) as Wrap<undefined> & DTMetadata, DT_METADATA, { configurable: true, value: {
             timestamp:  rsrcMetadata.timestamp,
-            totalCount: rsrcMetadata.totalCount,
+            totalCount: typeof rsrcMetadata.totalCount === 'bigint' ? Number(rsrcMetadata.totalCount) : rsrcMetadata.totalCount,
             version:    rsrcMetadata.version,
         } satisfies DTMetadata[typeof DT_METADATA]});
     }
@@ -190,7 +190,7 @@ export abstract class DataTableBase<K extends DTKey, E extends object, T extends
             const listResponse = await this.dtbList(filter).catch(err => this.dtbError(err));
             const listMetadata = (list: T[]) => Object.defineProperty(list as T[] & DTMetadata, DT_METADATA, { configurable: true, value: {
                 timestamp:  rsrcMetadata.timestamp,
-                totalCount: listResponse.totalCount,
+                totalCount: typeof listResponse.totalCount === 'bigint' ? Number(listResponse.totalCount) : listResponse.totalCount,
                 version:    rsrcMetadata.version,
             } satisfies DTMetadata[typeof DT_METADATA] });
 
@@ -359,7 +359,7 @@ export abstract class DBDataTable<K extends DTKey, E extends object, T extends o
         return this._db.query<T>((_retries) => cb());
     }
 
-    protected override async dtbList(filter?: DBDTFilter): Promise<{ records: T[]; totalCount?: number }> {
+    protected override async dtbList(filter?: DBDTFilter): Promise<{ records: T[]; totalCount?: number | bigint; }> {
         return await this.dbRef('all', filter).load<object[]>().then(records => ({
             records:    records.map(r => this.dbRowToRecord(r)),
             totalCount: records[FIELDS][0]?.totalCount

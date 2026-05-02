@@ -34,7 +34,7 @@ export class WebResponse<T extends BasicTypes = BasicTypes> {
      * @param value The header value.
      * @returns     This WebResponse.
      */
-    setHeader(name: keyof WebResponseHeaders | string, value: string | number | boolean | string[] | undefined): this {
+    setHeader(name: keyof WebResponseHeaders | string, value: string | number | bigint | boolean | string[] | undefined): this {
         (this.headers as any)[name.toLowerCase()] = value;
 
         return this;
@@ -202,10 +202,10 @@ export interface WebResponseHeaders {
     'access-control-expose-headers'?:    string | string[];
 
     /** CORS: Indicates the number of seconds (5 by default) the information provided by the `Access-Control-Allow-Methods` and `Access-Control-Allow-Headers` headers can be cached. */
-    'access-control-max-age'?:           string | number;
+    'access-control-max-age'?:           string | number | bigint;
 
     /** The age the object has been in a proxy cache in seconds. */
-    'age'?:                              string | number;
+    'age'?:                              string | number | bigint;
 
     /** Valid methods for a specified resource. */
     'allow'?:                            string | string[];
@@ -229,7 +229,7 @@ export interface WebResponseHeaders {
     'content-language'?:                 string;
 
     /** The length of the response body in octets. */
-    'content-length'?:                   string | number;
+    'content-length'?:                   string | number | bigint;
 
     /** An alternate location for the returned data. */
     'content-location'?:                 string | URIString | URL;
@@ -295,13 +295,13 @@ export interface WebResponseHeaders {
     'public-key-pins'?:                  string;
 
     /** Used in redirection, or when a new resource has been created. */
-    'refresh'?:                          string | number | Date;
+    'refresh'?:                          string | number | bigint | Date;
 
     /** Instructs the user agent to store reporting endpoints for an origin. */
     'report-to'?:                        string;
 
     /** If an entity is temporarily unavailable, this instructs the client to try again later. */
-    'retry-after'?:                      string | number | Date;
+    'retry-after'?:                      string | number | bigint | Date;
 
     /** A name for the server. */
     'server'?:                           string;
@@ -340,7 +340,7 @@ export interface WebResponseHeaders {
     'www-authenticate'?:                 string | string[] | WWWAuthenticate | WWWAuthenticate[];
 
     /** Provide the duration of the audio or video in seconds; only supported by Gecko browsers. */
-    'x-content-duration'?:               string | number;
+    'x-content-duration'?:               string | number | bigint;
 
     /** Content Security Policy definition. */
     'x-content-security-policy'?:        string;
@@ -364,7 +364,7 @@ export interface WebResponseHeaders {
     'x-request-id'?:                     string;
 
     /** The total number of items in a collection. */
-    'x-total-count'?:                    string | number;
+    'x-total-count'?:                    string | number | bigint;
 
     /** Recommends the preferred rendering engine (often a backward-compatibility mode) to use to display the content. */
     'x-ua-compatible'?:                  string;

@@ -582,7 +582,7 @@ export class WebArguments<Params extends ParamsBase = ParamsBase> {
             return def;
         }
         else {
-            if (typeof value === 'string' || typeof value === 'number' || typeof value === 'boolean' ) {
+            if (typeof value === 'string' || typeof value === 'number' || typeof value === 'bigint' || typeof value === 'boolean' ) {
                 return value.toString();
             }
             else if (value instanceof Date) {

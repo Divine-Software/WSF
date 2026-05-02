@@ -28,7 +28,7 @@ export class WebError extends Error {
      * @param value The header value.
      * @returns     This WebError.
      */
-    setHeader(name: keyof WebResponseHeaders | string, value: string | number | boolean | string[] | undefined): this {
+    setHeader(name: keyof WebResponseHeaders | string, value: string | number | bigint | boolean | string[] | undefined): this {
         (this.headers as any)[name.toLowerCase()] = value;
 
         return this;
