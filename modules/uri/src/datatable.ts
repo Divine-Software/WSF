@@ -22,12 +22,6 @@ export class Precondition {
         }
     }
 
-    assert(version?: string | null, timestamp?: Date): void {
-        if (!this.test(version, timestamp)) {
-            throw new DTError('precondition-failed');
-        }
-    }
-
     test(version?: string | null, timestamp?: Date | string): boolean {
         timestamp = timestamp ? new Date(timestamp.toString()) : undefined; // No milliseconds
 
@@ -158,6 +152,12 @@ export abstract class DataTableBase<K extends DTKey, E extends object, T extends
     protected abstract dtbModify(key: K, record: T): Promise<T>;
     protected abstract dtbRemove(key: K): Promise<void>;
 
+    protected dtbPrecondition(precondition: Precondition | undefined, version?: string | null, timestamp?: Date): void {
+        if (precondition && !precondition.test(version, timestamp)) {
+            throw new DTError('precondition-failed');
+        }
+    }
+
     protected dtbError(err: Error): never {
         throw err;
     }
@@ -208,7 +208,7 @@ export abstract class DataTableBase<K extends DTKey, E extends object, T extends
             const current = await this._recordMetadata(await this.dtbLoad(key, 'write').catch(err => this.dtbError(err)));
             const updated = await authorize(key, structuredClone(current), async () => {
                 const { version, timestamp } = current?.[DT_METADATA] ?? { version: null };
-                precondition?.assert(version, timestamp);
+                this.dtbPrecondition(precondition, version, timestamp);
 
                 return this.makeRecord(key, current, entity);
             }) ?? throwError('No object returned from authorizer.');
@@ -225,7 +225,7 @@ export abstract class DataTableBase<K extends DTKey, E extends object, T extends
             const created = await authorize(null, null, async () => {
                 if (precondition) {
                     const { version, timestamp } = await this.tableMetadata(false);
-                    precondition.assert(version, timestamp);
+                    this.dtbPrecondition(precondition, version, timestamp);
                 }
 
                 return this.makeRecord(null, null, entity);
@@ -243,7 +243,7 @@ export abstract class DataTableBase<K extends DTKey, E extends object, T extends
             const current = await this._recordMetadata(await this.dtbLoad(key, 'write').catch(err => this.dtbError(err)));
             const updated = await authorize(key, structuredClone(current), async () => {
                 const { version, timestamp } = current?.[DT_METADATA] ?? { version: null };
-                precondition?.assert(version, timestamp);
+                this.dtbPrecondition(precondition, version, timestamp);
 
                 return this.makeRecord(key, current, await transformer(structuredClone(current ?? throwError(new DTError('not-found')))));
             }) ?? throwError('No object returned from authorizer.');
@@ -258,7 +258,7 @@ export abstract class DataTableBase<K extends DTKey, E extends object, T extends
             const current = await this._recordMetadata(await this.dtbLoad(key, 'write').catch(err => this.dtbError(err)));
             const updated = await authorize(key, structuredClone(current), async () => {
                 const { version, timestamp } = current?.[DT_METADATA] ?? { version: null };
-                precondition?.assert(version, timestamp);
+                this.dtbPrecondition(precondition, version, timestamp);
 
                 if (!current) {
                     throw new DTError('not-found');

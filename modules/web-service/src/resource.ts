@@ -1,6 +1,6 @@
 import { Record, toStringOrUndefined } from '@divine/commons';
 import { ContentType } from '@divine/headers';
-import { Precondition, StringParams } from '@divine/uri';
+import { StringParams } from '@divine/uri';
 import { strict as assert } from 'assert';
 import { WebError, WebStatus } from './error';
 import { WebRequest } from './request';
@@ -284,9 +284,18 @@ export class WebArguments<Params extends ParamsBase = ParamsBase> {
         return this.request.log;
     }
 
-    /** @returns An alias/shortcut for {@link WebRequest.precondition}. */
-    get precondition(): Precondition | undefined {
-        return this.request.precondition;
+    /**
+     * Checks if the request meets the specified precondition, and throws a
+     * {@link WebError}({@link WebStatus.PRECONDITION_FAILED}) if not.
+     *
+     * @param version     The entity version to check against, or `null` if the current entity does not exist.
+     * @param timestamp   The entity timestamp to check against, or `undefined` if the entity does not have a timestamp.
+     * @throws {WebError} A {@link WebStatus.PRECONDITION_FAILED} error if the precondition is not met.
+     */
+    precondition(version?: string | null, timestamp?: Date | string): void {
+        if (this.request.precondition && !this.request.precondition.test(version, timestamp)) {
+            throw new WebError(WebStatus.PRECONDITION_FAILED, `Precondition '${this.request.precondition.mode}' not met.`);
+        }
     }
 
     /**
