@@ -1,5 +1,13 @@
 # @divine/uri
 
+## 2.0.0-v2.4
+
+### Patch Changes
+
+- 83d3ef6: Accept bigint in a few more places where number is already accepted.
+- c0a4f54: Moved Precondition.assert to DataTableBase and WebArguments.
+- 24fbb6a: Parameterized the JSON, TOML and YAML parser/serializer.
+
 ## 2.0.0-v2.3
 
 ### Minor Changes
