@@ -24,9 +24,11 @@ export class URIString extends String {}
  * @returns        An String object with the arguments encoded.
  */
 export function uri(strings: TemplateStringsArray, ...values: unknown[]): URIString {
-    const result = strings[0] + values.map((valueOrArray, i) => (Array.isArray(valueOrArray) ? valueOrArray : [valueOrArray]).map(value =>
-        (value instanceof URIString ? value.toString() : percentEncode(toString(value))) + strings[i + 1]).join(''))
-        .join('');
+    const result = strings[0] + values.map((valueOrArray, i) =>
+            (Array.isArray(valueOrArray) ? valueOrArray : [valueOrArray])
+                .map(value => (value instanceof URIString ? value.toString() : percentEncode(toString(value)))).join('')
+            + strings[i + 1]
+        ).join('');
 
     return uri.raw(result);
 }
