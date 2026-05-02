@@ -1,5 +1,11 @@
 # @divine/uri
 
+## 2.0.0-v2.5
+
+### Patch Changes
+
+- 890a6b3: uri template literal handled array arguments incorrectly.
+
 ## 2.0.0-v2.4
 
 ### Patch Changes
