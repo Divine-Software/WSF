@@ -12,7 +12,7 @@ import { BasicTypes } from '../uri-types';
  * @param text A valid JSON string.
  * @returns    A parsed JSON value.
  */
-export function parseJSON(text: string): BasicTypes {
+export function parseJSON<T extends BasicTypes>(text: string): T {
     return JSON.parse(text, (key: string, value: undefined, context?: { source: string }) => {
         if (typeof value === 'number' && context?.source && /^[-+0-9]+$/.test(context.source)) {
             return BigInt(context.source);
@@ -54,7 +54,7 @@ export function serializeJSON(value: unknown): string {
  * `bigint` on the receiving end.
  */
 export class JSONParser extends Parser {
-    async parse(stream: AsyncIterable<Buffer>): Promise<BasicTypes> {
+    async parse<T extends BasicTypes>(stream: AsyncIterable<Buffer>): Promise<T> {
         return parseJSON(await new StringParser(this.contentType).parse(stream));
     }
 

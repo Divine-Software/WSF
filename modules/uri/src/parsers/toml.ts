@@ -11,8 +11,8 @@ import { Parser, StringParser } from '../parsers';
  * @param text A valid TOML string.
  * @returns    A parsed TOML table.
  */
-export function parseTOML(text: string): object {
-    return recordify(TOML.parse(text, { integersAsBigInt: true }));
+export function parseTOML<T extends object>(text: string): T {
+    return recordify(TOML.parse(text, { integersAsBigInt: true })) as T;
 }
 
 /**
@@ -36,7 +36,7 @@ export function serializeTOML(value: object): string {
  * values will be serialized with a `.0` suffix to ensure they are parsed as `bigint` on the receiving end.
  */
 export class TOMLParser extends Parser {
-    async parse(stream: AsyncIterable<Buffer>): Promise<object> {
+    async parse<T extends object>(stream: AsyncIterable<Buffer>): Promise<T> {
         return parseTOML(await new StringParser(this.contentType).parse(stream));
     }
 

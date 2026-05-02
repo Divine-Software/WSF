@@ -1,26 +1,23 @@
 import { recordify } from '@divine/commons';
 import YAML from 'yaml';
 import { Parser, StringParser } from '../parsers';
-import { BasicTypes, FIELDS, WithFields, wrap } from '../uri-types';
+import { BasicTypes, FIELDS, WithFields, wrap, Wrap } from '../uri-types';
 
 /**
  * Utility function to parse YAML with standard WSF behavior.
  *
- * Only the first document in a multi-document YAML file is returned when parsing. To access all documents, use the
- * {@link FIELDS} property.
- *
  * All parsed objects will have a `null` prototype and all integer numbers will be parsed as `bigint`. Plain `number`
  * values will be serialized with a `.0` suffix to ensure they are parsed as `bigint` on the receiving end.
  *
+ * Only the first document in a multi-document YAML file is returned when parsing. To access all documents, use
+ * {@link Parser.parse} or {@link YAMLParser} directly, which both return all documents in the `FIELDS` property of the
+ * returned object.
+ *
  * @param text A valid YAML string.
- * @returns    A parsed YAML document.
+ * @returns    A parsed YAML value.
  */
-export function parseYAML(text: string): object & WithFields<BasicTypes> {
-    const yaml = YAML.parseAllDocuments(text, { intAsBigInt: true });
-    const json = yaml.map((yaml) => yaml.toJS({ mapAsMap: false, reviver: (_, value) =>  recordify(value) }) as BasicTypes);
-    const data = wrap(json[0]);
-
-    return json.length === 1 ? data : Object.defineProperty(data, FIELDS, { value: json });
+export function parseYAML<T extends BasicTypes>(text: string): T {
+    return YAML.parseDocument(text, { intAsBigInt: true }).toJS({ mapAsMap: false, reviver: (_, value) =>  recordify(value) }) as T;
 }
 
 /**
@@ -66,8 +63,12 @@ export function serializeYAML(value: BasicTypes & WithFields<BasicTypes>): strin
  *
  */
 export class YAMLParser extends Parser {
-    async parse(stream: AsyncIterable<Buffer>): Promise<object & WithFields<BasicTypes>> {
-        return parseYAML(await new StringParser(this.contentType).parse(stream));
+    async parse<T extends BasicTypes>(stream: AsyncIterable<Buffer>): Promise<Wrap<T> & WithFields<BasicTypes>> {
+        const yaml = YAML.parseAllDocuments(await new StringParser(this.contentType).parse(stream), { intAsBigInt: true });
+        const json = yaml.map((yaml) => yaml.toJS({ mapAsMap: false, reviver: (_, value) =>  recordify(value) }) as T);
+        const data = wrap(json[0]);
+
+        return (json.length === 1 ? data : Object.defineProperty(data, FIELDS, { value: json })) as Wrap<T> & WithFields<BasicTypes>;
     }
 
     serialize(data: BasicTypes): Buffer;
