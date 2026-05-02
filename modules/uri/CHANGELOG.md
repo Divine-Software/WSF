@@ -1,5 +1,11 @@
 # @divine/uri
 
+## 2.0.0-v2.6
+
+### Minor Changes
+
+- 7919630: Added 'true' and 'false' constant DB reference filters.
+
 ## 2.0.0-v2.5
 
 ### Patch Changes
