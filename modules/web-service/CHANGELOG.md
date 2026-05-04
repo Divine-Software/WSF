@@ -12,7 +12,7 @@
 ### Minor Changes
 
 - 301e5a0: The default RESTResource.transform() method is now recursive.
-- 62da631: Whereever string | URL is used, also accept URIString.
+- 62da631: Wherever string | URL is used, also accept URIString.
 
 ## 2.0.0-v2.2
 

@@ -1,6 +1,6 @@
 import { isOneOf, isReadableStream, Record } from '@divine/commons';
 import { Accept, AcceptCharset, ContentDisposition, ContentType, WWWAuthenticate } from '@divine/headers';
-import { BasicTypes, BufferParser, URI, URIString } from '@divine/uri';
+import { BasicTypes, BufferParser, URI, SafeURIString } from '@divine/uri';
 import { Readable } from 'stream';
 import { URL } from 'url';
 import { WebStatus } from './error';
@@ -196,7 +196,7 @@ export interface WebResponseHeaders {
     'access-control-allow-methods'?:     string | string[];
 
     /** CORS: Indicates whether the response can be shared, via returning the literal value of the `Origin` request header (which can be `null`) or `*` in a response. */
-    'access-control-allow-origin'?:      string | URIString | URL;
+    'access-control-allow-origin'?:      string | SafeURIString | URL;
 
     /** CORS: Indicates which headers can be exposed as part of the response by listing their names. */
     'access-control-expose-headers'?:    string | string[];
@@ -232,7 +232,7 @@ export interface WebResponseHeaders {
     'content-length'?:                   string | number | bigint;
 
     /** An alternate location for the returned data. */
-    'content-location'?:                 string | URIString | URL;
+    'content-location'?:                 string | SafeURIString | URL;
 
     /** A Base64-encoded binary MD5 sum of the content of the response. */
     'content-md5'?:                      string;
@@ -271,7 +271,7 @@ export interface WebResponseHeaders {
     'link'?:                             string | string[];
 
     /** Used in redirection, or when a new resource has been created. */
-    'location'?:                         string | URIString | URL;
+    'location'?:                         string | SafeURIString | URL;
 
     /** Used to configure network request logging. */
     'nel'?:                              string;

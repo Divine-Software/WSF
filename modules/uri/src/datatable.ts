@@ -1,6 +1,6 @@
 import { isOneOf, throwError } from '@divine/commons';
 import { DatabaseURI, DBResult } from './protocols/database';
-import { uri, URIString } from './uri';
+import { uri, SafeURIString } from './uri';
 import { FIELDS, Metadata, unwrap, Wrap, wrap } from './uri-types';
 
 type PreconditionMode = 'always' | 'never' | 'present' | 'absent' | 'match' | 'none-match' | 'unmodified-since' | 'modified-since';
@@ -303,18 +303,18 @@ export abstract class DataTableBase<K extends DTKey, E extends object, T extends
 }
 
 export interface DBDTFilter extends DTFilter {
-    where?: URIString;
+    where?: SafeURIString;
 }
 
 export abstract class DBDataTable<K extends DTKey, E extends object, T extends object = E> extends DataTableBase<K, E, T> {
-    constructor(protected _db: DatabaseURI, protected _table: string | URIString, protected _pk: K) {
+    constructor(protected _db: DatabaseURI, protected _table: string | SafeURIString, protected _pk: K) {
         super();
     }
 
-    protected dbRef(scope: 'one' | 'all', filter?: K | DBDTFilter | URIString, lock?: 'write' | 'read'): DatabaseURI {
+    protected dbRef(scope: 'one' | 'all', filter?: K | DBDTFilter | SafeURIString, lock?: 'write' | 'read'): DatabaseURI {
         let query = uri`#${this._table};${scope}`;
 
-        if (filter instanceof URIString) {
+        if (filter instanceof SafeURIString) {
             query = uri`${query}?${filter}`;
         } else if (typeof filter === 'string' || typeof filter === 'number' || typeof filter === 'bigint') {
             query = uri`${query}?{eq,${this._pk},${filter}}`;

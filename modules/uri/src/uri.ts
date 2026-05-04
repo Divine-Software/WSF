@@ -10,7 +10,18 @@ export { AuthSelector, HeadersSelector, ParamsSelector, Selector } from './selec
 
 const urlObject  = (url as any).Url;
 
-export class URIString extends String {}
+const safeURIString = Symbol('SafeURIString');
+export class SafeURIString extends String {
+    private static _create = (tag: symbol, raw: string) => new SafeURIString(tag, raw);
+
+    private constructor(tag: symbol, value: string) {
+        super(value);
+
+        if (tag !== safeURIString) {
+            throw new Error('SafeURIString is private. Use uri`...` or uri.raw() instead.');
+        }
+    }
+}
 
 /**
  * A template literal tag function that applies {@link percentEncode} to all arguments.
@@ -23,10 +34,10 @@ export class URIString extends String {}
  * @param values   The values to be encoded.
  * @returns        An String object with the arguments encoded.
  */
-export function uri(strings: TemplateStringsArray, ...values: unknown[]): URIString {
+export function uri(strings: TemplateStringsArray, ...values: unknown[]): SafeURIString {
     const result = strings[0] + values.map((valueOrArray, i) =>
             (Array.isArray(valueOrArray) ? valueOrArray : [valueOrArray])
-                .map(value => (value instanceof URIString ? value.toString() : percentEncode(toString(value)))).join('')
+                .map(value => (value instanceof SafeURIString ? value.toString() : percentEncode(toString(value)))).join('')
             + strings[i + 1]
         ).join('');
 
@@ -41,8 +52,8 @@ export namespace uri {
      * @param raw   The raw string to be used in the template literal.
      * @returns     A String that will not be escaped when passed to {@link uri}.
      */
-    export function raw(raw: string): URIString {
-        return new URIString(raw);
+    export function raw(raw: string): SafeURIString {
+        return SafeURIString['_create'](safeURIString, raw);
     }
 }
 

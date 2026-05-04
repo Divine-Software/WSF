@@ -5,7 +5,7 @@ import { SecureContextOptions } from 'tls';
 import { DBCallback, DBConnection, DBConnectionPool, DBReference } from '../database-driver';
 import { DBSessionSelector, invalidCharacter, isDatabaseTransactionParams, isDBCallback } from '../private/database-utils';
 import { URIParams } from '../selectors';
-import { IOError, ParamsSelector, uri, URI, URIString } from '../uri';
+import { IOError, ParamsSelector, uri, URI, SafeURIString } from '../uri';
 import { BasicTypes, FIELDS, Metadata, Params, WithFields, Wrap, wrap } from '../uri-types';
 
 /**
@@ -241,7 +241,7 @@ export namespace q {
  * @param value   The value to compare the column to.
  * @returns       The constructed filter, escaped correctly.
  */
-export function dbRef(op: 'lt' | 'le' | 'eq' | 'ne' | 'ge' | 'gt', column: string, value: unknown): URIString;
+export function dbRef(op: 'lt' | 'le' | 'eq' | 'ne' | 'ge' | 'gt', column: string, value: unknown): SafeURIString;
 /**
  * Utility function for constructing is-included-in-set *DB reference* filters for use in {@link DatabaseURI} fragments.
  *
@@ -250,7 +250,7 @@ export function dbRef(op: 'lt' | 'le' | 'eq' | 'ne' | 'ge' | 'gt', column: strin
  * @param value   A list of values to compare the column to.
  * @returns       The constructed filter, escaped correctly.
  */
-export function dbRef(op: 'in', column: string, ...value: unknown[]): URIString;
+export function dbRef(op: 'in', column: string, ...value: unknown[]): SafeURIString;
 /**
  * Utility function for constructing null-checking *DB reference* filters for use in {@link DatabaseURI} fragments.
  *
@@ -258,14 +258,14 @@ export function dbRef(op: 'in', column: string, ...value: unknown[]): URIString;
  * @param column  The column to check for null.
  * @returns       The constructed filter, escaped correctly.
  */
-export function dbRef(op: 'null', column: string): URIString;
+export function dbRef(op: 'null', column: string): SafeURIString;
 /**
  * Utility function for constructing constant *DB reference* filters for use in {@link DatabaseURI} fragments.
  *
  * @param op      `true` or `false`
  * @returns       The constructed filter, escaped correctly.
  */
-export function dbRef(op: 'true' | 'false'): URIString;
+export function dbRef(op: 'true' | 'false'): SafeURIString;
 /**
  * Utility function for calling *DB reference* extendsion functions for use in {@link DatabaseURI} fragments.
  *
@@ -275,7 +275,7 @@ export function dbRef(op: 'true' | 'false'): URIString;
  * @returns       The constructed filter, escaped correctly.
  */
 // eslint-disable-next-line @typescript-eslint/unified-signatures
-export function dbRef(op: 'fn', name: string, ...args: unknown[]): URIString;
+export function dbRef(op: 'fn', name: string, ...args: unknown[]): SafeURIString;
 /**
  * Utility function for constructing boolean *DB reference* filters for use in {@link DatabaseURI} fragments.
  *
@@ -283,7 +283,7 @@ export function dbRef(op: 'fn', name: string, ...args: unknown[]): URIString;
  * @param subqueries The subqueries to combine.
  * @returns          The constructed filter, escaped correctly.
  */
-export function dbRef(op: 'and' | 'or', ...subqueries: URIString[]): URIString;
+export function dbRef(op: 'and' | 'or', ...subqueries: SafeURIString[]): SafeURIString;
 /**
  * Utility function for constructing negated *DB reference* filters for use in {@link DatabaseURI} fragments.
  *
@@ -291,9 +291,9 @@ export function dbRef(op: 'and' | 'or', ...subqueries: URIString[]): URIString;
  * @param subquery The subquery to negate.
  * @returns        The constructed filter, escaped correctly.
  */
-export function dbRef(op: 'not', subquery: URIString): URIString;
+export function dbRef(op: 'not', subquery: SafeURIString): SafeURIString;
 // eslint-disable-next-line jsdoc/require-jsdoc
-export function dbRef(op: string, ...args: unknown[]): URIString {
+export function dbRef(op: string, ...args: unknown[]): SafeURIString {
     if (isOneOf(op, ['and', 'not', 'or'])) {
         return uri`{${op}${args}}`;
     } else if (isOneOf(op, ['lt', 'le', 'eq', 'ne', 'ge', 'gt'])) {
