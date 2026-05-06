@@ -152,6 +152,10 @@ export abstract class DataTableBase<K extends DTKey, E extends object, T extends
     protected abstract dtbModify(key: K, record: T): Promise<T>;
     protected abstract dtbRemove(key: K): Promise<void>;
 
+    protected dtbAuthorize<R extends T | T[]>(authorize: DTAuthorizer<K, R>, key: K | null, current: R & DTMetadata | null, next?: () => Promise<R | null>): Promise<R | null> {
+        return authorize(key, current, next);
+    }
+
     protected dtbPrecondition(precondition: Precondition | undefined, version?: string | null, timestamp?: Date): void {
         if (precondition && !precondition.test(version, timestamp)) {
             throw new DTError('precondition-failed');
@@ -194,19 +198,19 @@ export abstract class DataTableBase<K extends DTKey, E extends object, T extends
                 version:    rsrcMetadata.version,
             } satisfies DTMetadata[typeof DT_METADATA] });
 
-            return listMetadata(await authorize(null, listMetadata(listResponse.records)) ?? throwError('No list returned from authorizer.'));
+            return listMetadata(await this.dtbAuthorize(authorize, null, listMetadata(listResponse.records)) ?? throwError('No list returned from authorizer.'));
         }).catch(err => this.dtbError(err));
     }
 
     async load(authorize: DTAuthorizer<K, T>, key: K): Promise<T & DTMetadata> {
         const current = await this._recordMetadata(await this.dtbLoad(key).catch(err => this.dtbError(err)));
-        return await this._recordMetadata(await authorize(key, current)) ?? throwError(new DTError('not-found'));
+        return await this._recordMetadata(await this.dtbAuthorize(authorize, key, current)) ?? throwError(new DTError('not-found'));
     }
 
     async save(authorize: DTAuthorizer<K, T>, key: K, entity: E, precondition?: Precondition): Promise<T & DTMetadata> {
         return await this.dtbTransaction('write', async () => {
             const current = await this._recordMetadata(await this.dtbLoad(key, 'write').catch(err => this.dtbError(err)));
-            const updated = await authorize(key, structuredClone(current), async () => {
+            const updated = await this.dtbAuthorize(authorize, key, structuredClone(current), async () => {
                 const { version, timestamp } = current?.[DT_METADATA] ?? { version: null };
                 this.dtbPrecondition(precondition, version, timestamp);
 
@@ -222,7 +226,7 @@ export abstract class DataTableBase<K extends DTKey, E extends object, T extends
 
     async append(authorize: DTAuthorizer<K, T>, entity: E, precondition?: Precondition): Promise<T & DTMetadata> {
         return await this.dtbTransaction('write', async () => {
-            const created = await authorize(null, null, async () => {
+            const created = await this.dtbAuthorize(authorize, null, null, async () => {
                 if (precondition) {
                     const { version, timestamp } = await this.tableMetadata(false);
                     this.dtbPrecondition(precondition, version, timestamp);
@@ -241,7 +245,7 @@ export abstract class DataTableBase<K extends DTKey, E extends object, T extends
 
         return await this.dtbTransaction('write', async () => {
             const current = await this._recordMetadata(await this.dtbLoad(key, 'write').catch(err => this.dtbError(err)));
-            const updated = await authorize(key, structuredClone(current), async () => {
+            const updated = await this.dtbAuthorize(authorize, key, structuredClone(current), async () => {
                 const { version, timestamp } = current?.[DT_METADATA] ?? { version: null };
                 this.dtbPrecondition(precondition, version, timestamp);
 
@@ -256,7 +260,7 @@ export abstract class DataTableBase<K extends DTKey, E extends object, T extends
     async remove(authorize: DTAuthorizer<K, T>, key: K, precondition?: Precondition): Promise<T & DTMetadata | Wrap<null> & DTMetadata> {
         return await this.dtbTransaction('write', async () => {
             const current = await this._recordMetadata(await this.dtbLoad(key, 'write').catch(err => this.dtbError(err)));
-            const updated = await authorize(key, structuredClone(current), async () => {
+            const updated = await this.dtbAuthorize(authorize, key, structuredClone(current), async () => {
                 const { version, timestamp } = current?.[DT_METADATA] ?? { version: null };
                 this.dtbPrecondition(precondition, version, timestamp);
 
