@@ -195,7 +195,7 @@ export abstract class DataTableBase<K extends DTKey, E extends object, T extends
             } satisfies DTMetadata[typeof DT_METADATA] });
 
             return listMetadata(await authorize(null, listMetadata(listResponse.records)) ?? throwError('No list returned from authorizer.'));
-        });
+        }).catch(err => this.dtbError(err));
     }
 
     async load(authorize: DTAuthorizer<K, T>, key: K): Promise<T & DTMetadata> {
@@ -217,7 +217,7 @@ export abstract class DataTableBase<K extends DTKey, E extends object, T extends
                 ? await this.dtbModify(key, this._toUpdateRow(current, updated)).catch(err => this.dtbError(err))
                 : await this.dtbAppend(updated).catch(err => this.dtbError(err));
             return await this._recordMetadata(record, current === null) ?? throwError('dtbModify/dtbAppend did not return a record.');
-        });
+        }).catch(err => this.dtbError(err));
     }
 
     async append(authorize: DTAuthorizer<K, T>, entity: E, precondition?: Precondition): Promise<T & DTMetadata> {
@@ -233,7 +233,7 @@ export abstract class DataTableBase<K extends DTKey, E extends object, T extends
 
             const record = await this.dtbAppend(created).catch(err => this.dtbError(err));
             return await this._recordMetadata(record, true) ?? throwError('dtbAppend did not return a record.');
-        });
+        }).catch(err => this.dtbError(err));
     }
 
     async modify(authorize: DTAuthorizer<K, T>, key: K, transform: Partial<E> | ((current: T) => T | Promise<T>), precondition?: Precondition): Promise<T & DTMetadata> {
@@ -250,7 +250,7 @@ export abstract class DataTableBase<K extends DTKey, E extends object, T extends
 
             const record = await this.dtbModify(key, this._toUpdateRow(current, updated)).catch(err => this.dtbError(err));
             return await this._recordMetadata(record, false) ?? throwError('dtbModify did not return a record.');
-        });
+        }).catch(err => this.dtbError(err));
     }
 
     async remove(authorize: DTAuthorizer<K, T>, key: K, precondition?: Precondition): Promise<T & DTMetadata | Wrap<null> & DTMetadata> {
@@ -274,7 +274,7 @@ export abstract class DataTableBase<K extends DTKey, E extends object, T extends
                 await this.dtbRemove(key).catch(err => this.dtbError(err));
                 return Object.defineProperty(wrap(null) as Wrap<null> & DTMetadata, DT_METADATA, { value: { version: null} });
             }
-        });
+        }).catch(err => this.dtbError(err));
     }
 
     private async _recordMetadata(record: T | null, created?: boolean): Promise<T & DTMetadata | null> {
