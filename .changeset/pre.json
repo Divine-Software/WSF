@@ -17,6 +17,7 @@
     "website": "0.0.0"
   },
   "changesets": [
+    "afraid-cobras-tell",
     "chatty-grapes-fetch",
     "chilled-avocados-press",
     "chilly-pugs-explain",
@@ -27,6 +28,7 @@
     "empty-wolves-feel",
     "fast-forks-argue",
     "few-clouds-join",
+    "few-rabbits-drive",
     "five-bananas-matter",
     "fluffy-terms-notice",
     "fruity-eggs-cheat",
@@ -41,6 +43,7 @@
     "huge-dingos-build",
     "late-crews-rescue",
     "lazy-buttons-add",
+    "lazy-snails-hang",
     "new-adults-fry",
     "nice-dogs-perform",
     "old-walls-whisper",
@@ -58,6 +61,7 @@
     "silent-wolves-repair",
     "smart-eagles-bathe",
     "smart-masks-try",
+    "spicy-bats-punch",
     "spotty-hotels-explain",
     "strict-kids-drive",
     "stupid-planets-admire",
@@ -68,6 +72,7 @@
     "tasty-points-pay",
     "thirty-bags-serve",
     "two-trains-invite",
-    "violet-brooms-try"
+    "violet-brooms-try",
+    "whole-sheep-sniff"
   ]
 }

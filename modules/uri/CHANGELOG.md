@@ -1,5 +1,17 @@
 # @divine/uri
 
+## 2.0.0-v2.7
+
+### Minor Changes
+
+- 3675b7f: Added dtbAuthorize so subclasses validate their own records easily.
+- 14d706b: Also call dtbError if dtbTransaction fails.
+
+### Patch Changes
+
+- 058d145: URIString -> SafeURIString. Force API usage.
+- 7ffed3d: Don't insert undefined if entity is an array.
+
 ## 2.0.0-v2.6
 
 ### Minor Changes

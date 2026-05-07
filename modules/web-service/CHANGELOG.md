@@ -1,5 +1,12 @@
 # @divine/web-service
 
+## 2.0.0-v2.5
+
+### Patch Changes
+
+- 4a64e7c: Allow location() to return undefined, if entity location is unknown.
+- 058d145: URIString -> SafeURIString. Force API usage.
+
 ## 2.0.0-v2.4
 
 ### Patch Changes
