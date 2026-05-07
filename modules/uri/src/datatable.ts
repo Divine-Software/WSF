@@ -297,7 +297,7 @@ export abstract class DataTableBase<K extends DTKey, E extends object, T extends
 
     private _toUpdateRow(current: T | null, entity: T): T {
         for (const col in current) {
-            if (!(col in entity)) {
+            if (!(col in entity) && !Array.isArray(entity) /* Only if entity is an object */) {
                 (entity as any)[col] = undefined; // Ensure all known columns are present
             }
         }
