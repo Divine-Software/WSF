@@ -21,7 +21,7 @@ export abstract class RESTResource<Context, K extends string, E extends object, 
     protected abstract key: K | null;
 
     protected abstract authorize<V extends T | T[]>(key: K | null, current: V & DTMetadata | null, next?: () => Promise<V | null>): Promise<V | null>;
-    protected abstract location(record: T): string | SafeURIString |URL;
+    protected abstract location(record: T): string | SafeURIString | URL | undefined;
 
     protected filter(): DTFilter {
         return {};
