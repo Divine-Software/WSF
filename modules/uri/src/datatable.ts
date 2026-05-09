@@ -431,6 +431,10 @@ export abstract class DataTableBase<K extends DTKey, E extends object, T extends
      * Override to provide validation of the record(s) returned by the user-provided authorizer, for example to enforce
      * business rules or to restrict the value of certain properties.
      *
+     * You are allowed to modify the returned value, if needed. This can be useful, for example, to strip out sensitive
+     * fields from the record before it is returned to the caller or to ensure that certain fields are not modified by a
+     * write operation.
+     *
      * @param authorize  The authorizer callback provided by the caller.
      * @param key        Record key or `null` for list/append operations.
      * @param current    Value(s) currently present in the table, or `null` if absent.

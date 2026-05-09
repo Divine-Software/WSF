@@ -1,6 +1,6 @@
-import { DataTable, DT_METADATA, DTAuthorizer, Precondition, DTError, DTFilter, DTMetadata, unwrap, Wrap, SafeURIString } from '@divine/uri';
+import { DataTable, DT_METADATA, DTAuthorizer, DTError, DTFilter, DTMetadata, Precondition, SafeURIString, unwrap, Wrap } from '@divine/uri';
 import { WebError, WebStatus } from './error';
-import { WebResource, WebResourceBase } from './resource';
+import { type WebArguments, WebResource, WebResourceBase } from './resource';
 import { WebResponse } from './response';
 import { WebService } from './service';
 
@@ -16,25 +16,132 @@ const ENTITY_METHOD_MAP = {
     'remove':  'DELETE',
 };
 
+/**
+ * REST adapter that exposes a {@link DataTable} through standard HTTP methods.
+ *
+ * This base class maps REST operations to {@link DataTable} methods:
+ *
+ * - List resource (`key === null`):
+ *   - `GET` -> `list`
+ *   - `POST` -> `append`
+ * - Entity resource (`key !== null`):
+ *   - `GET` -> `load`
+ *   - `PUT` -> `save`
+ *   - `PATCH` -> `modify`
+ *   - `DELETE` -> `remove`
+ *
+ * To use this class, provide both {@link dataTable} and {@link key} in your concrete resource.
+ *
+ * - `dataTable` should point to the table instance backing this endpoint.
+ * - `key` should be `null` for collection/list URLs (for example `/users`) and the resolved
+ *   entity key for entity URLs (for example `/users/42`).
+ *
+ * @template Context Web service context type.
+ * @template K       Record key type.
+ * @template E       Input entity type accepted by writes.
+ * @template T       Stored/returned record type.
+ */
 export abstract class RESTResource<Context, K extends string, E extends object, T extends object = E> extends WebResourceBase<Context> implements WebResource {
+    /**
+     * This member should provide the {@link DataTable} instance exposed by this REST resource, either as a direct
+     * reference or a getter.
+     */
     protected abstract dataTable: DataTable<K, E, T>;
+
+    /**
+     * This member should provide the target entity key for the current request, either as a direct reference or a
+     * getter.
+     *
+     * It should be `null` for list/collection URLs and a concrete key value for entity URLs.
+     */
     protected abstract key: K | null;
 
+    /**
+     * This method should enforce authorization and return the value that may be read/written.
+     *
+     * Return `current` for read operations, or `await next()` for write operations. You are allowed to modify the
+     * returned value, if needed. This can be useful, for example, to strip out sensitive fields from the record before
+     * it is returned to the client or to ensure that certain fields are not modified by a write operation.
+     *
+     * This method should throw {@link WebError} if access is denied.
+     *
+     * @template V        Authorized value shape (`T` for entity operations, `T[]` for list operations).
+     * @param key         Entity key, or `null` for list-level operations.
+     * @param current     Current metadata-decorated value visible at this stage, or `null`.
+     * @param next        Optional callback producing the value that is about to be persisted.
+     * @throws {WebError} If access is denied.
+     * @returns           The value allowed by authorization, or `null` to deny visibility.
+     */
     protected abstract authorize<V extends T | T[]>(key: K | null, current: V & DTMetadata | null, next?: () => Promise<V | null>): Promise<V | null>;
+
+    /**
+     * This method should return the canonical location/URL (absolute or relative) for a record.
+     *
+     * Return `undefined` when no location is known or applicable for the record. In this case, the `content-location`
+     * header will be omitted and, for newly created records, the `location` header will be omitted as well.
+     *
+     * @param record  Record for which to produce a location.
+     * @returns       Absolute or relative location reference for this record, if available.
+     */
     protected abstract location(record: T): string | SafeURIString | URL | undefined;
 
+    /**
+     * This method should return additional list filtering options for `GET` list operations.
+     *
+     * Override to enable user-provided or default sort/pagination settings or query filters, for instance by parsing
+     * query parameters (preferably from the {@link WebArguments} in `args`).
+     *
+     * By default, it returns an empty filter, which means that the list operation will be performed without any
+     * filtering, sorting, or pagination.
+     *
+     * @returns Filter options passed to {@link DataTable.list}.
+     */
     protected filter(): DTFilter {
         return {};
     }
 
+    /**
+     * This method should return the request precondition used by write operations.
+     *
+     * By default, it just returns the precondition provided by the request, if any.
+     *
+     * @returns Effective precondition for write operations, or `undefined`.
+     */
     protected precondition(): Precondition | undefined {
         return this.args.request.precondition;
     }
 
+    /**
+     * This method should load and return the request body for create/replace operations.
+     *
+     * Override this method to validate and normalize incoming payloads before they are passed to
+     * the data table, for example by checking required properties, coercing formats or stripping
+     * forbidden fields.
+     *
+     * This method should throw {@link WebError} if the input body is invalid.
+     *
+     * @returns Parsed entity payload for `POST` and `PUT` operations.
+     */
     protected async entity(): Promise<E> {
         return await this.args.body();
     }
 
+    /**
+     * This method should compute the updated entity used by `PATCH` operations.
+     *
+     * The default implementation performs a deep object merge where nested objects are merged recursively and
+     * non-object fields are replaced. Arrays may be patched by using integer object keys (`{"0": "value"}` to set the
+     * first element), and all arrays will be converted to dense arrays by the patching process (the result will never
+     * contain sparse arrays).
+     *
+     * Override this method to customize patch semantics, normalize values, or validate patch operations before
+     * persistence.
+     *
+     * This method should throw {@link WebError} if the patch payload is invalid.
+     *
+     * @param current Current entity as loaded from storage.
+     * @returns       Updated entity that will be persisted.
+     */
     protected async transform(current: T): Promise<T> {
         const patch = (o: Record<string | number, unknown>, p: object) => {
             for (const [k, v] of Object.entries(p)) {
