@@ -627,11 +627,12 @@ export interface DBDTFilter extends DTFilter {
  */
 export abstract class DBDataTable<K extends DTKey, E extends object, T extends object = E> extends DataTableBase<K, E, T> {
     /**
-     * @param _db     Database URI.
-     * @param _table  Database table name.
-     * @param _pk     Primary key column/property name.
+     * @param _db        Database URI.
+     * @param _table     Database table name.
+     * @param _keyName   Record key column/property name.
+     * @param _subquery  Optional subspace query for multi-tenancy or logical separation within the same table.
      */
-    constructor(protected _db: DatabaseURI, protected _table: string | SafeURIString, protected _pk: K) {
+    constructor(protected _db: DatabaseURI, protected _table: string | SafeURIString, protected _keyName: string, protected _subquery?: SafeURIString) {
         super();
     }
 
@@ -649,13 +650,15 @@ export abstract class DBDataTable<K extends DTKey, E extends object, T extends o
     protected dbRef(scope: 'one' | 'all', filter?: K | DBDTFilter | SafeURIString, lock?: 'write' | 'read'): DatabaseURI {
         let query = uri`#${this._table};${scope}`;
 
+        const subquery = (filter?: SafeURIString) => this._subquery && filter ? dbRef('and', this._subquery, filter) : (this._subquery ?? filter);
+
         if (filter instanceof SafeURIString) {
-            query = uri`${query}?${filter}`;
+            query = uri`${query}?${subquery(filter)}`;
         } else if (typeof filter === 'string' || typeof filter === 'number' || typeof filter === 'bigint') {
-            query = uri`${query}?{eq,${this._pk},${filter}}`;
+            query = uri`${query}?${subquery(dbRef('eq', this._keyName, filter))}`;
         } else if (filter) {
-            if (filter.where?.length) {
-                query = uri`${query}?${filter.where}`;
+            if (filter.where || this._subquery) {
+                query = uri`${query}?${subquery(filter.where)}`;
             }
 
             if (filter.order) {
@@ -716,7 +719,7 @@ export abstract class DBDataTable<K extends DTKey, E extends object, T extends o
      * @returns         Resolved record key.
      */
     protected dbInsertedKey(record: T, dbResult: DBResult): K {
-        return (record[this._pk as unknown as keyof T] ?? dbResult.rowKey) as K ?? throwError('Unable to get key of inserted record.');
+        return (record[this._keyName as keyof T] ?? dbResult.rowKey) as K ?? throwError('Unable to get key of inserted record.');
     }
 
     protected override async dtbTransaction<T>(mode: 'write' | 'read', cb: () => Promise<T>): Promise<T> {
@@ -724,7 +727,7 @@ export abstract class DBDataTable<K extends DTKey, E extends object, T extends o
     }
 
     protected override async dtbList(filter?: DBDTFilter): Promise<{ records: T[]; totalCount?: number | bigint; }> {
-        return await this.dbRef('all', filter).load<object[]>().then(records => ({
+        return await this.dbRef('all', filter ?? {}).load<object[]>().then(records => ({
             records:    records.map(r => this.dbRowToRecord(r)),
             totalCount: records[FIELDS][0]?.totalCount
         }));
