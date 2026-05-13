@@ -34,7 +34,7 @@ const ENTITY_METHOD_MAP = {
  *
  * - `dataTable` should point to the table instance backing this endpoint.
  * - `key` should be `null` for collection/list URLs (for example `/users`) and the resolved
- *   entity key for entity URLs (for example `/users/42`).
+ *   record key for entity URLs (for example `/users/42`).
  *
  * @template Context Web service context type.
  * @template K       Record key type.
@@ -49,7 +49,7 @@ export abstract class RESTResource<Context, K extends string, E extends object, 
     protected abstract dataTable: DataTable<K, E, T>;
 
     /**
-     * This member should provide the target entity key for the current request, either as a direct reference or a
+     * This member should provide the target record key for the current request, either as a direct reference or a
      * getter.
      *
      * It should be `null` for list/collection URLs and a concrete key value for entity URLs.
@@ -59,20 +59,24 @@ export abstract class RESTResource<Context, K extends string, E extends object, 
     /**
      * This method should enforce authorization and return the value that may be read/written.
      *
-     * Return `current` for read operations, or `await next()` for write operations. You are allowed to modify the
-     * returned value, if needed. This can be useful, for example, to strip out sensitive fields from the record before
-     * it is returned to the client or to ensure that certain fields are not modified by a write operation.
+     * `current` is the value currently present in the table (or `null` if absent). It must not be modified.
+     *
+     * `next` is only provided for write operations and resolves to the value that is about to be written to the table.
+     *
+     * This method must return the value that should be written (for write operations) or returned (for non-write
+     * operations). In practice this means returning `current` when `next` is absent, or `await next()` when present, unless
+     * access rules require a different outcome.
      *
      * This method should throw {@link WebError} if access is denied.
      *
      * @template V        Authorized value shape (`T` for entity operations, `T[]` for list operations).
-     * @param key         Entity key, or `null` for list-level operations.
+     * @param key         Record key, or `null` for list-level operations.
      * @param current     Current metadata-decorated value visible at this stage, or `null`.
      * @param next        Optional callback producing the value that is about to be persisted.
      * @throws {WebError} If access is denied.
      * @returns           The value allowed by authorization, or `null` to deny visibility.
      */
-    protected abstract authorize<V extends T | T[]>(key: K | null, current: V & DTMetadata | null, next?: () => Promise<V | null>): Promise<V | null>;
+    protected abstract authorize<V extends T | T[]>(key: K | null, current: Readonly<V & DTMetadata> | null, next?: () => Promise<V | null>): Promise<V | null>;
 
     /**
      * This method should return the canonical location/URL (absolute or relative) for a record.
@@ -114,11 +118,12 @@ export abstract class RESTResource<Context, K extends string, E extends object, 
     /**
      * This method should load and return the request body for create/replace operations.
      *
-     * Override this method to validate and normalize incoming payloads before they are passed to
-     * the data table, for example by checking required properties, coercing formats or stripping
-     * forbidden fields.
+     * Override this method to transform, validate and normalize incoming payloads before they are passed to the data
+     * table, for example by checking required properties, coercing formats or stripping forbidden fields.
      *
-     * This method should throw {@link WebError} if the input body is invalid.
+     * This method should throw {@link WebError} if the input body is invalid; `UNPROCESSABLE_ENTITY` or
+     * `UNSUPPORTED_MEDIA_TYPE` are usually appropriate status codes for such errors, depending on the nature of the
+     * problem.
      *
      * @returns Parsed entity payload for `POST` and `PUT` operations.
      */
@@ -137,9 +142,11 @@ export abstract class RESTResource<Context, K extends string, E extends object, 
      * Override this method to customize patch semantics, normalize values, or validate patch operations before
      * persistence.
      *
-     * This method should throw {@link WebError} if the patch payload is invalid.
+     * This method should throw {@link WebError} if the patch payload is invalid. `UNPROCESSABLE_ENTITY` or
+     * `UNSUPPORTED_MEDIA_TYPE` are usually appropriate status codes for such errors, depending on the nature of the
+     * problem.
      *
-     * @param current Current entity as loaded from storage.
+     * @param current Current entity as loaded from storage. May be modified.
      * @returns       Updated entity that will be persisted.
      */
     protected async transform(current: T): Promise<T> {
@@ -158,19 +165,36 @@ export abstract class RESTResource<Context, K extends string, E extends object, 
         return patch(current as Record<string | number, unknown>, await this.args.body()) as T;
     }
 
-    private _authorize: DTAuthorizer<K, any> = (key, current, next) => this.authorize(key, current, next);
-
-    private _toWebResponse<R extends T | T[]>(written: boolean, result: R & DTMetadata | Wrap<null> & DTMetadata): WebResponse<R> {
+    /**
+     * Converts a data table result into a web response, setting appropriate status codes and headers.
+     *
+     * You may override this method to customize how data table results are translated into web responses, for example
+     * to set additional headers or to change the response format (like masking sensitive fields or wrapping the result
+     * in an envelope object).
+     *
+     * Be aware that if you do not apply the exact same transformation to the result of all operations all of the time,
+     * you *must* also update the `etag` header by appending a `~` character followed by some tag that identifies the
+     * transformation. Otherwise, `GET`/`HEAD` requests may use stale data that do not take the transformation into
+     * account.
+     *
+     * @param result Data table result to convert. May be an entity or a list of entities; includes metadata through the
+     *               `DT_METADATA` symbol.
+     * @returns      Web response containing the entity or list of entities, with appropriate status codes and headers.
+     */
+    protected toWebResponse<R extends T | T[]>(result: R & DTMetadata | Wrap<null> & DTMetadata): WebResponse<R> {
+        const { created, timestamp, totalCount, version } = result[DT_METADATA];
         const body = unwrap(result);
 
-        return new WebResponse(result[DT_METADATA].created ? WebStatus.CREATED : body ? WebStatus.OK : WebStatus.NO_CONTENT, body, {
-            'content-location': written ? this.location(body as T) : undefined,
-            'etag':             result[DT_METADATA].version ?? undefined,
-            'last-modified':    result[DT_METADATA].timestamp?.toUTCString(),
-            'location':         result[DT_METADATA].created ? this.location(body as T) : undefined,
-            'x-total-count':    result[DT_METADATA].totalCount,
+        return new WebResponse(body ? (created ? WebStatus.CREATED : WebStatus.OK) : WebStatus.NO_CONTENT, body, {
+            'content-location': created !== undefined ? this.location(body as T) : undefined,
+            'etag':             version ?? undefined,
+            'last-modified':    timestamp?.toUTCString(),
+            'location':         created ? this.location(body as T) : undefined,
+            'x-total-count':    totalCount,
         });
     }
+
+    private _authorize: DTAuthorizer<K, any> = (key, current, next) => this.authorize(key, current, next);
 
     private _rejectUnhandledMethod(method: string): never {
         return WebService.rejectUnhandledMethod(method, this.dataTable, this.key === null ? LIST_METHOD_MAP : ENTITY_METHOD_MAP);
@@ -189,9 +213,9 @@ export abstract class RESTResource<Context, K extends string, E extends object, 
 
     async GET(): Promise<WebResponse<T | T[]>> {
         if (this.key === null && this.dataTable.list) {
-            return this._toWebResponse(false, await this.dataTable.list(this._authorize, this.filter()));
+            return this.toWebResponse(await this.dataTable.list(this._authorize, this.filter()));
         } else if (this.key !== null && this.dataTable.load) {
-            return this._toWebResponse(false, await this.dataTable.load(this._authorize, this.key));
+            return this.toWebResponse(await this.dataTable.load(this._authorize, this.key));
         } else {
             this._rejectUnhandledMethod('GET');
         }
@@ -199,7 +223,7 @@ export abstract class RESTResource<Context, K extends string, E extends object, 
 
     async POST(): Promise<WebResponse<T>> {
         if (this.key === null && this.dataTable.append) {
-            return this._toWebResponse(true, await this.dataTable.append(this._authorize, await this.entity(), this.precondition()));
+            return this.toWebResponse(await this.dataTable.append(this._authorize, await this.entity(), this.precondition()));
         } else {
             this._rejectUnhandledMethod('POST');
         }
@@ -207,7 +231,7 @@ export abstract class RESTResource<Context, K extends string, E extends object, 
 
     async PUT(): Promise<WebResponse<T>> {
         if (this.key !== null && this.dataTable.save) {
-            return this._toWebResponse(true, await this.dataTable.save(this._authorize, this.key, await this.entity(), this.precondition()));
+            return this.toWebResponse(await this.dataTable.save(this._authorize, this.key, await this.entity(), this.precondition()));
         } else {
             this._rejectUnhandledMethod('PUT');
         }
@@ -215,7 +239,7 @@ export abstract class RESTResource<Context, K extends string, E extends object, 
 
     async PATCH(): Promise<WebResponse<T>> {
         if (this.key !== null && this.dataTable.modify) {
-            return this._toWebResponse(true, await this.dataTable.modify(this._authorize, this.key, (current) => this.transform(current), this.precondition()));
+            return this.toWebResponse(await this.dataTable.modify(this._authorize, this.key, (current) => this.transform(current), this.precondition()));
         } else {
             this._rejectUnhandledMethod('PATCH');
         }
@@ -223,7 +247,7 @@ export abstract class RESTResource<Context, K extends string, E extends object, 
 
     async DELETE(): Promise<WebResponse<T | null>> {
         if (this.key !== null && this.dataTable.remove) {
-            return this._toWebResponse(false, await this.dataTable.remove(this._authorize, this.key, this.precondition()));
+            return this.toWebResponse(await this.dataTable.remove(this._authorize, this.key, this.precondition()));
         } else {
             this._rejectUnhandledMethod('DELETE');
         }

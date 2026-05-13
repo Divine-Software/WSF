@@ -193,7 +193,7 @@ export interface EventAttributes {
  *
  * @template T The type of events to transmit.
  */
-export class EventStreamResponse<T = unknown> extends WebResponse {
+export class EventStreamResponse<T = unknown> extends WebResponse<AsyncGenerator<EventStreamEvent | undefined>> {
     private static async *_eventStream(source: AsyncIterable<any>, dataType?: ContentType | string, keepaliveTimeout?: number, signal?: { aborted: boolean }): AsyncGenerator<EventStreamEvent | undefined> {
         const serialize = async (event: any): Promise<string> => {
             const [serialized] = await Parser.serializeToBuffer(event, event[EVENT_FORMAT] ?? dataType);

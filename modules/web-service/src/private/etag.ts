@@ -27,11 +27,11 @@ export function updateETag(etag: string, headers: WebResponseHeaders): string {
             .join('\n')
         ).digest('base64url').substring(0, 8);
 
-    // Also disallow commas and tilde, to make parsing easier
+    // Also disallow commas, to make parsing easier
     if (etag.startsWith('W/')) {
-        return `W/"${etag.substring(2).replace(/[\x00-\x20",~\x7f]/g, '')}~${headersHash}"`;
+        return `W/"${etag.substring(2).replace(/[\x00-\x20",\x7f]/g, '')}~${headersHash}"`;
     } else {
-        return `"${etag.replace(/[\x00-\x20",~\x7f]/g, '')}~${headersHash}"`;
+        return `"${etag.replace(/[\x00-\x20",\x7f]/g, '')}~${headersHash}"`;
     }
 }
 

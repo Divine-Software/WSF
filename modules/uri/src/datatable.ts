@@ -1,6 +1,6 @@
 import { isOneOf, throwError } from '@divine/commons';
-import { DatabaseURI, DBResult } from './protocols/database';
-import { uri, SafeURIString } from './uri';
+import { DatabaseURI, dbRef, DBResult } from './protocols/database';
+import { SafeURIString, uri } from './uri';
 import { FIELDS, Metadata, unwrap, Wrap, wrap } from './uri-types';
 
 type PreconditionMode = 'always' | 'never' | 'present' | 'absent' | 'match' | 'none-match' | 'unmodified-since' | 'modified-since';
@@ -122,7 +122,7 @@ export interface DTMetadata extends Metadata {
      * Hidden metadata payload attached to the result object/array.
      */
     [DT_METADATA]: {
-        /** `true` if the result was created during the operation. */
+        /** `true` if the result was created during the operation, `false` if it was written, `undefined` otherwise. */
         created?:    boolean;
 
         /** Last-modified timestamp of the resource/table, when available. */
@@ -161,20 +161,17 @@ export type DTKey = string | number | bigint;
 /**
  * Authorization callback used to mediate access to records and operations.
  *
- * `current` is the value currently present in the table (or `null` if absent).
+ * `current` is the value currently present in the table (or `null` if absent). It must not be modified.
  *
- * `next` is only provided for write operations and resolves to the value that
- * is about to be written to the table.
+ * `next` is only provided for write operations and resolves to the value that is about to be written to the table.
  *
- * The callback must return the value that should be written (for write
- * operations) or returned (for non-write operations). In practice this means
- * returning `current` when `next` is absent, or `await next()` when present,
- * unless access rules require a different outcome.
+ * The callback must return the value that should be written (for write operations) or returned (for non-write
+ * operations). In practice this means returning `current` when `next` is absent, or `await next()` when present, unless
+ * access rules require a different outcome.
  *
- * Authorizers may compare `current` and `await next()` to enforce business
- * rules or for property-level access control.
+ * Authorizers may compare `current` and `await next()` to enforce business rules or for property-level access control.
  */
-export type DTAuthorizer<K extends DTKey, T extends object> = ((key: K | null, current: T & DTMetadata | null, next?: () => Promise<T | null>) => Promise<T | null>);
+export type DTAuthorizer<K extends DTKey, T extends object> = ((key: K | null, current: Readonly<T & DTMetadata> | null, next?: () => Promise<T | null>) => Promise<T | null>);
 
 /**
  * A no-op authorizer that applies no authorization logic.
@@ -358,7 +355,7 @@ export abstract class DataTableBase<K extends DTKey, E extends object, T extends
      * unless the storage layer can generate them automatically (e.g. default values, auto-generated keys).
      *
      */
-    protected abstract makeRecord(key: K | null, current: Readonly<T> | null, entity: E | T): T;
+    protected abstract makeRecord(key: K | null, current: Readonly<T & DTMetadata> | null, entity: E | T): T;
 
     /**
      * Implement this method to provide metadata (timestamp and/or version) for a single persisted record.
@@ -431,17 +428,13 @@ export abstract class DataTableBase<K extends DTKey, E extends object, T extends
      * Override to provide validation of the record(s) returned by the user-provided authorizer, for example to enforce
      * business rules or to restrict the value of certain properties.
      *
-     * You are allowed to modify the returned value, if needed. This can be useful, for example, to strip out sensitive
-     * fields from the record before it is returned to the caller or to ensure that certain fields are not modified by a
-     * write operation.
-     *
      * @param authorize  The authorizer callback provided by the caller.
      * @param key        Record key or `null` for list/append operations.
      * @param current    Value(s) currently present in the table, or `null` if absent.
      * @param next       Write-operation callback returning the value to be written.
      * @returns          The authorizer result value.
      */
-    protected dtbAuthorize<R extends T | T[]>(authorize: DTAuthorizer<K, R>, key: K | null, current: R & DTMetadata | null, next?: () => Promise<R | null>): Promise<R | null> {
+    protected dtbAuthorize<R extends T | T[]>(authorize: DTAuthorizer<K, R>, key: K | null, current: Readonly<R & DTMetadata> | null, next?: () => Promise<R | null>): Promise<R | null> {
         return authorize(key, current, next);
     }
 
@@ -521,7 +514,7 @@ export abstract class DataTableBase<K extends DTKey, E extends object, T extends
     async save(authorize: DTAuthorizer<K, T>, key: K, entity: E, precondition?: Precondition): Promise<T & DTMetadata> {
         return await this.dtbTransaction('write', async () => {
             const current = await this._recordMetadata(await this.dtbLoad(key, 'write').catch(err => this.dtbError(err)));
-            const updated = await this.dtbAuthorize(authorize, key, structuredClone(current), async () => {
+            const updated = await this.dtbAuthorize(authorize, key, current, async () => {
                 const { version, timestamp } = current?.[DT_METADATA] ?? { version: null };
                 this.dtbPrecondition(precondition, version, timestamp);
 
@@ -556,7 +549,7 @@ export abstract class DataTableBase<K extends DTKey, E extends object, T extends
 
         return await this.dtbTransaction('write', async () => {
             const current = await this._recordMetadata(await this.dtbLoad(key, 'write').catch(err => this.dtbError(err)));
-            const updated = await this.dtbAuthorize(authorize, key, structuredClone(current), async () => {
+            const updated = await this.dtbAuthorize(authorize, key, current, async () => {
                 const { version, timestamp } = current?.[DT_METADATA] ?? { version: null };
                 this.dtbPrecondition(precondition, version, timestamp);
 
@@ -571,7 +564,7 @@ export abstract class DataTableBase<K extends DTKey, E extends object, T extends
     async remove(authorize: DTAuthorizer<K, T>, key: K, precondition?: Precondition): Promise<T & DTMetadata | Wrap<null> & DTMetadata> {
         return await this.dtbTransaction('write', async () => {
             const current = await this._recordMetadata(await this.dtbLoad(key, 'write').catch(err => this.dtbError(err)));
-            const updated = await this.dtbAuthorize(authorize, key, structuredClone(current), async () => {
+            const updated = await this.dtbAuthorize(authorize, key, current, async () => {
                 const { version, timestamp } = current?.[DT_METADATA] ?? { version: null };
                 this.dtbPrecondition(precondition, version, timestamp);
 
