@@ -1,5 +1,11 @@
 # @divine/uri-sqlite-protocol
 
+## 2.0.0-v2.2
+
+### Major Changes
+
+- 8de0ae1: uri-sqlite-protocol now uses the native Node SQLite module and supports extensions and user-defined functions.
+
 ## 2.0.0-v2.1
 
 ### Patch Changes

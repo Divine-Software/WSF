@@ -1,5 +1,11 @@
 # @divine/web-service
 
+## 2.0.0-v2.6
+
+### Patch Changes
+
+- c56895f: The only supported place to modify the DataTable records are in toWebResponse().
+
 ## 2.0.0-v2.5
 
 ### Patch Changes

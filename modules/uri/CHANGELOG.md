@@ -1,5 +1,15 @@
 # @divine/uri
 
+## 2.0.0-v2.8
+
+### Minor Changes
+
+- e234c9b: Added subquery support to DBDataTable, to only work on a subset of a table.
+
+### Patch Changes
+
+- c56895f: The only supported place to modify the DataTable records are in toWebResponse().
+
 ## 2.0.0-v2.7
 
 ### Minor Changes
