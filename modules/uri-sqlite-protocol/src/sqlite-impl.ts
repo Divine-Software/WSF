@@ -5,12 +5,6 @@ import { SQLiteStatus } from './sqlite-errors';
 import type { SQLiteParams } from './sqlite-protocol';
 import type { ExecuteQueryResult, SQLiteWorkerMessage, SQLiteWorkerResult } from './sqlite-worker';
 
-class SqliteError extends Error {
-    constructor(message: string, public code: string) {
-        super(message);
-    }
-}
-
 export class SQLiteConnectionPool extends DBDriver.DBConnectionPool<SQLiteParams> {
     protected async _createDBConnection(): Promise<DBDriver.DBConnection> {
         return new SQLiteDatabaseConnection(this._dbURI, this._params);
@@ -58,7 +52,7 @@ class SQLiteDatabaseConnection implements DBDriver.DBConnection {
         });
 
         if (result.type === 'error') {
-            throw typeof result.code === 'string' ? new SqliteError(result.message, result.code) : new Error(result.message);
+            throw result.code ? new DBError(result.code.toString(), 'HY000', result.message) : new Error(result.message);
         }
         else if (result.type !== message.type) {
             throw new Error(`Unexpected result type '${result.type}'.`);
@@ -135,7 +129,12 @@ class SQLiteDatabaseConnection implements DBDriver.DBConnection {
                 })));
             }
             catch (err) {
-                throw err instanceof SqliteError ? new DBError(err.code, 'HY000', 'Query failed', err, query) : err;
+                if (err instanceof DBError) {
+                    err.message = `Query failed: ${err.message}`;
+                    err.data  ??= query;
+                }
+
+                throw err;
             }
         }
 

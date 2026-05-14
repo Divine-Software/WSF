@@ -1,6 +1,6 @@
 import { DatabaseURI, DBDriver, DBParams, DBParamsSelector, URI } from '@divine/uri';
+import { AggregateOptions, DatabaseSyncOptions, FunctionOptions, SQLInputValue, SQLOutputValue } from 'node:sqlite';
 import { SQLiteConnectionPool } from './sqlite-impl';
-import { DatabaseSync, DatabaseSyncOptions, FunctionOptions, SQLInputValue, SQLOutputValue } from 'node:sqlite'
 
 export { SQLiteStatus } from './sqlite-errors';
 
@@ -18,6 +18,9 @@ type NodeSQLiteConnectOptions = Omit<DatabaseSyncOptions,
 export interface SQLiteConnectOptions extends NodeSQLiteConnectOptions {
     /** Shared library extensions to load. */
     extensions?: string[] | undefined;
+
+    /** SQLite aggregate functions to register. */
+    aggregates?: Record<string, AggregateOptions> | undefined;
 
     /** SQLite user-defined functions to register. */
     functions?: Record<string, { options?: FunctionOptions, func: (...args: SQLOutputValue[]) => SQLInputValue  }> | undefined;

@@ -5,7 +5,7 @@ import type { SQLiteConnectOptions } from './sqlite-protocol';
 export interface ErrorResult {
     type:    'error';
     message: string;
-    code?:   string;
+    code?:   number;
 }
 
 export interface OpenDatabaseMessage {
@@ -79,8 +79,18 @@ parentPort?.on('message', (message: SQLiteWorkerMessage) => {
                 database.loadExtension(ext);
             }
 
+            for (const [name, options] of Object.entries(message.params.aggregates ?? {})) {
+                database.aggregate(name, {
+                    ...options,
+                    useBigIntArguments: options.useBigIntArguments ?? message.params.readBigInts ?? true,
+                });
+            }
+
             for (const [name, { options, func }] of Object.entries(message.params.functions ?? {})) {
-                database.function(name, options ?? {}, func);
+                database.function(name, {
+                    ...options,
+                    useBigIntArguments: options?.useBigIntArguments ?? message.params.readBigInts ?? true,
+                }, func);
             }
 
             sendResult({ type: message.type })
@@ -125,7 +135,7 @@ parentPort?.on('message', (message: SQLiteWorkerMessage) => {
     }
     catch (err: any) {
         // console.error(`*** SQLiteWorker message exception`, err, message);
-        sendResult({ type: 'error', message: err?.message ?? String(err), code: err.errcode?.toString() });
+        sendResult({ type: 'error', message: err?.message ?? String(err), code: err.code === 'ERR_SQLITE_ERROR' ? err.errcode : undefined });
     }
 }).on('close', () => {
     database?.close();
