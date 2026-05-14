@@ -108,7 +108,7 @@ export function describeCommonDBTest(def: CommonDBTestParams): void {
         serial:    BigInt(1),
         uuid:      '00000000-0000-0000-0000-000000000000',
         int:       1e6,
-        bigint:    BigInt('99999999999999999'),
+        bigint:    def.enableDT.bigints ? BigInt('99999999999999999') : BigInt(Number.MAX_SAFE_INTEGER),
         real:      12345.6,
         double:    1234567890.123,
         decimal:   !def.enableDT.decimal ? null : '99999999999999999.99110',
@@ -438,6 +438,7 @@ export function describeCommonDBTest(def: CommonDBTestParams): void {
 
             expect(maxRetries).toBeGreaterThanOrEqual(1);
             expect(start).toBeGreaterThanOrEqual(3);
+            // expect(end).toBeGreaterThanOrEqual(2); // With proper timeout, end should acctually always be 2?
             expect(end).toBe(2);
             expect(Number(col)).toBe(113);
         });

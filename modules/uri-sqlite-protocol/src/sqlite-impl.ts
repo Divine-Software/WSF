@@ -1,10 +1,15 @@
 import { DatabaseURI, DBColumnInfo, DBDriver, DBError, DBQuery, DBResult, DBTransactionParams, q } from '@divine/uri';
-import { SqliteError } from 'better-sqlite3';
 import { basename, extname } from 'path';
 import { Worker } from 'worker_threads';
 import { SQLiteStatus } from './sqlite-errors';
 import type { SQLiteParams } from './sqlite-protocol';
 import type { ExecuteQueryResult, SQLiteWorkerMessage, SQLiteWorkerResult } from './sqlite-worker';
+
+class SqliteError extends Error {
+    constructor(message: string, public code: string) {
+        super(message);
+    }
+}
 
 export class SQLiteConnectionPool extends DBDriver.DBConnectionPool<SQLiteParams> {
     protected async _createDBConnection(): Promise<DBDriver.DBConnection> {

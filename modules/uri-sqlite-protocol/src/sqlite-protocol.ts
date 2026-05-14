@@ -1,15 +1,34 @@
 import { DatabaseURI, DBDriver, DBParams, DBParamsSelector, URI } from '@divine/uri';
-import { Options } from 'better-sqlite3';
 import { SQLiteConnectionPool } from './sqlite-impl';
+import { DatabaseSync, DatabaseSyncOptions, FunctionOptions, SQLInputValue, SQLOutputValue } from 'node:sqlite'
 
 export { SQLiteStatus } from './sqlite-errors';
 
+type NodeSQLiteConnectOptions = Omit<DatabaseSyncOptions,
+    | 'allowBareNamedParameters'
+    | 'allowExtension'
+    | 'allowUnknownNamedParameters'
+    | 'open'
+    | 'readBigInts'
+    | 'returnArrays'
+    | 'timeout'
+>;
+
 /** Connection parameters for {@link SQLiteURI}. */
-export interface SQLiteConnectOptions extends Options {
+export interface SQLiteConnectOptions extends NodeSQLiteConnectOptions {
+    /** Shared library extensions to load. */
+    extensions?: string[] | undefined;
+
+    /** SQLite user-defined functions to register. */
+    functions?: Record<string, { options?: FunctionOptions, func: (...args: SQLOutputValue[]) => SQLInputValue  }> | undefined;
+
     /**
      * Set to `false` to use `number` instead of `bigint` for integer types. Default is to use `bigint`.
      */
-    defaultSafeIntegers?: boolean | undefined;
+    readBigInts?: boolean | undefined;
+
+    /** The busy timeout in milliseconds. Default is 5000 ms. */
+    timeout?: number | undefined;
 }
 
 /** SQLite-specific DBParams. */

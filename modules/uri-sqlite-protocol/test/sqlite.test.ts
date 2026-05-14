@@ -55,7 +55,7 @@ describeCommonDBTest({
 describeCommonDBTest({
     name: 'SQLite (no bigints)',
     uri:  new URI('sqlite:/tmp/_divine_uri_test_.db').addSelector<DBParamsSelector>({
-        params: { connectOptions: { defaultSafeIntegers: false } }
+        params: { connectOptions: { readBigInts: false } }
     }),
     createDT: q`
         create table dt (

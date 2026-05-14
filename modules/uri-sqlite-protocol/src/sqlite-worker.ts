@@ -1,4 +1,4 @@
-import Database from 'better-sqlite3';
+import { DatabaseSync, type StatementColumnMetadata, type SQLInputValue } from 'node:sqlite';
 import { parentPort } from 'worker_threads';
 import type { SQLiteConnectOptions } from './sqlite-protocol';
 
@@ -42,7 +42,7 @@ export interface ExecuteQueryMessage {
 
 export interface ExecuteQueryResult {
     type:              'execute';
-    columns?:          Database.ColumnDefinition[]
+    columns?:          StatementColumnMetadata[]
     rows?:             unknown[][];
     changes?:          number;
     lastInsertRowid?:  string;
@@ -51,7 +51,7 @@ export interface ExecuteQueryResult {
 export type SQLiteWorkerMessage = OpenDatabaseMessage | CloseDatabaseMessage | ExecuteQueryMessage | ShutdownMessage;
 export type SQLiteWorkerResult  = OpenDatabaseResult  | CloseDatabaseResult  | ExecuteQueryResult  | ShutdownResult  | ErrorResult;
 
-let database: Database.Database | null = null;
+let database: DatabaseSync | null = null;
 
 function sendResult(result: SQLiteWorkerResult) {
     parentPort?.postMessage(result);
@@ -61,11 +61,27 @@ parentPort?.on('message', (message: SQLiteWorkerMessage) => {
     try {
         if (message.type === 'open') {
             if (database) {
-                throw new Error(`Database '${database.name}' already open.`);
+                throw new Error(`Database '${message.dbPath}' already open.`);
             }
 
-            database = new Database(message.dbPath, message.params)
-                .defaultSafeIntegers(message.params.defaultSafeIntegers ?? true);
+            database = new DatabaseSync(message.dbPath, {
+                ...{ ...message.params, extensions: undefined, functions: undefined },
+                allowBareNamedParameters:    false,
+                allowExtension:              !!message.params.extensions?.length,
+                allowUnknownNamedParameters: false,
+                open:                        true,
+                readBigInts:                 message.params.readBigInts ?? true, // Default is true.
+                returnArrays:                true,
+                timeout:                     message.params.timeout ?? 5000,     // Default is 5000 ms.
+            });
+
+            for (const ext of message.params.extensions ?? []) {
+                database.loadExtension(ext);
+            }
+
+            for (const [name, { options, func }] of Object.entries(message.params.functions ?? {})) {
+                database.function(name, options ?? {}, func);
+            }
 
             sendResult({ type: message.type })
         }
@@ -85,18 +101,17 @@ parentPort?.on('message', (message: SQLiteWorkerMessage) => {
             }
 
             const query = database.prepare(message.query);
+            const columns = query.columns();
 
-            if (query.reader) {
-                const reader  = query.raw(true);
-                const rows    = reader.all(...message.params) as unknown[][];
-                const columns = reader.columns();
+            if (columns.length > 0) {
+                const rows = query.all(...message.params as SQLInputValue[]) as unknown as unknown[][];
 
                 sendResult({ type: message.type, columns, rows });
             }
             else {
-                const info = query.run(...message.params);
+                const info = query.run(...message.params as SQLInputValue[]);
 
-                sendResult({ type: message.type, changes: info.changes, lastInsertRowid: info.lastInsertRowid?.toString() });
+                sendResult({ type: message.type, changes: Number(info.changes), lastInsertRowid: info.lastInsertRowid?.toString() });
             }
         }
         else if (message.type === 'shutdown') {
@@ -110,7 +125,7 @@ parentPort?.on('message', (message: SQLiteWorkerMessage) => {
     }
     catch (err: any) {
         // console.error(`*** SQLiteWorker message exception`, err, message);
-        sendResult({ type: 'error', message: err?.message ?? String(err), code: err.code });
+        sendResult({ type: 'error', message: err?.message ?? String(err), code: err.errcode?.toString() });
     }
 }).on('close', () => {
     database?.close();
