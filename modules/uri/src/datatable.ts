@@ -358,7 +358,23 @@ export abstract class DataTableBase<K extends DTKey, E extends object, T extends
     protected abstract makeRecord(key: K | null, current: Readonly<T & DTMetadata> | null, entity: E | T): T;
 
     /**
+     * Override this method if you need to transform records returned by the storage layer before they are returned by
+     * the data table, for example to add derived properties or to mask sensitive data.
+     *
+     * By default, this method returns the record unchanged.
+     *
+     * @param record  The record returned by the storage layer.
+     * @returns       The record to be returned by the data table.
+     */
+    protected returnRecord(record: T): T {
+        return record;
+    }
+
+    /**
      * Implement this method to provide metadata (timestamp and/or version) for a single persisted record.
+     *
+     * Note that this method is invoked *before* {@link returnRecord}, so it has full access to the original record as
+     * returned by the storage layer.
      */
     protected abstract recordMetadata(record: Readonly<T>): DTRecordMetadata | Promise<DTRecordMetadata>;
 
@@ -508,7 +524,7 @@ export abstract class DataTableBase<K extends DTKey, E extends object, T extends
 
     async load(authorize: DTAuthorizer<K, T>, key: K): Promise<T & DTMetadata> {
         const current = await this._recordMetadata(await this.dtbLoad(key).catch(err => this.dtbError(err)));
-        return await this._recordMetadata(await this.dtbAuthorize(authorize, key, current)) ?? throwError(new DTError('not-found'));
+        return await this._returnRecord(await this.dtbAuthorize(authorize, key, current)) ?? throwError(new DTError('not-found'));
     }
 
     async save(authorize: DTAuthorizer<K, T>, key: K, entity: E, precondition?: Precondition): Promise<T & DTMetadata> {
@@ -524,7 +540,7 @@ export abstract class DataTableBase<K extends DTKey, E extends object, T extends
             const record = current
                 ? await this.dtbModify(key, this._toUpdateRow(current, updated)).catch(err => this.dtbError(err))
                 : await this.dtbAppend(updated).catch(err => this.dtbError(err));
-            return await this._recordMetadata(record, current === null) ?? throwError('dtbModify/dtbAppend did not return a record.');
+            return await this._returnRecord(record, current === null) ?? throwError('dtbModify/dtbAppend did not return a record.');
         }).catch(err => this.dtbError(err));
     }
 
@@ -540,7 +556,7 @@ export abstract class DataTableBase<K extends DTKey, E extends object, T extends
             }) ?? throwError('No object returned from authorizer.');
 
             const record = await this.dtbAppend(created).catch(err => this.dtbError(err));
-            return await this._recordMetadata(record, true) ?? throwError('dtbAppend did not return a record.');
+            return await this._returnRecord(record, true) ?? throwError('dtbAppend did not return a record.');
         }).catch(err => this.dtbError(err));
     }
 
@@ -557,7 +573,7 @@ export abstract class DataTableBase<K extends DTKey, E extends object, T extends
             }) ?? throwError('No object returned from authorizer.');
 
             const record = await this.dtbModify(key, this._toUpdateRow(current, updated)).catch(err => this.dtbError(err));
-            return await this._recordMetadata(record, false) ?? throwError('dtbModify did not return a record.');
+            return await this._returnRecord(record, false) ?? throwError('dtbModify did not return a record.');
         }).catch(err => this.dtbError(err));
     }
 
@@ -577,7 +593,7 @@ export abstract class DataTableBase<K extends DTKey, E extends object, T extends
 
             if (updated /* next() return value overridden by authorizer */) {
                 const record = await this.dtbModify(key, this._toUpdateRow(current, updated)).catch(err => this.dtbError(err));
-                return await this._recordMetadata(record, false) ?? throwError('dtbModify did not return a record.');
+                return await this._returnRecord(record, false) ?? throwError('dtbModify did not return a record.');
             } else {
                 await this.dtbRemove(key).catch(err => this.dtbError(err));
                 return Object.defineProperty(wrap(null) as Wrap<null> & DTMetadata, DT_METADATA, { value: { version: null} });
@@ -585,11 +601,19 @@ export abstract class DataTableBase<K extends DTKey, E extends object, T extends
         }).catch(err => this.dtbError(err));
     }
 
-    private async _recordMetadata(record: T | null, created?: boolean): Promise<T & DTMetadata | null> {
+    private async _recordMetadata(record: T | null): Promise<T & DTMetadata | null> {
+        return await this._addRecordMetadata(record, undefined, false);
+    }
+
+    private async _returnRecord(record: T | null, created?: boolean): Promise<T & DTMetadata | null> {
+        return await this._addRecordMetadata(record, created, true);
+    }
+
+    private async _addRecordMetadata(record: T | null, created: boolean | undefined, returnRecord: boolean): Promise<T & DTMetadata | null> {
         if (record) {
             const md = await this.recordMetadata(record);
 
-            return Object.defineProperty(record as T & DTMetadata, DT_METADATA, { configurable: true, value: {
+            return Object.defineProperty((returnRecord ? this.returnRecord(record) : record) as T & DTMetadata, DT_METADATA, { configurable: true, value: {
                 created:    created,
                 timestamp:  md.timestamp,
                 version:    md.version,
@@ -685,7 +709,9 @@ export abstract class DBDataTable<K extends DTKey, E extends object, T extends o
      * Converts a record to the actual table row format used for persistence.
      *
      * The default implementation assumes a 1:1 mapping between record properties and table columns, but subclasses can
-     * override this to implement custom mapping logic.
+     * override this to implement custom mapping logic, for example to pack arrays or to serialize JSON fields.
+     *
+     * @see makeRecord
      *
      * @param record  Typed record.
      * @returns       Storage row object.
@@ -698,7 +724,9 @@ export abstract class DBDataTable<K extends DTKey, E extends object, T extends o
      * Converts a table row from persistence into a record.
      *
      * The default implementation assumes a 1:1 mapping between record properties and table columns, but subclasses can
-     * override this to implement custom mapping logic.
+     * override this to implement custom mapping logic, for example to unpack arrays or to deserialize JSON fields.
+     *
+     * @see returnRecord
      *
      * @param row  Storage row object.
      * @returns    Typed record.

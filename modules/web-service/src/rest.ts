@@ -1,4 +1,4 @@
-import { DataTable, DT_METADATA, DTAuthorizer, DTError, DTFilter, DTMetadata, Precondition, SafeURIString, unwrap, Wrap } from '@divine/uri';
+import { DataTable, type DataTableBase, DT_METADATA, DTAuthorizer, DTError, DTFilter, DTMetadata, Precondition, SafeURIString, unwrap, Wrap } from '@divine/uri';
 import { WebError, WebStatus } from './error';
 import { type WebArguments, WebResource, WebResourceBase } from './resource';
 import { WebResponse } from './response';
@@ -172,10 +172,14 @@ export abstract class RESTResource<Context, K extends string, E extends object, 
      * to set additional headers or to change the response format (like masking sensitive fields or wrapping the result
      * in an envelope object).
      *
+     * That being said, masking sensitive fields, it is probably better to use {@link DataTableBase.returnRecord} to
+     * customize the data table response instead of overriding this method.
+     *
      * Be aware that if you do not apply the exact same transformation to the result of all operations all of the time,
-     * you *must* also update the `etag` header by appending a `~` character followed by some tag that identifies the
+     * you *must* also update the entity version by appending a `~` character followed by some tag that identifies the
      * transformation. Otherwise, `GET`/`HEAD` requests may use stale data that do not take the transformation into
-     * account.
+     * account. If you modify the result *before* calling this method, modify `result[DT_METADATA].version`; if you
+     * modify it *after* calling this method, modify the returned response's `etag` header.
      *
      * @param result Data table result to convert. May be an entity or a list of entities; includes metadata through the
      *               `DT_METADATA` symbol.
