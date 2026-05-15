@@ -1,5 +1,11 @@
 # @divine/uri-sqlite-protocol
 
+## 2.0.0-v2.3
+
+### Patch Changes
+
+- 036e909: Cleaner exception handling. Added aggregates which I forgot.
+
 ## 2.0.0-v2.2
 
 ### Major Changes

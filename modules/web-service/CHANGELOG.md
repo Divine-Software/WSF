@@ -1,5 +1,11 @@
 # @divine/web-service
 
+## 2.0.0-v2.7
+
+### Patch Changes
+
+- 6fa0a1a: Added DataTableBase.returnRecord().
+
 ## 2.0.0-v2.6
 
 ### Patch Changes

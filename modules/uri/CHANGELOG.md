@@ -1,5 +1,11 @@
 # @divine/uri
 
+## 2.0.0-v2.9
+
+### Minor Changes
+
+- 6fa0a1a: Added DataTableBase.returnRecord().
+
 ## 2.0.0-v2.8
 
 ### Minor Changes
