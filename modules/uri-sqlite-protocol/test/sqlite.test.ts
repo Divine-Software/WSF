@@ -1,6 +1,7 @@
-import { DBParamsSelector, q, URI } from '@divine/uri';
+import { q, URI } from '@divine/uri';
 import { describeCommonDBTest } from '@divine/uri/build/test/protocols/common-database-tests';
 import '../src';
+import { SQLiteParamsSelector } from '../src';
 
 describeCommonDBTest({
     name: 'SQLite',
@@ -54,7 +55,7 @@ describeCommonDBTest({
 
 describeCommonDBTest({
     name: 'SQLite (no bigints)',
-    uri:  new URI('sqlite:/tmp/_divine_uri_test_.db').addSelector<DBParamsSelector>({
+    uri:  new URI('sqlite:/tmp/_divine_uri_test_.db').addSelector<SQLiteParamsSelector>({
         params: { connectOptions: { readBigInts: false } }
     }),
     createDT: q`

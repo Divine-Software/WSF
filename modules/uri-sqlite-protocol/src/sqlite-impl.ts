@@ -72,7 +72,7 @@ class SQLiteDatabaseConnection implements DBDriver.DBConnection {
                     this._handleResult(null, this._error); // Reject immediately
                 }
                 else {
-                    this._worker.postMessage(this._current.message); // Send to worker
+                    this._worker.postMessage(packFunctions(this._current.message)); // Send to worker
                 }
             }
         }
@@ -272,4 +272,16 @@ function toSQLiteType(value: unknown): unknown {
     else {
         return value;
     }
+}
+
+function packFunctions<T extends object>(obj: T): T {
+    for (const [key, value] of Object.entries(obj)) {
+        if (typeof value === 'function') {
+            obj[key as keyof T] = Uint8ClampedArray.from(Buffer.from(value.toString())) as any;
+        } else if (value !== null && typeof value === 'object') {
+            packFunctions(value);
+        }
+    }
+
+    return obj;
 }

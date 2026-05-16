@@ -57,8 +57,22 @@ function sendResult(result: SQLiteWorkerResult) {
     parentPort?.postMessage(result);
 }
 
+function unpackFunctions<T extends object>(obj: T): T {
+    for (const [key, value] of Object.entries(obj)) {
+        if (value instanceof Uint8ClampedArray) {
+            obj[key as keyof T] = eval(Buffer.from(value).toString());
+        } else if (value !== null && typeof value === 'object') {
+            unpackFunctions(value);
+        }
+    }
+
+    return obj;
+}
+
 parentPort?.on('message', (message: SQLiteWorkerMessage) => {
     try {
+        message = unpackFunctions(message);
+
         if (message.type === 'open') {
             if (database) {
                 throw new Error(`Database '${message.dbPath}' already open.`);

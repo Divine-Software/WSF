@@ -1,3 +1,15 @@
+/**
+ * Returns the primary SQLite status code for a given status code.
+ *
+ * The supplied status code may be either a primary or an extended status code.
+ *
+ * @param status SQLite status code (primary or extended).
+ * @returns      Primary SQLite status code.
+ */
+export function toPrimaryStatus(status: SQLiteStatus): SQLiteStatus {
+    return String(Number(status) & 255) as SQLiteStatus;
+}
+
 // From <https://sqlite.org/c3ref/c_abort.html> and <https://sqlite.org/c3ref/c_abort_rollback.html>
 export const enum SQLiteStatus {
     SQLITE_OK                                            = '0',
