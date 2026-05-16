@@ -1,5 +1,11 @@
 # @divine/uri-sqlite-protocol
 
+## 2.0.0-v2.5
+
+### Patch Changes
+
+- 9626545: Tweak functions signature, func serdes.
+
 ## 2.0.0-v2.4
 
 ### Patch Changes
