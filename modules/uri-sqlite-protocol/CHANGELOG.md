@@ -1,5 +1,11 @@
 # @divine/uri-sqlite-protocol
 
+## 2.0.0-v2.4
+
+### Patch Changes
+
+- f64b116: Serialize functions. Added toPrimaryStatus().
+
 ## 2.0.0-v2.3
 
 ### Patch Changes
