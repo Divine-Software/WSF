@@ -57,10 +57,24 @@ function sendResult(result: SQLiteWorkerResult) {
     parentPort?.postMessage(result);
 }
 
+function unpackFunction(source: string | Buffer) {
+    try {
+        try {
+            // eslint-disable-next-line @typescript-eslint/no-implied-eval
+            return new Function(`return (${source})`)();
+        } catch {
+            return eval(`Object.values({${source}})[0]`); // try "method" syntax
+        }
+    } catch (err: any) {
+        err.message = `unpackFunction: ${err.message}: ${source}`;
+        throw err;
+    }
+}
+
 function unpackFunctions<T extends object>(obj: T): T {
     for (const [key, value] of Object.entries(obj)) {
         if (value instanceof Uint8ClampedArray) {
-            obj[key as keyof T] = eval(Buffer.from(value).toString());
+            obj[key as keyof T] = unpackFunction(Buffer.from(value));
         } else if (value !== null && typeof value === 'object') {
             unpackFunctions(value);
         }
@@ -100,11 +114,11 @@ parentPort?.on('message', (message: SQLiteWorkerMessage) => {
                 });
             }
 
-            for (const [name, { options, func }] of Object.entries(message.params.functions ?? {})) {
+            for (const [name, options] of Object.entries(message.params.functions ?? {})) {
                 database.function(name, {
-                    ...options,
-                    useBigIntArguments: options?.useBigIntArguments ?? message.params.readBigInts ?? true,
-                }, func);
+                    ...{ ...options, func: undefined },
+                    useBigIntArguments: options.useBigIntArguments ?? message.params.readBigInts ?? true,
+                }, options.func);
             }
 
             sendResult({ type: message.type })

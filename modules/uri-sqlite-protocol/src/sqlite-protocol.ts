@@ -23,7 +23,7 @@ export interface SQLiteConnectOptions extends NodeSQLiteConnectOptions {
     aggregates?: Record<string, AggregateOptions> | undefined;
 
     /** SQLite user-defined functions to register. */
-    functions?: Record<string, { options?: FunctionOptions, func: (...args: SQLOutputValue[]) => SQLInputValue  }> | undefined;
+    functions?: Record<string, FunctionOptions & { func: (...args: SQLOutputValue[]) => SQLInputValue }> | undefined;
 
     /**
      * Set to `false` to use `number` instead of `bigint` for integer types. Default is to use `bigint`.
