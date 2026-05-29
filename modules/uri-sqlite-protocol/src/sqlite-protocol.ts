@@ -19,10 +19,20 @@ export interface SQLiteConnectOptions extends NodeSQLiteConnectOptions {
     /** Shared library extensions to load. */
     extensions?: string[] | undefined;
 
-    /** SQLite aggregate functions to register. */
+    /**
+     * SQLite aggregate functions to register.
+     *
+     * Note that all functions will be serialized and sent to a worker thread, so they must be pure functions that do
+     * not rely on any external state.
+     */
     aggregates?: Record<string, AggregateOptions> | undefined;
 
-    /** SQLite user-defined functions to register. */
+    /**
+     * SQLite user-defined functions to register.
+     *
+     * Note that all functions will be serialized and sent to a worker thread, so they must be pure functions that do
+     * not rely on any external state.
+     */
     functions?: Record<string, FunctionOptions & { func: (...args: SQLOutputValue[]) => SQLInputValue }> | undefined;
 
     /**
