@@ -96,7 +96,7 @@ export class WebRequest implements AuthSchemeRequest {
         const server       = String((config.trustForwardedHost  ? this.header('x-forwarded-host',       '', false) : '') || incomingServer);
         this.remoteAddress = String((config.trustForwardedFor   ? this.header('x-forwarded-for',        '', false) : '') || incomingRemote);
         this.method        = String((config.trustMethodOverride ? this.header('x-http-method-override', '', false) : '') || incomingMethod);
-        this.url           = new URL(`${scheme}://${server}${incomingMessage.url}`);
+        this.url           = new URL(incomingMessage.url || '/', (() => { const u = new URL(`${scheme}://localhost`); u.host = server; return u })());
         this.precondition  = createCondition(this.method, incomingMessage.headers);
         this.userAgent     = new UAParser(incomingMessage.headers['user-agent']).getResult() as UserAgent;
         this.id            = incomingReqID && REQUEST_ID.test(incomingReqID) ? incomingReqID : ulid().toLowerCase();
