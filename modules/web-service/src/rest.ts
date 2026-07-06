@@ -69,12 +69,14 @@ export abstract class RESTResource<Context, K extends string, E extends object, 
      *
      * This method should throw {@link WebError} if access is denied.
      *
-     * @template V        Authorized value shape (`T` for entity operations, `T[]` for list operations).
-     * @param key         Record key, or `null` for list-level operations.
-     * @param current     Current metadata-decorated value visible at this stage, or `null`.
-     * @param next        Optional callback producing the value that is about to be persisted.
-     * @throws {WebError} If access is denied.
-     * @returns           The value allowed by authorization, or `null` to deny visibility.
+     * @see {@link DTAuthorizer}
+     *
+     * @template V           Authorized value shape (`T` for entity operations, `T[]` for list operations).
+     * @param    key         Record key, or `null` for list-level operations.
+     * @param    current     Current metadata-decorated value visible at this stage, or `null`.
+     * @param    next        Optional callback producing the value that is about to be persisted.
+     * @throws   {WebError}  If access is denied.
+     * @returns              The value allowed by authorization, or `null` to deny visibility.
      */
     protected abstract authorize<V extends T | T[]>(key: K | null, current: Readonly<V & DTMetadata> | null, next?: () => Promise<V | null>): Promise<V | null>;
 

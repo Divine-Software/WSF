@@ -304,11 +304,11 @@ export class URI extends URL implements AsyncIterable<Buffer> {
      * It's also perfectly valid *not* to specify a selector for some kind of parameters. As long as there is only one
      * kind of this configuration, it will apply unconditionally.
      *
-     * @param  selector   The selector to add.
-     * @param  merge      If a selector of the same kind already exists, merge the new selector instead of replacing the
-     *                    previous one. Note that merging auth selectors is not supported.
-     * @throws TypeError  If the selector to add is invalid.
-     * @returns           This URI.
+     * @param  selector     The selector to add.
+     * @param  merge        If a selector of the same kind already exists, merge the new selector instead of replacing the
+     *                      previous one. Note that merging auth selectors is not supported.
+     * @throws {TypeError}  If the selector to add is invalid.
+     * @returns             This URI.
      */
     addSelector<T extends AuthSelector | HeadersSelector | ParamsSelector | SessionSelector>(selector: T, merge = false): this {
         let valid = false;
@@ -356,9 +356,9 @@ export class URI extends URL implements AsyncIterable<Buffer> {
      * The actual operation depends on what kind of URI this is. See {@link FileURI.info} or {@link HTTPURI.info} for
      * two common examples.
      *
-     * @template T        The actual type of information record returned. Must extend {@link DirectoryEntry}.
-     * @throws   IOError  On I/O errors or if the subclass does not support this method.
-     * @returns           An information record describing the resources.
+     * @template T          The actual type of information record returned. Must extend {@link DirectoryEntry}.
+     * @throws   {IOError}  On I/O errors or if the subclass does not support this method.
+     * @returns             An information record describing the resources.
      */
     async info<T extends DirectoryEntry>(): Promise<T & Metadata> {
         throw new IOError(`URI ${this} does not support info().`);
@@ -369,9 +369,9 @@ export class URI extends URL implements AsyncIterable<Buffer> {
      *
      * The actual operation depends on what kind of URI this is. See {@link FileURI.info} for a common example.
      *
-     * @template T        The actual type of information record returned. Must extend {@link DirectoryEntry}.
-     * @throws   IOError  On I/O errors or if the subclass does not support this method.
-     * @returns           An array of information record describing the subresources.
+     * @template T          The actual type of information record returned. Must extend {@link DirectoryEntry}.
+     * @throws   {IOError}  On I/O errors or if the subclass does not support this method.
+     * @returns             An array of information record describing the subresources.
      */
     async list<T extends DirectoryEntry>(): Promise<T[] & Metadata> {
         throw new IOError(`URI ${this} does not support list().`);
@@ -387,11 +387,11 @@ export class URI extends URL implements AsyncIterable<Buffer> {
      * to {@link ContentType.bytes} to receive a Node.js `Buffer` and {@link ContentType.stream} for an
      * `AsyncIterable<Buffer>` stream, if you prefer raw data.
      *
-     * @template T            The actual type returned.
-     * @param    recvCT       Override the default response parser.
-     * @throws   IOError      On I/O errors or if the subclass does not support this method.
-     * @throws   ParserError  If the media type is unsupported or the parser fails to parse the resource.
-     * @returns               The remote resource parsed as `recvCT` *into an object*, including {@link MetaData}.
+     * @template T              The actual type returned.
+     * @param    recvCT         Override the default response parser.
+     * @throws   {IOError}      On I/O errors or if the subclass does not support this method.
+     * @throws   {ParserError}  If the media type is unsupported or the parser fails to parse the resource.
+     * @returns                 The remote resource parsed as `recvCT` *into an object*, including {@link MetaData}.
      */
     // eslint-disable-next-line @typescript-eslint/no-unused-vars
     async load<T>(recvCT?: ContentType | string): Promise<Wrap<T> & Metadata> {
@@ -408,15 +408,15 @@ export class URI extends URL implements AsyncIterable<Buffer> {
      * to {@link ContentType.bytes} to receive a Node.js `Buffer` and {@link ContentType.stream} for an
      * `AsyncIterable<Buffer>` stream, if you prefer raw data.
      *
-     * @template T            The actual type returned.
-     * @template D            The type of data to store.
-     * @param    data         The data to store.
-     * @param    sendCT       Override the default data serializer.
-     * @param    recvCT       Override the default response parser.
-     * @throws   IOError      On I/O errors or if the subclass does not support this method.
-     * @throws   ParserError  If the media type is unsupported or the parser fails to parse the response.
-     * @returns               If the operation produced a result, it will be parsed as `recvCT` *into an object*,
-     *                        including {@link MetaData}.
+     * @template T              The actual type returned.
+     * @template D              The type of data to store.
+     * @param    data           The data to store.
+     * @param    sendCT         Override the default data serializer.
+     * @param    recvCT         Override the default response parser.
+     * @throws   {IOError}      On I/O errors or if the subclass does not support this method.
+     * @throws   {ParserError}  If the media type is unsupported or the parser fails to parse the response.
+     * @returns                 If the operation produced a result, it will be parsed as `recvCT` *into an object*,
+     *                          including {@link MetaData}.
      */
     // eslint-disable-next-line @typescript-eslint/no-unused-vars
     async save<T, D = unknown>(data: D, sendCT?: ContentType | string, recvCT?: ContentType | string): Promise<Wrap<T> & Metadata> {
@@ -433,15 +433,15 @@ export class URI extends URL implements AsyncIterable<Buffer> {
      * to {@link ContentType.bytes} to receive a Node.js `Buffer` and {@link ContentType.stream} for an
      * `AsyncIterable<Buffer>` stream, if you prefer raw data.
      *
-     * @template T            The actual type returned.
-     * @template D            The type of data to append.
-     * @param    data         The data to append.
-     * @param    sendCT       Override the default data serializer.
-     * @param    recvCT       Override the default response parser.
-     * @throws   IOError      On I/O errors or if the subclass does not support this method.
-     * @throws   ParserError  If the media type is unsupported or the parser fails to parse the response.
-     * @returns               If the operation produced a result, it will be parsed as `recvCT` *into an object*,
-     *                        including {@link MetaData}.
+     * @template T              The actual type returned.
+     * @template D              The type of data to append.
+     * @param    data           The data to append.
+     * @param    sendCT         Override the default data serializer.
+     * @param    recvCT         Override the default response parser.
+     * @throws   {IOError}      On I/O errors or if the subclass does not support this method.
+     * @throws   {ParserError}  If the media type is unsupported or the parser fails to parse the response.
+     * @returns                 If the operation produced a result, it will be parsed as `recvCT` *into an object*,
+     *                          including {@link MetaData}.
      */
     // eslint-disable-next-line @typescript-eslint/no-unused-vars
     async append<T, D = unknown>(data: D, sendCT?: ContentType | string, recvCT?: ContentType | string): Promise<Wrap<T> & Metadata> {
@@ -458,15 +458,15 @@ export class URI extends URL implements AsyncIterable<Buffer> {
      * to {@link ContentType.bytes} to receive a Node.js `Buffer` and {@link ContentType.stream} for an
      * `AsyncIterable<Buffer>` stream, if you prefer raw data.
      *
-     * @template T            The actual type returned.
-     * @template D            The type of patch data to apply.
-     * @param    data         The patch data to apply.
-     * @param    sendCT       Override the default data serializer.
-     * @param    recvCT       Override the default response parser.
-     * @throws   IOError      On I/O errors or if the subclass does not support this method.
-     * @throws   ParserError  If the media type is unsupported or the parser fails to parse the response.
-     * @returns               If the operation produced a result, it will be parsed as `recvCT` *into an object*,
-     *                        including {@link MetaData}.
+     * @template T              The actual type returned.
+     * @template D              The type of patch data to apply.
+     * @param    data           The patch data to apply.
+     * @param    sendCT         Override the default data serializer.
+     * @param    recvCT         Override the default response parser.
+     * @throws   {IOError}      On I/O errors or if the subclass does not support this method.
+     * @throws   {ParserError}  If the media type is unsupported or the parser fails to parse the response.
+     * @returns                 If the operation produced a result, it will be parsed as `recvCT` *into an object*,
+     *                          including {@link MetaData}.
      */
     // eslint-disable-next-line @typescript-eslint/no-unused-vars
     async modify<T, D = unknown>(data: D, sendCT?: ContentType | string, recvCT?: ContentType | string): Promise<Wrap<T> & Metadata> {
@@ -483,12 +483,12 @@ export class URI extends URL implements AsyncIterable<Buffer> {
      * to {@link ContentType.bytes} to receive a Node.js `Buffer` and {@link ContentType.stream} for an
      * `AsyncIterable<Buffer>` stream, if you prefer raw data.
      *
-     * @template T            The actual type returned.
-     * @param    recvCT       Override the default response parser.
-     * @throws   IOError      On I/O errors or if the subclass does not support this method.
-     * @throws   ParserError  If the media type is unsupported or the parser fails to parse the response.
-     * @returns               If the operation produced a result, it will be parsed as `recvCT` *into an object*,
-     *                        including {@link MetaData}.
+     * @template T              The actual type returned.
+     * @param    recvCT         Override the default response parser.
+     * @throws   {IOError}      On I/O errors or if the subclass does not support this method.
+     * @throws   {ParserError}  If the media type is unsupported or the parser fails to parse the response.
+     * @returns                 If the operation produced a result, it will be parsed as `recvCT` *into an object*,
+     *                          including {@link MetaData}.
      */
     // eslint-disable-next-line @typescript-eslint/no-unused-vars
     async remove<T>(recvCT?: ContentType | string): Promise<Wrap<T> & Metadata> {
@@ -501,11 +501,11 @@ export class URI extends URL implements AsyncIterable<Buffer> {
      * The actual operation depends on what kind of URI this is. See {@link HTTPURI.query} or {@link DatabaseURI.query}
      * for two common examples.
      *
-     * @template T            The actual type returned.
-     * @param    args         Depends on the subclass.
-     * @throws   IOError      On I/O errors or if the subclass does not support this method.
-     * @throws   ParserError  If the media type is unsupported or the parser fails to parse the response.
-     * @returns               If the operation produced a result, it will returned together with {@link MetaData}.
+     * @template T              The actual type returned.
+     * @param    args           Depends on the subclass.
+     * @throws   {IOError}      On I/O errors or if the subclass does not support this method.
+     * @throws   {ParserError}  If the media type is unsupported or the parser fails to parse the response.
+     * @returns                 If the operation produced a result, it will returned together with {@link MetaData}.
      */
     // eslint-disable-next-line @typescript-eslint/no-unused-vars
     async query<T>(...args: unknown[]): Promise<Wrap<T> & Metadata> {
@@ -518,10 +518,10 @@ export class URI extends URL implements AsyncIterable<Buffer> {
      * The actual operation depends on what kind of URI this is. See {@link FileURI.watch} or {@link DatabaseURI.watch}
      * for two common examples.
      *
-     * @param    args         Depends on the subclass.
-     * @throws   IOError      On I/O errors or if the subclass does not support this method.
-     * @throws   ParserError  If the media type is unsupported or the parser fails to parse the response.
-     * @returns               A stream of change events together with {@link MetaData}.
+     * @param    args           Depends on the subclass.
+     * @throws   {IOError}      On I/O errors or if the subclass does not support this method.
+     * @throws   {ParserError}  If the media type is unsupported or the parser fails to parse the response.
+     * @returns                 A stream of change events together with {@link MetaData}.
      */
     // eslint-disable-next-line @typescript-eslint/no-unused-vars, require-yield
     async *watch(...args: unknown[]): AsyncIterable<object & Metadata> {
@@ -542,8 +542,8 @@ export class URI extends URL implements AsyncIterable<Buffer> {
      * All URIs are `AsyncIterable<Buffer>`. This method implements that interface by calling
      * {@link load}({@link @divine/headers!ContentType.stream}).
      *
-     * @returns An `AsyncIterator<Buffer>` stream.
-     * @yields  `Buffer` chunks of the resource.
+     * @yields  {Buffer}  Chunks of bytes from the resource.
+     * @returns           An `AsyncIterator<Buffer>` stream.
      */
     async *[Symbol.asyncIterator](): AsyncIterator<Buffer> & Metadata {
         return yield* await this.load<AsyncIterable<Buffer>>('application/vnd.esxx.octet-stream');

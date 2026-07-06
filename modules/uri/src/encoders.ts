@@ -48,11 +48,11 @@ export abstract class Encoder {
     /**
      * Encodes the provided stream using one or more encoders.
      *
-     * @param  stream        The data to encode. If a string, it will first converted to UTF-8.
-     * @param  types         An encoding format or an ordered list of encoding formats to apply to the stream. A list
-     *                       may either be a comma-separated string or an array of strings.
-     * @throws EncoderError  On encoding errors or if the encoding format is not recognized.
-     * @returns              An encoded byte stream.
+     * @param  stream          The data to encode. If a string, it will first converted to UTF-8.
+     * @param  types           An encoding format or an ordered list of encoding formats to apply to the stream. A list
+     *                         may either be a comma-separated string or an array of strings.
+     * @throws {EncoderError}  On encoding errors or if the encoding format is not recognized.
+     * @returns                An encoded byte stream.
      */
     static encode(stream: string | Buffer | AsyncIterable<Buffer>, types: string | string[]): Readable & AsyncIterable<Buffer> {
         stream = isAsyncIterable(stream) ? stream : toAsyncIterable(stream);
@@ -73,11 +73,11 @@ export abstract class Encoder {
     /**
      * Decodes the provided stream using one or more encoders.
      *
-     * @param  stream        The data to encode. If a string, it will first converted to UTF-8.
-     * @param  types         An encoding format or an ordered list of encoding formats to apply (in reverse!) to the
-     *                       stream.  A list may either be a comma-separated string or an array of strings.
-     * @throws EncoderError  On decoding errors or if the encoding format is not recognized.
-     * @returns              An encoded byte stream.
+     * @param  stream          The data to encode. If a string, it will first converted to UTF-8.
+     * @param  types           An encoding format or an ordered list of encoding formats to apply (in reverse!) to the
+     *                         stream.  A list may either be a comma-separated string or an array of strings.
+     * @throws {EncoderError}  On decoding errors or if the encoding format is not recognized.
+     * @returns                An encoded byte stream.
      */
     static decode(stream: string | Buffer | AsyncIterable<Buffer>, types: string | string[]): Readable & AsyncIterable<Buffer> {
         stream = isAsyncIterable(stream) ? stream : toAsyncIterable(stream);
@@ -111,7 +111,7 @@ export abstract class Encoder {
     /**
      * Constructs a new Encoder instance.
      *
-     * @param type The encoding format this encoder object was instanciated for.
+     * @param type The encoding format this encoder object was instantiated for.
      */
     constructor(type: string) {
         this.type = type.toLowerCase();
@@ -122,9 +122,9 @@ export abstract class Encoder {
      *
      * This method must be implemented by the actual subclass.
      *
-     * @param  stream        The stream to encode.
-     * @throws EncoderError  On encoding errors.
-     * @returns              The encoded stream.
+     * @param  stream          The stream to encode.
+     * @throws {EncoderError}  On encoding errors.
+     * @returns                The encoded stream.
      */
     abstract encode(stream: AsyncIterable<Buffer>): AsyncIterable<Buffer>;
 
@@ -133,9 +133,9 @@ export abstract class Encoder {
      *
      * This method must be implemented by the actual subclass.
      *
-     * @param  stream        The stream to decode.
-     * @throws EncoderError  On decoding errors.
-     * @returns              The decoded stream.
+     * @param  stream          The stream to decode.
+     * @throws {EncoderError}  On decoding errors.
+     * @returns                The decoded stream.
      */
      abstract decode(stream: AsyncIterable<Buffer>): AsyncIterable<Buffer>;
 }

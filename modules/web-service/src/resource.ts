@@ -288,9 +288,9 @@ export class WebArguments<Params extends ParamsBase = ParamsBase> {
      * Checks if the request meets the specified precondition, and throws a
      * {@link WebError}({@link WebStatus.PRECONDITION_FAILED}) if not.
      *
-     * @param version     The entity version to check against, or `null` if the current entity does not exist.
-     * @param timestamp   The entity timestamp to check against, or `undefined` if the entity does not have a timestamp.
-     * @throws {WebError} A {@link WebStatus.PRECONDITION_FAILED} error if the precondition is not met.
+     * @param  version     The entity version to check against, or `null` if the current entity does not exist.
+     * @param  timestamp   The entity timestamp to check against, or `undefined` if the entity does not have a timestamp.
+     * @throws {WebError}  {@link WebStatus.PRECONDITION_FAILED} if the precondition is not met.
      */
     precondition(version?: string | null, timestamp?: Date | string): void {
         if (this.request.precondition && !this.request.precondition.test(version, timestamp)) {
@@ -302,15 +302,13 @@ export class WebArguments<Params extends ParamsBase = ParamsBase> {
      * Invokes {@link WebRequest.body} and then inserts all top-level properties of the parsed body into {@link params}
      * with a `.` prefix (unless the parsed body is an array).
      *
-     * @template T             The type this method should return.
-     * @param contentType      What parser to use. Defaults to the `content-type` request header.
-     * @param maxContentLength The maximum number of bytes to parse (after content-decoding/decompression). Defaults to
-     *                         {@link WebServiceConfig.maxContentLength}.
-     * @throws                 A {@link WebError}({@link WebStatus.PAYLOAD_TOO_LARGE}) if the request payload was larger
-     *                         than allowed.
-     * @throws                 A {@link WebError}({@link WebStatus.UNSUPPORTED_MEDIA_TYPE}) if the payload could not be
-     *                         parsed.
-     * @returns                The parsed request payload.
+     * @template T                 The type this method should return.
+     * @param    contentType       What parser to use. Defaults to the `content-type` request header.
+     * @param    maxContentLength  The maximum number of bytes to parse (after content-decoding/decompression). Defaults to
+     *                             {@link WebServiceConfig.maxContentLength}.
+     * @throws   {WebError}        {@link WebStatus.PAYLOAD_TOO_LARGE} if the request payload was larger than allowed.
+     * @throws   {WebError}        {@link WebStatus.UNSUPPORTED_MEDIA_TYPE} if the payload could not be parsed.
+     * @returns                    The parsed request payload.
      */
     async body<T extends object>(contentType?: ContentType | string, maxContentLength?: number): Promise<T> {
         const body = await this.request.body<T>(contentType, maxContentLength);
@@ -346,12 +344,10 @@ export class WebArguments<Params extends ParamsBase = ParamsBase> {
      *
      * The values `true` and `t` are accepted as `true`, while `false` and `f` represent `false`.
      *
-     * @param param The name of the parameter to fetch (must include the desired prefix).
-     * @throws      A {@link WebError}({@link WebStatus.BAD_REQUEST}) if a non-body parameter is missing or cannot be
-     *              parsed.
-     * @throws      A {@link WebError}({@link WebStatus.UNPROCESSABLE_ENTITY}) if a body parameter is missing or cannot be
-     *              parsed.
-     * @returns     The parameter parsed as a boolean.
+     * @param  param       The name of the parameter to fetch (must include the desired prefix).
+     * @throws {WebError}  {@link WebStatus.BAD_REQUEST} if a non-body parameter is missing or cannot be parsed.
+     * @throws {WebError}  {@link WebStatus.UNPROCESSABLE_ENTITY} if a body parameter is missing or cannot be parsed.
+     * @returns            The parameter parsed as a boolean.
      */
     boolean(param: keyof Params & ParamsKeys): boolean;
     /**
@@ -359,12 +355,12 @@ export class WebArguments<Params extends ParamsBase = ParamsBase> {
      *
      * The values `true` and `t` are accepted as `true`, while `false` and `f` represents `false`.
      *
-     * @template T  The type of the {@link def} parameter.
-     * @param param The name of the parameter to fetch (must include the desired prefix).
-     * @param def   The value that should be returned if the parameter could not be found.
-     * @throws      A {@link WebError}({@link WebStatus.BAD_REQUEST}) if a non-body parameter cannot be parsed.
-     * @throws      A {@link WebError}({@link WebStatus.UNPROCESSABLE_ENTITY}) if a body parameter cannot be parsed.
-     * @returns     The parameter parsed as a boolean, or the value of `def`.
+     * @template T           The type of the {@link def} parameter.
+     * @param    param       The name of the parameter to fetch (must include the desired prefix).
+     * @param    def         The value that should be returned if the parameter could not be found.
+     * @throws   {WebError}  {@link WebStatus.BAD_REQUEST} if a non-body parameter cannot be parsed.
+     * @throws   {WebError}  {@link WebStatus.UNPROCESSABLE_ENTITY} if a body parameter cannot be parsed.
+     * @returns              The parameter parsed as a boolean, or the value of `def`.
      */
     boolean<T extends boolean | undefined | null>(param: keyof Params & ParamsKeys, def: T): boolean | T;
     boolean(param: keyof Params & ParamsKeys, def?: boolean | undefined | null): boolean | undefined | null {
@@ -389,12 +385,10 @@ export class WebArguments<Params extends ParamsBase = ParamsBase> {
      *
      * The values `true` and `t` are accepted as `true`, while `false` and `f` represents `false`.
      *
-     * @param param The name of the parameter to fetch (must include the desired prefix).
-     * @throws      A {@link WebError}({@link WebStatus.BAD_REQUEST}) if a non-body parameter is missing or cannot be
-     *              parsed.
-     * @throws      A {@link WebError}({@link WebStatus.UNPROCESSABLE_ENTITY}) if a body parameter is missing or cannot
-     *              be parsed.
-     * @returns     The parameter parsed as an ISO date/timestamp.
+     * @param  param       The name of the parameter to fetch (must include the desired prefix).
+     * @throws {WebError}  {@link WebStatus.BAD_REQUEST} if a non-body parameter is missing or cannot be parsed.
+     * @throws {WebError}  {@link WebStatus.UNPROCESSABLE_ENTITY} if a body parameter is missing or cannot be parsed.
+     * @returns            The parameter parsed as an ISO date/timestamp.
      */
     date(param: keyof Params & ParamsKeys): Date;
     /**
@@ -402,12 +396,12 @@ export class WebArguments<Params extends ParamsBase = ParamsBase> {
      *
      * Any date/timestamp that begins with at least 4 digits and is supported by `new Date()` is accepted.
      *
-     * @template T  The type of the {@link def} parameter.
-     * @param param The name of the parameter to fetch (must include the desired prefix).
-     * @param def   The value that should be returned if the parameter could not be found.
-     * @throws      A {@link WebError}({@link WebStatus.BAD_REQUEST}) if a non-body parameter cannot be parsed.
-     * @throws      A {@link WebError}({@link WebStatus.UNPROCESSABLE_ENTITY}) if a body parameter cannot be parsed.
-     * @returns     The parameter parsed as an ISO date/timestamp, or the value of `def`.
+     * @template T           The type of the {@link def} parameter.
+     * @param    param       The name of the parameter to fetch (must include the desired prefix).
+     * @param    def         The value that should be returned if the parameter could not be found.
+     * @throws   {WebError}  {@link WebStatus.BAD_REQUEST} if a non-body parameter cannot be parsed.
+     * @throws   {WebError}  {@link WebStatus.UNPROCESSABLE_ENTITY} if a body parameter cannot be parsed.
+     * @returns              The parameter parsed as an ISO date/timestamp, or the value of `def`.
      */
     date<T extends Date | undefined | null>(param: keyof Params & ParamsKeys, def: T): Date | T;
     date(param: keyof Params & ParamsKeys, def?: Date | undefined | null): Date | undefined | null {
@@ -441,12 +435,10 @@ export class WebArguments<Params extends ParamsBase = ParamsBase> {
      *
      * Any number supported by `BigInt()` is accepted. This means that `0x`, `0b` and `0o` prefices are respected.
      *
-     * @param param The name of the parameter to fetch (must include the desired prefix).
-     * @throws      A {@link WebError}({@link WebStatus.BAD_REQUEST}) if a non-body parameter is missing or cannot be
-     *              parsed.
-     * @throws      A {@link WebError}({@link WebStatus.UNPROCESSABLE_ENTITY}) if a body parameter is missing or cannot
-     *              be parsed.
-     * @returns     The parameter parsed as a bigint.
+     * @param  param       The name of the parameter to fetch (must include the desired prefix).
+     * @throws {WebError}  {@link WebStatus.BAD_REQUEST} if a non-body parameter is missing or cannot be parsed.
+     * @throws {WebError}  {@link WebStatus.UNPROCESSABLE_ENTITY} if a body parameter is missing or cannot be parsed.
+     * @returns            The parameter parsed as a bigint.
      */
     integer(param: keyof Params & ParamsKeys): bigint;
     /**
@@ -454,12 +446,12 @@ export class WebArguments<Params extends ParamsBase = ParamsBase> {
      *
      * Any number supported by `BigInt()` is accepted. This means that `0x`, `0b` and `0o` prefices are respected.
      *
-     * @template T  The type of the {@link def} parameter.
-     * @param param The name of the parameter to fetch (must include the desired prefix).
-     * @param def   The value that should be returned if the parameter could not be found.
-     * @throws      A {@link WebError}({@link WebStatus.BAD_REQUEST}) if a non-body parameter cannot be parsed.
-     * @throws      A {@link WebError}({@link WebStatus.UNPROCESSABLE_ENTITY}) if a body parameter cannot be parsed.
-     * @returns     The parameter parsed as an integer, or the value of `def`.
+     * @template T           The type of the {@link def} parameter.
+     * @param    param       The name of the parameter to fetch (must include the desired prefix).
+     * @param    def         The value that should be returned if the parameter could not be found.
+     * @throws   {WebError}  {@link WebStatus.BAD_REQUEST} if a non-body parameter cannot be parsed.
+     * @throws   {WebError}  {@link WebStatus.UNPROCESSABLE_ENTITY} if a body parameter cannot be parsed.
+     * @returns              The parameter parsed as an integer, or the value of `def`.
      */
     integer<T extends bigint | undefined | null>(param: keyof Params & ParamsKeys, def: T): bigint | T;
     integer(param: keyof Params & ParamsKeys, def?: bigint | undefined | null): bigint | undefined | null {
@@ -481,12 +473,10 @@ export class WebArguments<Params extends ParamsBase = ParamsBase> {
      *
      * Any number supported by `Number()` is accepted. This means that `0x`, `0b` and `0o` prefices are respected.
      *
-     * @param param The name of the parameter to fetch (must include the desired prefix).
-     * @throws      A {@link WebError}({@link WebStatus.BAD_REQUEST}) if a non-body parameter is missing or cannot be
-     *              parsed.
-     * @throws      A {@link WebError}({@link WebStatus.UNPROCESSABLE_ENTITY}) if a body parameter is missing or cannot be
-     *              parsed.
-     * @returns     The parameter parsed as a number.
+     * @param  param       The name of the parameter to fetch (must include the desired prefix).
+     * @throws {WebError}  {@link WebStatus.BAD_REQUEST} if a non-body parameter is missing or cannot be parsed.
+     * @throws {WebError}  {@link WebStatus.UNPROCESSABLE_ENTITY} if a body parameter is missing or cannot be parsed.
+     * @returns            The parameter parsed as a number.
      */
     number(param: keyof Params & ParamsKeys): number;
     /**
@@ -494,12 +484,12 @@ export class WebArguments<Params extends ParamsBase = ParamsBase> {
      *
      * Any number supported by `Number()` is accepted. This means that `0x`, `0b` and `0o` prefices are respected.
      *
-     * @template T  The type of the {@link def} parameter.
-     * @param param The name of the parameter to fetch (must include the desired prefix).
-     * @param def   The value that should be returned if the parameter could not be found.
-     * @throws      A {@link WebError}({@link WebStatus.BAD_REQUEST}) if a non-body parameter cannot be parsed.
-     * @throws      A {@link WebError}({@link WebStatus.UNPROCESSABLE_ENTITY}) if a body parameter cannot be parsed.
-     * @returns     The parameter parsed as a number, or the value of `def`.
+     * @template T           The type of the {@link def} parameter.
+     * @param    param       The name of the parameter to fetch (must include the desired prefix).
+     * @param    def         The value that should be returned if the parameter could not be found.
+     * @throws   {WebError}  {@link WebStatus.BAD_REQUEST} if a non-body parameter cannot be parsed.
+     * @throws   {WebError}  {@link WebStatus.UNPROCESSABLE_ENTITY} if a body parameter cannot be parsed.
+     * @returns              The parameter parsed as a number, or the value of `def`.
      */
     number<T extends number | undefined | null>(param: keyof Params & ParamsKeys, def: T): number | T;
     number(param: keyof Params & ParamsKeys, def?: number | undefined | null): number | undefined | null {
@@ -525,12 +515,10 @@ export class WebArguments<Params extends ParamsBase = ParamsBase> {
      * Note that only parameters coming from the request body or manually set by {@link WebRequest.setParam} can
      * actually be objects.
      *
-     * @param param The name of the parameter to fetch (must include the desired prefix).
-     * @throws      A {@link WebError}({@link WebStatus.BAD_REQUEST}) if a non-body parameter is missing or cannot be
-     *              parsed.
-     * @throws      A {@link WebError}({@link WebStatus.UNPROCESSABLE_ENTITY}) if a body parameter is missing or cannot
-     *              be parsed.
-     * @returns     The parameter as an object.
+     * @param  param       The name of the parameter to fetch (must include the desired prefix).
+     * @throws {WebError}  {@link WebStatus.BAD_REQUEST} if a non-body parameter is missing or cannot be parsed.
+     * @throws {WebError}  {@link WebStatus.UNPROCESSABLE_ENTITY} if a body parameter is missing or cannot be parsed.
+     * @returns            The parameter as an object.
      */
     object<T extends object>(param: keyof Params & ParamsKeys): T;
     /**
@@ -539,12 +527,12 @@ export class WebArguments<Params extends ParamsBase = ParamsBase> {
      * Note that only parameters coming from the request body or manually set by {@link WebRequest.setParam} can
      * actually be objects.
      *
-     * @template T  The type of the {@link def} parameter.
-     * @param param The name of the parameter to fetch (must include the desired prefix).
-     * @param def   The value that should be returned if the parameter could not be found.
-     * @throws      A {@link WebError}({@link WebStatus.BAD_REQUEST}) if a non-body parameter cannot be parsed.
-     * @throws      A {@link WebError}({@link WebStatus.UNPROCESSABLE_ENTITY}) if a body parameter cannot be parsed.
-     * @returns     The parameter as an object, or the value of `def`.
+     * @template T          The type of the {@link def} parameter.
+     * @param    param      The name of the parameter to fetch (must include the desired prefix).
+     * @param    def        The value that should be returned if the parameter could not be found.
+     * @throws  {WebError}  {@link WebStatus.BAD_REQUEST} if a non-body parameter cannot be parsed.
+     * @throws  {WebError}  {@link WebStatus.UNPROCESSABLE_ENTITY} if a body parameter cannot be parsed.
+     * @returns             The parameter as an object, or the value of `def`.
      */
     object<T extends object | undefined | null>(param: keyof Params & ParamsKeys, def: T): object | T;
     object<T extends object>(param: keyof Params & ParamsKeys, def?: T | undefined | null): T | undefined | null {
@@ -565,23 +553,21 @@ export class WebArguments<Params extends ParamsBase = ParamsBase> {
     /**
      * Returns the value of a parameter as a string.
      *
-     * @param param The name of the parameter to fetch (must include the desired prefix).
-     * @throws      A {@link WebError}({@link WebStatus.BAD_REQUEST}) if a non-body parameter is missing or cannot be
-     *              parsed.
-     * @throws      A {@link WebError}({@link WebStatus.UNPROCESSABLE_ENTITY}) if a body parameter is missing or cannot
-     *              be parsed.
-     * @returns     The parameter as a string.
+     * @param  param       The name of the parameter to fetch (must include the desired prefix).
+     * @throws {WebError}  {@link WebStatus.BAD_REQUEST} if a non-body parameter is missing or cannot be parsed.
+     * @throws {WebError}  {@link WebStatus.UNPROCESSABLE_ENTITY} if a body parameter is missing or cannot be parsed.
+     * @returns            The parameter as a string.
      */
     string(param: keyof Params & ParamsKeys): string;
     /**
      * Returns the value of a parameter as a string.
      *
-     * @template T  The type of the {@link def} parameter.
-     * @param param The name of the parameter to fetch (must include the desired prefix).
-     * @param def   The value that should be returned if the parameter could not be found.
-     * @throws      A {@link WebError}({@link WebStatus.BAD_REQUEST}) if a non-body parameter cannot be parsed.
-     * @throws      A {@link WebError}({@link WebStatus.UNPROCESSABLE_ENTITY}) if a body parameter cannot be parsed.
-     * @returns     The parameter as a string, or the value of `def`.
+     * @template T           The type of the {@link def} parameter.
+     * @param    param       The name of the parameter to fetch (must include the desired prefix).
+     * @param    def         The value that should be returned if the parameter could not be found.
+     * @throws   {WebError}  {@link WebStatus.BAD_REQUEST} if a non-body parameter cannot be parsed.
+     * @throws   {WebError}  {@link WebStatus.UNPROCESSABLE_ENTITY} if a body parameter cannot be parsed.
+     * @returns              The parameter as a string, or the value of `def`.
      */
     string<T extends string | undefined | null>(param: keyof Params & ParamsKeys, def: T): string | T;
     string(param: keyof Params & ParamsKeys, def?: string | undefined | null): string | undefined | null {

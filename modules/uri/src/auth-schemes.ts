@@ -187,25 +187,25 @@ export abstract class AuthScheme<C extends Credentials> {
     /**
      * Generates an {@link Authorization} header for an outgoing request.
      *
-     * @param  challenge        An optional challenge sent by the remote server.
-     * @param  request          The request that is to be authenticated.
-     * @param  payload          The request payload that will be sent.
-     * @throws AuthSchemeError  If the challenge or the credentials provided via {@link setCredentialsProvider} are
-     *                          incompatibe with this AuthScheme.
-     * @returns                 An Authorization header with the provided credentials.
+     * @param  challenge          An optional challenge sent by the remote server.
+     * @param  request            The request that is to be authenticated.
+     * @param  payload            The request payload that will be sent.
+     * @throws {AuthSchemeError}  If the challenge or the credentials provided via {@link setCredentialsProvider} are
+     *                            incompatibe with this AuthScheme.
+     * @returns                   An Authorization header with the provided credentials.
      */
     abstract createAuthorization(challenge?: WWWAuthenticate, request?: AuthSchemeRequest, payload?: Uint8Array): Promise<Authorization | undefined>;
 
     /**
      * Verifies an {@link Authorization} header from an incoming request.
      *
-     * @template T                The type of the header to validate.
-     * @param    authorization    The authentication provided by the remote client.
-     * @param    request          The request that is to be authenticated.
-     * @param    payload          The request payload that was sent.
-     * @throws   AuthSchemeError  If the authentication or the credentials provided via {@link setCredentialsProvider}
-     *                            are incompatibe with this AuthScheme.
-     * @returns                   The validated Authorization header.
+     * @template T                  The type of the header to validate.
+     * @param    authorization      The authentication provided by the remote client.
+     * @param    request            The request that is to be authenticated.
+     * @param    payload            The request payload that was sent.
+     * @throws   {AuthSchemeError}  If the authentication or the credentials provided via {@link setCredentialsProvider}
+     *                              are incompatibe with this AuthScheme.
+     * @returns                     The validated Authorization header.
      */
     abstract verifyAuthorization<T extends Authorization | undefined>(authorization: T, request?: AuthSchemeRequest, payload?: Uint8Array): Promise<T>;
 
@@ -214,22 +214,22 @@ export abstract class AuthScheme<C extends Credentials> {
      *
      * Not all protocols supports verification of responses. In that case, this method does nothing.
      *
-     * @template T                The type of the header to validate.
-     * @param    authentication   The authentication provided by the remote server.
-     * @param    request          The *response* to a request that is to be authenticated.
-     * @param    payload          The *response* payload received from the remote server.
-     * @throws   AuthSchemeError  If the authentication or the credentials provided via {@link setCredentialsProvider}
-     *                            are incompatibe with this AuthScheme.
-     * @returns                   The validated AuthenticationInfo/ServerAuthorization header.
+     * @template T                  The type of the header to validate.
+     * @param    authentication     The authentication provided by the remote server.
+     * @param    request            The *response* to a request that is to be authenticated.
+     * @param    payload            The *response* payload received from the remote server.
+     * @throws   {AuthSchemeError}  If the authentication or the credentials provided via {@link setCredentialsProvider}
+     *                              are incompatibe with this AuthScheme.
+     * @returns                     The validated AuthenticationInfo/ServerAuthorization header.
      */
     abstract verifyAuthenticationInfo<T extends AuthenticationInfo | ServerAuthorization | undefined>(authentication: T, request?: AuthSchemeRequest, payload?: Uint8Array): Promise<T>;
 
     /**
      * Checks if the provided credentials are compatible with this AuthScheme.
      *
-     * @param  credentials      The credentials to check for compatibility.
-     * @throws AuthSchemeError  If the credentials provided are incompatibe with this AuthScheme.
-     * @returns                 `true` if the provided credentials are usable by this AuthScheme.
+     * @param  credentials        The credentials to check for compatibility.
+     * @throws {AuthSchemeError}  If the credentials provided are incompatibe with this AuthScheme.
+     * @returns                   `true` if the provided credentials are usable by this AuthScheme.
      */
     protected abstract _isCompatibleCredentials(credentials: Credentials): boolean;
 
@@ -248,10 +248,10 @@ export abstract class AuthScheme<C extends Credentials> {
     /**
      * Asks the credentials provider for credentials.
      *
-     * @param  options          Options to pass to the credentials provider.
-     * @throws AuthSchemeError  If the authentication, challenge or the credentials provided via
-     *                          {@link setCredentialsProvider} are incompatibe with this AuthScheme.
-     * @returns                 Valid credentials or `undefined` if no credentials could be provided.
+     * @param  options            Options to pass to the credentials provider.
+     * @throws {AuthSchemeError}  If the authentication, challenge or the credentials provided via
+     *                            {@link setCredentialsProvider} are incompatibe with this AuthScheme.
+     * @returns                   Valid credentials or `undefined` if no credentials could be provided.
      */
     protected async _getCredentials(options: CredentialsProviderOptions<C>): Promise<C | undefined> {
         this._assertCompatibleAuthHeader(options.authorization);
@@ -290,9 +290,9 @@ export abstract class AuthScheme<C extends Credentials> {
     /**
      * Asserts that an authentication header is compatible with this AuthScheme.
      *
-     * @param   header           The header to check, or `undefined` to do nothing.
-     * @throws  AuthSchemeError  If the header is incompatible with this AuthScheme.
-     * @returns                  The provided header.
+     * @param   header             The header to check, or `undefined` to do nothing.
+     * @throws  {AuthSchemeError}  If the header is incompatible with this AuthScheme.
+     * @returns                    The provided header.
      */
     protected _assertCompatibleAuthHeader<H extends AuthHeader | undefined>(header: H): H {
         if (header !== undefined && header.scheme !== this.scheme) {
@@ -306,10 +306,10 @@ export abstract class AuthScheme<C extends Credentials> {
     /**
      * Asserts that some credentials are compatible with this AuthScheme.
      *
-     * @template C                The type of credentials that the scheme uses.
-     * @param    credentials      The credentials to check, or `undefined` to do nothing.
-     * @throws   AuthSchemeError  If the credentials are incompatible with this AuthScheme.
-     * @returns                   The provided credentials.
+     * @template C                  The type of credentials that the scheme uses.
+     * @param    credentials        The credentials to check, or `undefined` to do nothing.
+     * @throws   {AuthSchemeError}  If the credentials are incompatible with this AuthScheme.
+     * @returns                     The provided credentials.
      */
      protected _assertCompatibleCredentials<C extends Credentials | undefined>(credentials: C): C {
         if (credentials && !this._isCompatibleCredentials(credentials)) {

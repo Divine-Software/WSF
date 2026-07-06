@@ -21,11 +21,11 @@ import { BasicTypes, FIELDS, Metadata, Params, WithFields, Wrap, wrap } from '..
  * See also {@link q.quote}, {@link q.raw}, {@link q.join}, {@link q.list}, {@link q.values} and {@link q.assign} for
  * handy utility functions.
  *
- * @param  query      The query as a template string array.
- * @param  params     The query parameters. Values may be {@link DBQuery} instances themselves, or of any type supported
- *                    by the database.
- * @throws TypeError  If one of the parameters is `undefined`.
- * @returns           A new DBQeury object.
+ * @param  query        The query as a template string array.
+ * @param  params       The query parameters. Values may be {@link DBQuery} instances themselves, or of any type supported
+ *                      by the database.
+ * @throws {TypeError}  If one of the parameters is `undefined`.
+ * @returns             A new DBQeury object.
  */
 export function q(query: TemplateStringsArray, ...params: unknown[]): DBQuery;
 /**
@@ -42,11 +42,11 @@ export function q(query: TemplateStringsArray, ...params: unknown[]): DBQuery;
  * See also {@link q.quote}, {@link q.raw}, {@link q.join}, {@link q.list}, {@link q.values} and {@link q.assign} for
  * handy utility functions.
  *
- * @param  query      The query, with `{prop}` placeholders for parameters.
- * @param  params     An record with parameters, used to look up placeholders from the query. Parameters may be DBQuery
- *                    instances themselves, or of any type supported by the database.
- * @throws TypeError  If one of the parameters is `undefined`.
- * @returns           A new DBQeury object.
+ * @param  query        The query, with `{prop}` placeholders for parameters.
+ * @param  params       An record with parameters, used to look up placeholders from the query. Parameters may be DBQuery
+ *                      instances themselves, or of any type supported by the database.
+ * @throws {TypeError}  If one of the parameters is `undefined`.
+ * @returns             A new DBQeury object.
  */
 export function q(query: string, params: Params): DBQuery;
 // eslint-disable-next-line jsdoc/require-jsdoc
@@ -517,9 +517,9 @@ export class DBQuery {
      * {@link q.list}, {@link q.values} or {@link q.assign} to construct queries, or just call {@link DatabaseURI.query}
      * directly.
      *
-     * @param  query      The query segments, much like a template literal string array.
-     * @param  params     The parameters. There should be exactly one less parameter than query segments.
-     * @throws TypeError  If one of the parameters is `undefined` or if a nested DBQuery is invalid.
+     * @param  query        The query segments, much like a template literal string array.
+     * @param  params       The parameters. There should be exactly one less parameter than query segments.
+     * @throws {TypeError}  If one of the parameters is `undefined` or if a nested DBQuery is invalid.
      */
     constructor(query: ReadonlyArray<string>, params: unknown[]) {
         if (query.length !== params.length + 1) {
@@ -719,8 +719,8 @@ export abstract class DBResult extends Array<unknown[]> {
      * {@link DBColumnInfo.column_name}. Subclasses may override or extend this method, based on how the actual database
      * provides column metadata.
      *
-     * @throws DBError  On database/query errors.
-     * @returns         The updated/expanded column metadata (also available in {@link columns} after this call has
+     * @throws {DBError}  On database/query errors.
+     * @returns           The updated/expanded column metadata (also available in {@link columns} after this call has
      * completed).
      */
     async updateColumnInfo(): Promise<DBColumnInfo[]> {
@@ -800,11 +800,11 @@ export abstract class DBResult extends Array<unknown[]> {
      * This method is used by {@link DatabaseURI.watch} if the event contains only a single row, which is usually the
      * case.
      *
-     * @template T          The actual record type.
-     * @param    fields     What to set `[FIELDS]` to. Defaults to `[ this ]`.
-     * @throws   TypeError  If the length of this result set is not exactly 1.
-     * @returns             A single record (where keys are the column labels) of the first (and only) row in the result
-     *                      set.
+     * @template T            The actual record type.
+     * @param    fields       What to set `[FIELDS]` to. Defaults to `[ this ]`.
+     * @throws   {TypeError}  If the length of this result set is not exactly 1.
+     * @returns               A single record (where keys are the column labels) of the first (and only) row in the
+     *                        result set.
      */
     toObject<T extends object>(fields?: DBResult[]): T & DBMetadata {
         const result = Object.defineProperty(Record(), FIELDS, { value: fields ?? [ this ] }) as any;
@@ -1093,10 +1093,10 @@ export abstract class DatabaseURI extends URI {
      * const info = await base.$`#item_info?{eq,id,${item}}`.load();
      * ```
      *
-     * @param  strings    The template string array.
-     * @param  values     The values to be encoded.
-     * @throws TypeError  If the resulting URI is not actually a DatabaseURI.
-     * @returns           A new DatabaseURI subclass instance.
+     * @param  strings      The template string array.
+     * @param  values       The values to be encoded.
+     * @throws {TypeError}  If the resulting URI is not actually a DatabaseURI.
+     * @returns             A new DatabaseURI subclass instance.
      */
     override $(strings: TemplateStringsArray, ...values: unknown[]): DatabaseURI {
         const result = super.$(strings, ...values);
@@ -1113,11 +1113,11 @@ export abstract class DatabaseURI extends URI {
      * Uses the *DB reference* in this URI's fragment to retrieve one or multiple rows or a single cell from a table
      * with `SELECT`.
      *
-     * @template  T        The actual type returned.
-     * @param     _recvCT  Must not be used.
-     * @throws    IOError  On I/O errors or if this URI does not have a valid *DB reference* fragment.
-     * @throws    DBError  On database/query errors.
-     * @returns            A cell, row or array of rows, with DBMetadata.
+     * @template  T          The actual type returned.
+     * @param     _recvCT    Must not be used.
+     * @throws    {IOError}  On I/O errors or if this URI does not have a valid *DB reference* fragment.
+     * @throws    {DBError}  On database/query errors.
+     * @returns              A cell, row or array of rows, with DBMetadata.
      */
     override load<T>(_recvCT?: ContentType | string): Promise<Wrap<T> & Metadata & DBMetadata> {
         return this._session(async (conn) => {
@@ -1131,14 +1131,14 @@ export abstract class DatabaseURI extends URI {
      * Uses the *DB reference* in this URI's fragment to store one or multiple rows in a table using *upsert* semantics
      * (using `INSERT ... ON CONFLICT UPDATE ...` or `UPSERT`, for instance, but this depends on the database).
      *
-     * @template  T        The actual type returned.
-     * @template  D        The type of data to store.
-     * @param     data     The data to store in a row (or an array of rows to store).
-     * @param     _sendCT  Must not be used.
-     * @param     _recvCT  Must not be used.
-     * @throws    IOError  On I/O errors or if this URI does not have a valid *DB reference* fragment.
-     * @throws    DBError  On database/query errors.
-     * @returns            A row or array of rows (if the database supports it), with DBMetadata.
+     * @template  T          The actual type returned.
+     * @template  D          The type of data to store.
+     * @param     data       The data to store in a row (or an array of rows to store).
+     * @param     _sendCT    Must not be used.
+     * @param     _recvCT    Must not be used.
+     * @throws    {IOError}  On I/O errors or if this URI does not have a valid *DB reference* fragment.
+     * @throws    {DBError}  On database/query errors.
+     * @returns              A row or array of rows (if the database supports it), with DBMetadata.
      */
     override save<T, D = unknown>(data: D, _sendCT?: ContentType | string, _recvCT?: ContentType | string): Promise<Wrap<T> & Metadata & DBMetadata> {
         return this._session(async (conn) => {
@@ -1151,14 +1151,14 @@ export abstract class DatabaseURI extends URI {
     /**
      * Uses the *DB reference* in this URI's fragment to add one or multiple rows in a table using `INSERT`.
      *
-     * @template  T        The actual type returned.
-     * @template  D        The type of data to store.
-     * @param     data     The data to add to the table.
-     * @param     _sendCT  Must not be used.
-     * @param     _recvCT  Must not be used.
-     * @throws    IOError  On I/O errors or if this URI does not have a valid *DB reference* fragment.
-     * @throws    DBError  On database/query errors.
-     * @returns            A row or array of rows (if the database supports it), with DBMetadata.
+     * @template  T          The actual type returned.
+     * @template  D          The type of data to store.
+     * @param     data       The data to add to the table.
+     * @param     _sendCT    Must not be used.
+     * @param     _recvCT    Must not be used.
+     * @throws    {IOError}  On I/O errors or if this URI does not have a valid *DB reference* fragment.
+     * @throws    {DBError}  On database/query errors.
+     * @returns              A row or array of rows (if the database supports it), with DBMetadata.
      */
     override append<T, D = unknown>(data: D, _sendCT?: ContentType | string, _recvCT?: ContentType | string): Promise<Wrap<T> & Metadata & DBMetadata> {
         return this._session(async (conn) => {
@@ -1171,14 +1171,14 @@ export abstract class DatabaseURI extends URI {
     /**
      * Uses the *DB reference* in this URI's fragment to modify one or multiple rows in a table using `UPDATE`.
      *
-     * @template  T        Object.
-     * @template  D        The type of the update data.
-     * @param     data     The data to update in the table.
-     * @param     _sendCT  Must not be used.
-     * @param     _recvCT  Must not be used.
-     * @throws    IOError  On I/O errors or if this URI does not have a valid *DB reference* fragment.
-     * @throws    DBError  On database/query errors.
-     * @returns            `[]`, with DBMetadata.
+     * @template  T          Object.
+     * @template  D          The type of the update data.
+     * @param     data       The data to update in the table.
+     * @param     _sendCT    Must not be used.
+     * @param     _recvCT    Must not be used.
+     * @throws    {IOError}  On I/O errors or if this URI does not have a valid *DB reference* fragment.
+     * @throws    {DBError}  On database/query errors.
+     * @returns              `[]`, with DBMetadata.
      */
     override modify<T, D = unknown>(data: D, _sendCT?: ContentType | string, _recvCT?: ContentType | string): Promise<Wrap<T> & Metadata & DBMetadata> {
         return this._session(async (conn) => {
@@ -1191,11 +1191,11 @@ export abstract class DatabaseURI extends URI {
     /**
      * Uses the *DB reference* in this URI's fragment to remove one or multiple rows from a table using `DELETE`.
      *
-     * @template  T        Object.
-     * @param     _recvCT  Must not be used.
-     * @throws    IOError  On I/O errors or if this URI does not have a valid *DB reference* fragment.
-     * @throws    DBError  On database/query errors.
-     * @returns            `[]`, with DBMetadata.
+     * @template  T          Object.
+     * @param     _recvCT    Must not be used.
+     * @throws    {IOError}  On I/O errors or if this URI does not have a valid *DB reference* fragment.
+     * @throws    {DBError}  On database/query errors.
+     * @returns              `[]`, with DBMetadata.
      */
     override remove<T>(_recvCT?: ContentType | string): Promise<Wrap<T> & Metadata & DBMetadata> {
         return this._session(async (conn) => {
@@ -1208,13 +1208,13 @@ export abstract class DatabaseURI extends URI {
     /**
      * Executes one or more queries in the same session.
      *
-     * @template T          The actual type returned. Always an array.
-     * @param    queries    The queries to execute.
-     * @throws   TypeError  If the arguments are invalid.
-     * @throws   IOError    On I/O errors.
-     * @throws   DBError    On database/query errors.
-     * @returns             An array of rows from the *last* query. All result sets are available as a {@link DBResult}
-     *                      array via {@link FIELDS} (from the DBMetadata).
+     * @template T            The actual type returned. Always an array.
+     * @param    queries      The queries to execute.
+     * @throws   {TypeError}  If the arguments are invalid.
+     * @throws   {IOError}    On I/O errors.
+     * @throws   {DBError}    On database/query errors.
+     * @returns               An array of rows from the *last* query. All result sets are available as a
+     *                        {@link DBResult} array via {@link FIELDS} (from the DBMetadata).
      */
     override query<T = object[]>(...queries: DBQuery[]): Promise<Wrap<T> & Metadata & DBMetadata>;
     /**
@@ -1230,15 +1230,15 @@ export abstract class DatabaseURI extends URI {
      * See also {@link q}, {@link q.quote}, {@link q.raw}, {@link q.join}, {@link q.list}, {@link q.values} and
      * {@link q.assign} for handy utility functions.
      *
-     * @template T          The actual type returned. Always an array.
-     * @param    query      The query as a template string array.
-     * @param    params     The query parameters. Values may be {@link DBQuery} instances or of any type supported by
-     *                      the database.
-     * @throws   TypeError  If one of the parameters is `undefined` or if the arguments are invalid.
-     * @throws   IOError    On I/O errors.
-     * @throws   DBError    On database/query errors.
-     * @returns             An array of rows. The raw set is available as a {@link DBResult} array — of length 1 — via
-     *                      {@link FIELDS} (from the DBMetadata).
+     * @template T            The actual type returned. Always an array.
+     * @param    query        The query as a template string array.
+     * @param    params       The query parameters. Values may be {@link DBQuery} instances or of any type supported by
+     *                        the database.
+     * @throws   {TypeError}  If one of the parameters is `undefined` or if the arguments are invalid.
+     * @throws   {IOError}    On I/O errors.
+     * @throws   {DBError}    On database/query errors.
+     * @returns               An array of rows. The raw set is available as a {@link DBResult} array — of length 1 — via
+     *                        {@link FIELDS} (from the DBMetadata).
      */
     override query<T = object[]>(query: TemplateStringsArray, ...params: (BasicTypes)[]): Promise<Wrap<T> & Metadata & DBMetadata>;
     /**
@@ -1255,15 +1255,15 @@ export abstract class DatabaseURI extends URI {
      * See also {@link q}, {@link q.quote}, {@link q.raw}, {@link q.join}, {@link q.list}, {@link q.values} and
      * {@link q.assign} for handy utility functions.
      *
-     * @template T          The actual type returned. Always an array.
-     * @param    query      The query, with `{prop}` placeholders for parameters.
-     * @param    params     An record with parameters, used to look up placeholders from the query. Parameters may be
-     *                      {@link DBQuery} instances themselves, or of any type supported by the database.
-     * @throws   TypeError  If one of the parameters is `undefined` or if the arguments are invalid.
-     * @throws   IOError    On I/O errors.
-     * @throws   DBError    On database/query errors.
-     * @returns             An array of rows. The raw set is available as a {@link DBResult} array — of length 1 — via
-     *                      {@link FIELDS} (from the DBMetadata).
+     * @template T            The actual type returned. Always an array.
+     * @param    query        The query, with `{prop}` placeholders for parameters.
+     * @param    params       An record with parameters, used to look up placeholders from the query. Parameters may be
+     *                        {@link DBQuery} instances themselves, or of any type supported by the database.
+     * @throws   {TypeError}  If one of the parameters is `undefined` or if the arguments are invalid.
+     * @throws   {IOError}    On I/O errors.
+     * @throws   {DBError}    On database/query errors.
+     * @returns               An array of rows. The raw set is available as a {@link DBResult} array — of length 1 — via
+     *                        {@link FIELDS} (from the DBMetadata).
      */
     override query<T = object[]>(query: string, params: Params): Promise<Wrap<T> & Metadata & DBMetadata>;
     /**
@@ -1281,15 +1281,15 @@ export abstract class DatabaseURI extends URI {
      * If this method is called recursively, *savepoints* will be created (and rolled back) instead of transactions, and
      * `params` will be *silently ignored*. The `retryCount` argument is set to `null` in this case.
      *
-     * @template T          The return type of the callback.
-     * @param    params     Transaction options, specifying the number of retries on deadlocks, the backoff strategey or
-     *                      transaction isolation level.
-     * @param    cb         The function to evaluate inside the transaction/savepoint.
-     * @throws   TypeError  if the arguments are invalid.
-     * @throws   IOError    On I/O errors.
-     * @throws   DBError    On database/query errors.
-     * @throws   unknown    Any exception thrown by `cb` is propagated.
-     * @returns             Whatever `cb` returns.
+     * @template T            The return type of the callback.
+     * @param    params       Transaction options, specifying the number of retries on deadlocks, the backoff strategey or
+     *                        transaction isolation level.
+     * @param    cb           The function to evaluate inside the transaction/savepoint.
+     * @throws   {TypeError}  if the arguments are invalid.
+     * @throws   {IOError}    On I/O errors.
+     * @throws   {DBError}    On database/query errors.
+     * @throws   {unknown}    Any exception thrown by `cb` is propagated.
+     * @returns               Whatever `cb` returns.
      */
     override query<T>(params: DBTransactionParams, cb: DBCallback<T>): Promise<T>;
     /**
@@ -1306,13 +1306,13 @@ export abstract class DatabaseURI extends URI {
      * If this method is called recursively, *savepoints* will be created (and rolled back) instead of transactions. The
      * `retryCount` argument is set to `null` in this case.
      *
-     * @template T          The return type of the callback.
-     * @param    cb         The function to evaluate inside the transaction/savepoint.
-     * @throws   TypeError  if the arguments are invalid.
-     * @throws   IOError    On I/O errors.
-     * @throws   DBError    On database/query errors.
-     * @throws   unknown    Any exception thrown by `cb` is propagated.
-     * @returns             Whatever `cb` returns.
+     * @template T            The return type of the callback.
+     * @param    cb           The function to evaluate inside the transaction/savepoint.
+     * @throws   {TypeError}  if the arguments are invalid.
+     * @throws   {IOError}    On I/O errors.
+     * @throws   {DBError}    On database/query errors.
+     * @throws   {unknown}    Any exception thrown by `cb` is propagated.
+     * @returns               Whatever `cb` returns.
      */
     override query<T>(cb: DBCallback<T>): Promise<T>;
     override async query<T>(first: DBQuery | TemplateStringsArray | string | DBTransactionParams | DBCallback<T>, ...rest: unknown[]): Promise<unknown & Metadata & WithFields<DBResult>> {
@@ -1345,8 +1345,9 @@ export abstract class DatabaseURI extends URI {
      *
      * @template T          The type of events that will be emitted.
      * @param    query      The query that opens the change event stream.
-     * @throws   IOError    On I/O errors.
-     * @throws   DBError    On database/query errors.
+     * @throws   {IOError}  On I/O errors.
+     * @throws   {DBError}  On database/query errors.
+     * @yields   {T}        Change events.
      * @returns             A stream of change events.
      */
     override watch<T extends object>(query: DBQuery): AsyncIterable<T & DBMetadata>;
@@ -1359,14 +1360,15 @@ export abstract class DatabaseURI extends URI {
      * }
      * ```
      *
-     * @template T          The type of events that will be emitted.
-     * @param    query      The query that opens the change event stream.
-     * @param    params     The query parameters. Values may be {@link DBQuery} instances or of any type supported by
-     *                      the database.
-     * @throws   TypeError  If one of the parameters is `undefined` or if the arguments are invalid.
-     * @throws   IOError    On I/O errors.
-     * @throws   DBError    On database/query errors.
-     * @returns             A stream of change events.
+     * @template T            The type of events that will be emitted.
+     * @param    query        The query that opens the change event stream.
+     * @param    params       The query parameters. Values may be {@link DBQuery} instances or of any type supported by
+     *                        the database.
+     * @throws   {TypeError}  If one of the parameters is `undefined` or if the arguments are invalid.
+     * @throws   {IOError}    On I/O errors.
+     * @throws   {DBError}    On database/query errors.
+     * @yields   {T}          Change events.
+     * @returns               A stream of change events.
      */
     override watch<T extends object>(query: TemplateStringsArray, ...params: unknown[]): AsyncIterable<T & DBMetadata>;
     /**
@@ -1378,14 +1380,15 @@ export abstract class DatabaseURI extends URI {
      * }
      * ```
      *
-     * @template T          The type of events that will be emitted.
-     * @param    query      The query that opens the change event stream, with `{prop}` placeholders for parameters.
-     * @param    params     An record with parameters, used to look up placeholders from the query. Parameters may be
-     *                      {@link DBQuery} instances themselves, or of any type supported by the database.
-     * @throws   TypeError  If one of the parameters is `undefined` or if the arguments are invalid.
-     * @throws   IOError    On I/O errors.
-     * @throws   DBError    On database/query errors.
-     * @returns             A stream of change events.
+     * @template T            The type of events that will be emitted.
+     * @param    query        The query that opens the change event stream, with `{prop}` placeholders for parameters.
+     * @param    params       An record with parameters, used to look up placeholders from the query. Parameters may be
+     *                        {@link DBQuery} instances themselves, or of any type supported by the database.
+     * @throws   {TypeError}  If one of the parameters is `undefined` or if the arguments are invalid.
+     * @throws   {IOError}    On I/O errors.
+     * @throws   {DBError}    On database/query errors.
+     * @yields   {T}          Change events.
+     * @returns               A stream of change events.
      */
     override watch<T extends object>(query: string, params: Params): AsyncIterable<T & DBMetadata>;
     override async *watch<T extends object>(query: DBQuery | TemplateStringsArray | string, ...rest: unknown[]): AsyncIterable<unknown & DBMetadata> {
@@ -1418,7 +1421,7 @@ export abstract class DatabaseURI extends URI {
     /**
      * Shuts down the database connection pool.
      *
-     * @throws IOError  On I/O errors.
+     * @throws {IOError}  On I/O errors.
      */
     override async close(): Promise<void> {
         try {

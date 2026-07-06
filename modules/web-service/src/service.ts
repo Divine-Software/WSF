@@ -15,20 +15,20 @@ export interface PayloadEncoder {
     /**
      * A custom decoder function that can be used to decode request payloads.
      *
-     * @param  stream        The request payload to decode.
-     * @param  type          The encoding format.
-     * @throws EncoderError  On decoding errors or if the encoding format is not recognized.
-     * @returns              An encoded byte stream.
+     * @param   stream          The request payload to decode.
+     * @param   type            The encoding format.
+     * @throws  {EncoderError}  On decoding errors or if the encoding format is not recognized.
+     * @returns                 An encoded byte stream.
      */
     decode(stream: AsyncIterable<Buffer>, type: string): AsyncIterable<Buffer>;
 
     /**
      * A custom encoder function that can be used to encode response payloads.
      *
-     * @param  stream        The response payload to encode.
-     * @param  type          The encoding format.
-     * @throws EncoderError  On encoding errors or if the encoding format is not recognized.
-     * @returns              An encoded byte stream.
+     * @param   stream          The response payload to encode.
+     * @param   type            The encoding format.
+     * @throws  {EncoderError}  On encoding errors or if the encoding format is not recognized.
+     * @returns                 An encoded byte stream.
      */
     encode(stream: Buffer | AsyncIterable<Buffer>, type: string): AsyncIterable<Buffer>;
 }
@@ -37,20 +37,20 @@ export interface PayloadParser {
     /**
      * A custom parser function that can be used to parse request payloads.
      *
-     * @param   stream       The request payload as an async iterable of buffers.
-     * @param   contentType  The content type of the request payload.
-     * @throws  ParserError  On parser errors or if the media type is not recognized.
-     * @returns              The parsed message.
+     * @param   stream         The request payload as an async iterable of buffers.
+     * @param   contentType    The content type of the request payload.
+     * @throws  {ParserError}  On parser errors or if the media type is not recognized.
+     * @returns                The parsed message.
      */
     parse(stream: AsyncIterable<Buffer>, contentType: ContentType | string): Promise<object & Finalizable>;
 
     /**
      * A custom serializer function that can be used to serialize response payloads.
      *
-     * @param   data         The response payload to be serialized.
-     * @param   contentType  The content type to use for serialization.
-     * @throws  ParserError  On serialization errors or if the media type is not recognized.
-     * @returns              A tuple containing the serialized payload and the content type.
+     * @param   data           The response payload to be serialized.
+     * @param   contentType    The content type to use for serialization.
+     * @throws  {ParserError}  On serialization errors or if the media type is not recognized.
+     * @returns                A tuple containing the serialized payload and the content type.
      */
     serialize(data: BasicTypes, contentType?: ContentType): [Buffer | AsyncIterable<Buffer>, ContentType];
 }

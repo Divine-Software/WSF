@@ -210,35 +210,35 @@ export interface DataTable<K extends DTKey, E extends object, T extends object =
     /**
      * Loads one record by key.
      *
-     * @param authorize  Authorization callback for the loaded record.
-     * @param key        Record key.
-     * @throws {DTError} With code `not-found` if no matching record exists.
-     * @returns          The loaded record with attached {@link DTMetadata}.
+     * @param  authorize  Authorization callback for the loaded record.
+     * @param  key        Record key.
+     * @throws {DTError}  With code `not-found` if no matching record exists.
+     * @returns           The loaded record with attached {@link DTMetadata}.
      */
     load?(authorize: DTAuthorizer<K, T>, key: K): Promise<T & DTMetadata>;
 
     /**
      * Creates or replaces a record for a key.
      *
-     * @param authorize     Authorization callback for the operation.
-     * @param key           Record key.
-     * @param entity        Input entity data.
-     * @param precondition  Optional conditional guard that must pass before write.
-     * @throws {DTError}    With code `precondition-failed` if `precondition` does not pass.
-     * @throws {DTError}    With code `not-found` if no matching record exists and the table does not support creating
-     *                      new records with user-defined keys.
-     * @returns             The saved record with attached {@link DTMetadata}.
+     * @param  authorize     Authorization callback for the operation.
+     * @param  key           Record key.
+     * @param  entity        Input entity data.
+     * @param  precondition  Optional conditional guard that must pass before write.
+     * @throws {DTError}     With code `precondition-failed` if `precondition` does not pass.
+     * @throws {DTError}     With code `not-found` if no matching record exists and the table does not support creating
+     *                       new records with user-defined keys.
+     * @returns              The saved record with attached {@link DTMetadata}.
      */
     save?(authorize: DTAuthorizer<K, T>, key: K, entity: E, precondition?: Precondition): Promise<T & DTMetadata>;
 
     /**
      * Appends/creates a new record.
      *
-     * @param authorize     Authorization callback for the operation.
-     * @param entity        Input entity data.
-     * @param precondition  Optional table-level conditional guard.
-     * @throws {DTError}    With code `precondition-failed` if `precondition` does not pass.
-     * @returns             The created record with attached {@link DTMetadata}.
+     * @param  authorize     Authorization callback for the operation.
+     * @param  entity        Input entity data.
+     * @param  precondition  Optional table-level conditional guard.
+     * @throws {DTError}     With code `precondition-failed` if `precondition` does not pass.
+     * @returns              The created record with attached {@link DTMetadata}.
      */
     append?(authorize: DTAuthorizer<K, T>, entity: E, precondition?: Precondition): Promise<T & DTMetadata>;
 
@@ -248,13 +248,13 @@ export interface DataTable<K extends DTKey, E extends object, T extends object =
      * `transform` can be either a partial patch object or a function that
      * receives the current record and returns the updated record.
      *
-     * @param authorize     Authorization callback for the operation.
-     * @param key           Record key.
-     * @param transform     Patch object or transformation function.
-     * @param precondition  Optional conditional guard that must pass before write.
-     * @throws {DTError}    With code `not-found` if no matching record exists.
-     * @throws {DTError}    With code `precondition-failed` if `precondition` does not pass.
-     * @returns             The modified record with attached {@link DTMetadata}.
+     * @param  authorize     Authorization callback for the operation.
+     * @param  key           Record key.
+     * @param  transform     Patch object or transformation function.
+     * @param  precondition  Optional conditional guard that must pass before write.
+     * @throws {DTError}     With code `not-found` if no matching record exists.
+     * @throws {DTError}     With code `precondition-failed` if `precondition` does not pass.
+     * @returns              The modified record with attached {@link DTMetadata}.
      */
     modify?(authorize: DTAuthorizer<K, T>, key: K, transform: Partial<E> | ((current: T) => T | Promise<T>), precondition?: Precondition): Promise<T & DTMetadata>;
 
@@ -263,13 +263,13 @@ export interface DataTable<K extends DTKey, E extends object, T extends object =
      *
      * Authorizers may override deletion by returning a replacement record.
      *
-     * @param authorize     Authorization callback for the operation.
-     * @param key           Record key.
-     * @param precondition  Optional conditional guard that must pass before delete.
-     * @throws {DTError}    With code `not-found` if no matching record exists.
-     * @throws {DTError}    With code `precondition-failed` if `precondition` does not pass.
-     * @returns             Either metadata-wrapped `null` (deleted) or a record
-     *                      with attached {@link DTMetadata}.
+     * @param  authorize     Authorization callback for the operation.
+     * @param  key           Record key.
+     * @param  precondition  Optional conditional guard that must pass before delete.
+     * @throws {DTError}     With code `not-found` if no matching record exists.
+     * @throws {DTError}     With code `precondition-failed` if `precondition` does not pass.
+     * @returns              Either metadata-wrapped `null` (deleted) or a record
+     *                       with attached {@link DTMetadata}.
      */
     remove?(authorize: DTAuthorizer<K, T>, key: K, precondition?: Precondition): Promise<T & DTMetadata | Wrap<null> & DTMetadata>;
 }
@@ -457,10 +457,10 @@ export abstract class DataTableBase<K extends DTKey, E extends object, T extends
     /**
      * Evaluates a precondition and throws when it fails.
      *
-     * @param precondition  Precondition to evaluate.
-     * @param version       Current version/etag value.
-     * @param timestamp     Current timestamp value.
-     * @throws {DTError}    With code `precondition-failed` if the precondition does not pass.
+     * @param  precondition  Precondition to evaluate.
+     * @param  version       Current version/etag value.
+     * @param  timestamp     Current timestamp value.
+     * @throws {DTError}     With code `precondition-failed` if the precondition does not pass.
      */
     protected dtbPrecondition(precondition: Precondition | undefined, version?: string | null, timestamp?: Date): void {
         if (precondition && !precondition.test(version, timestamp)) {
@@ -473,8 +473,8 @@ export abstract class DataTableBase<K extends DTKey, E extends object, T extends
      *
      * By default, errors are re-thrown unchanged. Override to translate backend errors into domain errors.
      *
-     * @param err      Error raised by backend/storage code.
-     * @throws {Error} By default, the original error is re-thrown.
+     * @param  err      Error raised by backend/storage code.
+     * @throws {Error}  By default, the original error is re-thrown.
      */
     protected dtbError(err: Error): never {
         throw err;
@@ -711,7 +711,7 @@ export abstract class DBDataTable<K extends DTKey, E extends object, T extends o
      * The default implementation assumes a 1:1 mapping between record properties and table columns, but subclasses can
      * override this to implement custom mapping logic, for example to pack arrays or to serialize JSON fields.
      *
-     * @see makeRecord
+     * @see {@link makeRecord}
      *
      * @param record  Typed record.
      * @returns       Storage row object.
@@ -726,7 +726,7 @@ export abstract class DBDataTable<K extends DTKey, E extends object, T extends o
      * The default implementation assumes a 1:1 mapping between record properties and table columns, but subclasses can
      * override this to implement custom mapping logic, for example to unpack arrays or to deserialize JSON fields.
      *
-     * @see returnRecord
+     * @see {@link returnRecord}
      *
      * @param row  Storage row object.
      * @returns    Typed record.

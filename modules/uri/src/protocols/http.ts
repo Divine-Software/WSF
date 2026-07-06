@@ -50,8 +50,8 @@ export class HTTPURI extends URI {
     /**
      * Issues a `HEAD` request and constructs a {@link DirectoryEntry} from the result.
      *
-     * @throws IOError  On I/O errors or if this the HTTP response status is outside the 200-299 range.
-     * @returns         Information about this HTTP resource, including {@link MetaData}.
+     * @throws {IOError}  On I/O errors or if this the HTTP response status is outside the 200-299 range.
+     * @returns           Information about this HTTP resource, including {@link MetaData}.
      */
     override async info<T extends DirectoryEntry>(): Promise<T & Metadata> {
         const response = await this._query<T>('HEAD', {}, undefined, undefined, undefined);
@@ -77,11 +77,11 @@ export class HTTPURI extends URI {
     /**
      * Issues a `GET` request and parses the result.
      *
-     * @template T            The actual type returned.
-     * @param    recvCT       Override the default response parser. Defaults to the `content-type` response header.
-     * @throws   IOError      On I/O errors or if this the HTTP response status is outside the 200-299 range.
-     * @throws   ParserError  If the media type is unsupported or if the parser fails to parse the resource.
-     * @returns               The HTTP resource parsed as `recvCT` *into an object*, including {@link MetaData}.
+     * @template T              The actual type returned.
+     * @param    recvCT         Override the default response parser. Defaults to the `content-type` response header.
+     * @throws   {IOError}      On I/O errors or if this the HTTP response status is outside the 200-299 range.
+     * @throws   {ParserError}  If the media type is unsupported or if the parser fails to parse the resource.
+     * @returns                 The HTTP resource parsed as `recvCT` *into an object*, including {@link MetaData}.
      */
     override async load<T>(recvCT?: ContentType | string): Promise<Wrap<T> & Metadata> {
         return await this._query('GET', {}, undefined, undefined, recvCT);
@@ -90,15 +90,15 @@ export class HTTPURI extends URI {
     /**
      * Issues a `PUT` request with a serialized payload and parses the result.
      *
-     * @template T            The actual type returned.
-     * @template D            The type of data to store.
-     * @param    data         The data to store.
-     * @param    sendCT       Override the default data serializer.
-     * @param    recvCT       Override the default response parser. Defaults to the `content-type` response header.
-     * @throws   IOError      On I/O errors or if this the HTTP response status is outside the 200-299 range.
-     * @throws   ParserError  If the media type is unsupported or if the parser fails to serialize the payload or parse
-     *                        the response.
-     * @returns               The HTTP response parsed as `recvCT` *into an object*, including {@link MetaData}.
+     * @template T              The actual type returned.
+     * @template D              The type of data to store.
+     * @param    data           The data to store.
+     * @param    sendCT         Override the default data serializer.
+     * @param    recvCT         Override the default response parser. Defaults to the `content-type` response header.
+     * @throws   {IOError}      On I/O errors or if this the HTTP response status is outside the 200-299 range.
+     * @throws   {ParserError}  If the media type is unsupported or if the parser fails to serialize the payload or
+     *                          parse the response.
+     * @returns                 The HTTP response parsed as `recvCT` *into an object*, including {@link MetaData}.
      */
     override async save<T, D = unknown>(data: D, sendCT?: ContentType | string, recvCT?: ContentType | string): Promise<Wrap<T> & Metadata> {
         return await this._query('PUT', {}, data, sendCT, recvCT);
@@ -107,15 +107,15 @@ export class HTTPURI extends URI {
     /**
      * Issues a `POST` request with a serialized payload and parses the result.
      *
-     * @template T            The actual type returned.
-     * @template D            The type of data to send.
-     * @param    data         The data to send.
-     * @param    sendCT       Override the default data serializer.
-     * @param    recvCT       Override the default response parser. Defaults to the `content-type` response header.
-     * @throws   IOError      On I/O errors or if this the HTTP response status is outside the 200-299 range.
-     * @throws   ParserError  If the media type is unsupported or if the parser fails to serialize the payload or parse
-     *                        the response.
-     * @returns               The HTTP response parsed as `recvCT` *into an object*, including {@link MetaData}.
+     * @template T              The actual type returned.
+     * @template D              The type of data to send.
+     * @param    data           The data to send.
+     * @param    sendCT         Override the default data serializer.
+     * @param    recvCT         Override the default response parser. Defaults to the `content-type` response header.
+     * @throws   {IOError}      On I/O errors or if this the HTTP response status is outside the 200-299 range.
+     * @throws   {ParserError}  If the media type is unsupported or if the parser fails to serialize the payload or
+     *                          parse the response.
+     * @returns                 The HTTP response parsed as `recvCT` *into an object*, including {@link MetaData}.
      */
     override async append<T, D = unknown>(data: D, sendCT?: ContentType | string, recvCT?: ContentType | string): Promise<Wrap<T> & Metadata> {
         return await this._query('POST', {}, data, sendCT, recvCT);
@@ -124,15 +124,15 @@ export class HTTPURI extends URI {
     /**
      * Issues a `PATCH` request with a serialized payload and parses the result.
      *
-     * @template T            The actual type returned.
-     * @template D            The type of the patch data.
-     * @param    data         The patch data to send.
-     * @param    sendCT       Override the default data serializer.
-     * @param    recvCT       Override the default response parser. Defaults to the `content-type` response header.
-     * @throws   IOError      On I/O errors or if this the HTTP response status is outside the 200-299 range.
-     * @throws   ParserError  If the media type is unsupported or if the parser fails to serialize the payload or parse
-     *                        the response.
-     * @returns               The HTTP response parsed as `recvCT` *into an object*, including {@link MetaData}.
+     * @template T              The actual type returned.
+     * @template D              The type of the patch data.
+     * @param    data           The patch data to send.
+     * @param    sendCT         Override the default data serializer.
+     * @param    recvCT         Override the default response parser. Defaults to the `content-type` response header.
+     * @throws   {IOError}      On I/O errors or if this the HTTP response status is outside the 200-299 range.
+     * @throws   {ParserError}  If the media type is unsupported or if the parser fails to serialize the payload or
+     *                          parse the response.
+     * @returns                 The HTTP response parsed as `recvCT` *into an object*, including {@link MetaData}.
      */
     override async modify<T, D = unknown>(data: D, sendCT?: ContentType | string, recvCT?: ContentType | string): Promise<Wrap<T> & Metadata> {
         return await this._query('PATCH', {}, data, sendCT, recvCT);
@@ -141,11 +141,11 @@ export class HTTPURI extends URI {
     /**
      * Issues a `DELETE` request and parses the result.
      *
-     * @template T            The actual type returned.
-     * @param    recvCT       Override the default response parser. Defaults to the `content-type` response header.
-     * @throws   IOError      On I/O errors or if this the HTTP response status is outside the 200-299 range.
-     * @throws   ParserError  If the media type is unsupported or if the parser fails to parse the response.
-     * @returns               The HTTP response parsed as `recvCT` *into an object*, including {@link MetaData}.
+     * @template T              The actual type returned.
+     * @param    recvCT         Override the default response parser. Defaults to the `content-type` response header.
+     * @throws   {IOError}      On I/O errors or if this the HTTP response status is outside the 200-299 range.
+     * @throws   {ParserError}  If the media type is unsupported or if the parser fails to parse the response.
+     * @returns                 The HTTP response parsed as `recvCT` *into an object*, including {@link MetaData}.
      */
     override async remove<T>(recvCT?: ContentType | string): Promise<Wrap<T> & Metadata> {
         return await this._query('DELETE', {}, undefined, undefined, recvCT);
@@ -154,17 +154,17 @@ export class HTTPURI extends URI {
     /**
      * Issues a custom HTTP request, optionally with a serialized payload, and parses the result.
      *
-     * @template T            The actual type returned.
-     * @template D            The type of the patch data.
-     * @param    method       The (case-sensitive) HTTP method to issue.
-     * @param    headers      Custom headers to send, in addition to those specified via {@link HeadersSelector}.
-     * @param    data         The data/payload to send.
-     * @param    sendCT       Override the default data serializer.
-     * @param    recvCT       Override the default response parser. Defaults to the `content-type` response header.
-     * @throws   IOError      On I/O errors or if this the HTTP response status is outside the 200-299 range.
-     * @throws   ParserError  If the media type is unsupported or if the parser fails to serialize the payload or parse
-     *                        the response.
-     * @returns               The HTTP response parsed as `recvCT` *into an object*, including {@link MetaData}.
+     * @template T              The actual type returned.
+     * @template D              The type of the patch data.
+     * @param    method         The (case-sensitive) HTTP method to issue.
+     * @param    headers        Custom headers to send, in addition to those specified via {@link HeadersSelector}.
+     * @param    data           The data/payload to send.
+     * @param    sendCT         Override the default data serializer.
+     * @param    recvCT         Override the default response parser. Defaults to the `content-type` response header.
+     * @throws   {IOError}      On I/O errors or if this the HTTP response status is outside the 200-299 range.
+     * @throws   {ParserError}  If the media type is unsupported or if the parser fails to serialize the payload or
+     *                          parse the response.
+     * @returns                 The HTTP response parsed as `recvCT` *into an object*, including {@link MetaData}.
      */
     override async query<T, D = unknown>(method: string, headers?: StringParams | null, data?: D, sendCT?: ContentType | string, recvCT?: ContentType | string): Promise<Wrap<T> & Metadata> {
         if (typeof method !== 'string') {

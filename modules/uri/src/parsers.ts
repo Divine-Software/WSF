@@ -63,13 +63,13 @@ export abstract class Parser {
      * NOTE: This method *always returns an object* using {@link wrap}. You may use {@link unwrap} to return the
      * original value.
      *
-     * @template T            The type of the parsed object.
-     * @param    stream       The source that should be parsed.
-     * @param    contentType  The media type that specifies what parser to use.
-     * @throws   ParserError  On parser errors or if the media type is not recognized.
-     * @returns               An *object* (always an object) that represents the original source after parsing. It's
-     *                        possible that the Parser subclass allocated temporary resources as part of the process.
-     *                        These resources may be cleaned up by calling {@link FINALIZE}.
+     * @template T              The type of the parsed object.
+     * @param    stream         The source that should be parsed.
+     * @param    contentType    The media type that specifies what parser to use.
+     * @throws   {ParserError}  On parser errors or if the media type is not recognized.
+     * @returns                 An *object* (always an object) that represents the original source after parsing. It's
+     *                          possible that the Parser subclass allocated temporary resources as part of the process.
+     *                          These resources may be cleaned up by calling {@link FINALIZE}.
      */
     static async parse<T>(stream: string | Buffer | AsyncIterable<Buffer | string>, contentType: ContentType | string): Promise<Wrap<T> & Finalizable> {
         try {
@@ -89,13 +89,13 @@ export abstract class Parser {
      * Buffers and ReadableStream will be passed through as-is. Strings will just be encoded using the `charset` param
      * from `contentType` (or UTF-8 if not present). Everything else is serialized using a Parser subclass.
      *
-     * @template T            The type of the object that is to be serialized.
-     * @param    data         The object that is to be serialized.
-     * @param    contentType  The media type that specifies what parser to use.
-     * @throws   ParserError  On serialization errors or if the media type is not recognized.
-     * @returns               A tuple containing the Buffer/byte stream and the actual media type. Note that the parser
-     *                        may return a slightly different media type than was given (for instance,
-     *                        {@link MultiPartParser} might add a boundary param if none was given).
+     * @template T              The type of the object that is to be serialized.
+     * @param    data           The object that is to be serialized.
+     * @param    contentType    The media type that specifies what parser to use.
+     * @throws   {ParserError}  On serialization errors or if the media type is not recognized.
+     * @returns                 A tuple containing the Buffer/byte stream and the actual media type. Note that the
+     *                          parser may return a slightly different media type than was given (for instance,
+     *                          {@link MultiPartParser} might add a boundary param if none was given).
      */
     static serialize<T = unknown>(data: T, contentType?: ContentType | string): [Buffer | Readable & AsyncIterable<Buffer>, ContentType] {
         try {
@@ -141,12 +141,12 @@ export abstract class Parser {
      * This is a convenience method that just invokes {@link parse} and then converts the byte stream into a single
      * Buffer.
      *
-     * @param    data         The object that is to be serialized.
-     * @param    contentType  The media type that specifies what parser to use.
-     * @throws   ParserError  On serialization errors or if the media type is not recognized.
-     * @returns               A tuple containing the Buffer and the actual media type. Note that the parser may return a
-     *                        slightly different media type than was given (for instance, {@link MultiPartParser} might
-     *                        add a boundary param if none was given).
+     * @param    data           The object that is to be serialized.
+     * @param    contentType    The media type that specifies what parser to use.
+     * @throws   {ParserError}  On serialization errors or if the media type is not recognized.
+     * @returns                 A tuple containing the Buffer and the actual media type. Note that the parser may return
+     *                          a slightly different media type than was given (for instance, {@link MultiPartParser}
+     *                          might add a boundary param if none was given).
      */
     static async serializeToBuffer<T = unknown>(data: T, contentType?: ContentType | string): Promise<[Buffer, ContentType]> {
         const [ stream, ct ] = Parser.serialize(data, contentType);
@@ -188,9 +188,9 @@ export abstract class Parser {
      *
      * This method must be implemented by the actual subclass.
      *
-     * @param  stream       The stream to parse.
-     * @throws ParserError  On parser errors.
-     * @returns             The parsed stream.
+     * @param  stream         The stream to parse.
+     * @throws {ParserError}  On parser errors.
+     * @returns               The parsed stream.
      */
     abstract parse(stream: AsyncIterable<Buffer>): Promise<unknown>;
 
@@ -199,9 +199,9 @@ export abstract class Parser {
      *
      * This method must be implemented by the actual subclass.
      *
-     * @param  data         A parser-specific representation that is to be serialized.
-     * @throws ParserError  On serialization errors.
-     * @returns             A Buffer or a byte stream.
+     * @param  data           A parser-specific representation that is to be serialized.
+     * @throws {ParserError}  On serialization errors.
+     * @returns               A Buffer or a byte stream.
      */
     abstract serialize(data: unknown): Buffer | AsyncIterable<Buffer>;
 

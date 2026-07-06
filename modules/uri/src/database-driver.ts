@@ -63,8 +63,7 @@ export abstract class DBConnectionPool<P extends DBParams = DBParams> {
             tls = { ref: 0, conn: await this._obtainConnection(), failed: false };
 
             const actual = cb;
-            // @ts-expect-error (@types/node is wrong)
-            cb = (connection) => als.run(tls, actual, connection);
+            cb = (connection) => als.run(tls!, actual, connection);
         }
 
         try {
