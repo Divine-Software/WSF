@@ -518,7 +518,8 @@ export abstract class DataTableBase<K extends DTKey, E extends object, T extends
                 version:    rsrcMetadata.version,
             } satisfies DTMetadata[typeof DT_METADATA] });
 
-            return listMetadata(await this.dtbAuthorize(authorize, null, listMetadata(listResponse.records)) ?? throwError('No list returned from authorizer.'));
+            const records = listResponse.records.map(r => this.returnRecord(r));
+            return listMetadata(await this.dtbAuthorize(authorize, null, listMetadata(records)) ?? throwError('No list returned from authorizer.'));
         }).catch(err => this.dtbError(err));
     }
 
@@ -757,7 +758,7 @@ export abstract class DBDataTable<K extends DTKey, E extends object, T extends o
     protected override async dtbList(filter?: DBDTFilter): Promise<{ records: T[]; totalCount?: number | bigint; }> {
         return await this.dbRef('all', filter ?? {}).load<object[]>().then(records => ({
             records:    records.map(r => this.dbRowToRecord(r)),
-            totalCount: records[FIELDS][0]?.totalCount
+            totalCount: records[FIELDS][0]?.totalCount,
         }));
     }
 

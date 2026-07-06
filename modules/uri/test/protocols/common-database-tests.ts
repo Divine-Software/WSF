@@ -6,7 +6,7 @@
 import { createHash } from 'crypto';
 import { DatabaseURI, DBError, DBParamsSelector, DBQuery, dbRef, FIELDS, q, UNWRAP, unwrap, URI, wrap } from '../../src';
 import { DBDataTable, DT_METADATA, DTError, DTRecordMetadata, DTTableMetadata, noAuth, Precondition } from '../../src/datatable';
-import { Record } from '@divine/commons';
+import { Record, recordify } from '@divine/commons';
 
 export interface CommonDBTestParams {
     name:        string;
@@ -56,10 +56,12 @@ interface CDTTable {
     date:  string | null;
     req:   string;
     opt?:  string;
+    rtn?:  boolean;
 }
 
 class CommonDataTable extends DBDataTable<string, CDTEntity, CDTTable> {
     public tableMetadataStatus: boolean | undefined;
+    public enableReturnRecord = false;
 
     constructor(private _def: CommonDBTestParams, db: DatabaseURI, table: string, pk: keyof CDTTable) {
         super(db, table, pk);
@@ -77,6 +79,14 @@ class CommonDataTable extends DBDataTable<string, CDTEntity, CDTTable> {
         }
 
         return entity as CDTTable;
+    }
+
+    protected override returnRecord(record: CDTTable): CDTTable {
+        if (this.enableReturnRecord) {
+            return recordify({ ...record, rtn: true });
+        } else {
+            return record;
+        }
     }
 
     protected override async recordMetadata(record: Readonly<CDTTable>): Promise<DTRecordMetadata> {
@@ -610,25 +620,26 @@ export function describeCommonDBTest(def: CommonDBTestParams): void {
         });
 
         it('handles basic DataTable entity ops', async () => {
-            expect.assertions(33);
+            expect.assertions(34);
 
             const dv = new CommonDataTable(def, db, 'dv', 'id');
+            dv.enableReturnRecord = true;
 
             await expect(dv.load(noAuth, 'entity')).rejects.toThrow(DTError);
             await expect(dv.load(noAuth, 'entity')).rejects.toThrow('not-found');
 
             const s1 = await dv.save(noAuth, 'entity', { req: 'req1', opt: 'opt1' });
-            expect(s1).toStrictEqual(Record({ id: 'entity', date: expect.any(String), req: 'req1', opt: 'opt1' }));
+            expect(s1).toStrictEqual(Record({ id: 'entity', date: expect.any(String), req: 'req1', opt: 'opt1', rtn: true }));
             expect(s1[DT_METADATA].timestamp).toBeInstanceOf(Date);
             expect(await dv.load(noAuth, 'entity')).toStrictEqual(s1);
 
             const s2 = await dv.save(noAuth, 'entity', { req: 'req2', opt: 'opt2' });
-            expect(s2).toStrictEqual(Record({ id: 'entity', date: expect.any(String), req: 'req2', opt: 'opt2' }));
+            expect(s2).toStrictEqual(Record({ id: 'entity', date: expect.any(String), req: 'req2', opt: 'opt2', rtn: true }));
             expect(s2[DT_METADATA].timestamp).toBeInstanceOf(Date);
             expect(await dv.load(noAuth, 'entity')).toStrictEqual(s2);
 
             const s3 = await dv.save(noAuth, 'entity', { req: 'req3', date: new Date(0).toISOString() });
-            expect(s3).toStrictEqual(Record({ id: 'entity', date: '1970-01-01T00:00:00.000Z', req: 'req3', opt: 'Def' }));
+            expect(s3).toStrictEqual(Record({ id: 'entity', date: '1970-01-01T00:00:00.000Z', req: 'req3', opt: 'Def', rtn: true }));
             expect(s3[DT_METADATA].timestamp).toStrictEqual(new Date(0));
             expect(await dv.load(noAuth, 'entity')).toStrictEqual(s3);
 
@@ -641,20 +652,23 @@ export function describeCommonDBTest(def: CommonDBTestParams): void {
             expect(await dv.load(noAuth, 'entity')).toStrictEqual(s3);
 
             const s6 = await dv.save(noAuth, 'entity', { id: 'ignored', date: null, req: 'req6' } as CDTEntity);
-            expect(s6).toStrictEqual(Record({ id: 'entity', date: null, req: 'req6', opt: 'Def' }));
+            expect(s6).toStrictEqual(Record({ id: 'entity', date: null, req: 'req6', opt: 'Def', rtn: true }));
             expect(s6[DT_METADATA].timestamp).toBeUndefined();
             expect(await dv.load(noAuth, 'entity')).toStrictEqual(s6);
 
+            const l1 = await dv.list(noAuth, { where: dbRef('eq', 'id', 'entity') });
+            expect(l1).toStrictEqual([Record({ id: 'entity', date: null, req: 'req6', opt: 'Def', rtn: true })]);
+
             const m1 = await dv.modify(noAuth, 'entity', { id: 'ignored', date: undefined, req: 'req1', opt: 'opt1' } as Partial<CDTEntity>);
-            expect(m1).toStrictEqual(Record({ id: 'entity', date: expect.any(String), req: 'req1', opt: 'opt1' }));
+            expect(m1).toStrictEqual(Record({ id: 'entity', date: expect.any(String), req: 'req1', opt: 'opt1', rtn: true }));
             expect(await dv.load(noAuth, 'entity')).toStrictEqual(m1);
 
             const m2 = await dv.modify(noAuth, 'entity', { id: undefined, date: null, opt: undefined } as Partial<CDTEntity>);
-            expect(m2).toStrictEqual(Record({ id: 'entity', date: null, req: 'req1', opt: 'Def' }));
+            expect(m2).toStrictEqual(Record({ id: 'entity', date: null, req: 'req1', opt: 'Def', rtn: true }));
             expect(await dv.load(noAuth, 'entity')).toStrictEqual(m2);
 
             const m3 = await dv.modify(noAuth, 'entity', async (row) => ({ ...row, date: new Date(0).toISOString(), req: row.req + '*', opt: undefined }));
-            expect(m3).toStrictEqual(Record({ id: 'entity', date: '1970-01-01T00:00:00.000Z', req: 'req1*', opt: 'Def' }));
+            expect(m3).toStrictEqual(Record({ id: 'entity', date: '1970-01-01T00:00:00.000Z', req: 'req1*', opt: 'Def', rtn: true }));
             expect(m3[DT_METADATA].timestamp).toStrictEqual(new Date(0));
             expect(await dv.load(noAuth, 'entity')).toStrictEqual(m3);
 
