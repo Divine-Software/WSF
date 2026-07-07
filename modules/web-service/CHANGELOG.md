@@ -1,5 +1,15 @@
 # @divine/web-service
 
+## 2.0.0-v2.8
+
+### Minor Changes
+
+- 2e2c898: Allow user to opt out of the default integer handling.
+
+### Patch Changes
+
+- 0fed689: TSDoc fixes.
+
 ## 2.0.0-v2.7
 
 ### Patch Changes
