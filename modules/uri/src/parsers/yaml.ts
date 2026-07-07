@@ -6,18 +6,20 @@ import { BasicTypes, FIELDS, WithFields, wrap, Wrap } from '../uri-types';
 /**
  * Utility function to parse YAML with standard WSF behavior.
  *
- * All parsed objects will have a `null` prototype and all integer numbers will be parsed as `bigint`. Plain `number`
- * values will be serialized with a `.0` suffix to ensure they are parsed as `bigint` on the receiving end.
+ * All parsed objects will have a `null` prototype. By default, all integer numbers will be parsed as `bigint` and
+ * `number` integers will be serialized with a `.0` suffix to ensure they are parsed as `number` and not `bigint` on the
+ * receiving end.
  *
  * Only the first document in a multi-document YAML file is returned when parsing. To access all documents, use
  * {@link Parser.parse} or {@link YAMLParser} directly, which both return all documents in the `FIELDS` property of the
  * returned object.
  *
- * @param text A valid YAML string.
- * @returns    A parsed YAML value.
+ * @param text      A valid YAML string.
+ * @param integers  Whether to treat integers distinct from decimal numbers or not. Default is {@link Parser.integers}.
+ * @returns         A parsed YAML value.
  */
-export function parseYAML<T extends BasicTypes>(text: string): T {
-    return YAML.parseDocument(text, { intAsBigInt: true }).toJS({ mapAsMap: false, reviver: (_, value) =>  recordify(value) }) as T;
+export function parseYAML<T extends BasicTypes>(text: string, integers = Parser.integers): T {
+    return YAML.parseDocument(text, { intAsBigInt: integers }).toJS({ mapAsMap: false, reviver: (_, value) =>  recordify(value) }) as T;
 }
 
 /**
@@ -26,17 +28,19 @@ export function parseYAML<T extends BasicTypes>(text: string): T {
  * Only the first document in a multi-document YAML file is returned when parsing. To access all documents, use the
  * {@link FIELDS} property.
  *
- * All parsed objects will have a `null` prototype and all integer numbers will be parsed as `bigint`. Plain `number`
- * values will be serialized with a `.0` suffix to ensure they are parsed as `bigint` on the receiving end.
+ * All parsed objects will have a `null` prototype. By default, all integer numbers will be parsed as `bigint` and
+ * `number` integers will be serialized with a `.0` suffix to ensure they are parsed as `number` and not `bigint` on the
+ * receiving end.
  *
- * @param value The value to serialize.
- * @returns     A YAML string.
+ * @param value     The value to serialize.
+ * @param integers  Whether to treat integers distinct from decimal numbers or not. Default is {@link Parser.integers}.
+ * @returns         A YAML string.
  */
-export function serializeYAML(value: BasicTypes & WithFields<BasicTypes>): string {
+export function serializeYAML(value: BasicTypes & WithFields<BasicTypes>, integers = Parser.integers): string {
     const stringify = (value: unknown) => {
         const doc = new YAML.Document(value);
 
-        YAML.visit(doc, (key, node) => {
+        integers && YAML.visit(doc, (key, node) => {
             if (key === 'value' && node instanceof YAML.Scalar && typeof node.value === 'number' && /^[-+0-9]+$/.test(JSON.stringify(node.value))) {
                 node.minFractionDigits ??= 1;
             }
@@ -58,13 +62,14 @@ export function serializeYAML(value: BasicTypes & WithFields<BasicTypes>): strin
  * Only the first document in a multi-document YAML file is returned when parsing. To access all documents, use the
  * {@link FIELDS} property.
  *
- * All parsed objects will have a `null` prototype and all integer numbers will be parsed as `bigint`. Plain `number`
- * values will be serialized with a `.0` suffix to ensure they are parsed as `bigint` on the receiving end.
+ * All parsed objects will have a `null` prototype and all integer numbers will be parsed as `bigint`. All `number`
+ * integers will be serialized with a `.0` suffix to ensure they are parsed as `number` and not `bigint` on the
+ * receiving end.
  *
  */
 export class YAMLParser extends Parser {
     async parse<T extends BasicTypes>(stream: AsyncIterable<Buffer>): Promise<Wrap<T> & WithFields<BasicTypes>> {
-        const yaml = YAML.parseAllDocuments(await new StringParser(this.contentType).parse(stream), { intAsBigInt: true });
+        const yaml = YAML.parseAllDocuments(await new StringParser(this.contentType).parse(stream), { intAsBigInt: this.integers });
         const json = yaml.map((yaml) => yaml.toJS({ mapAsMap: false, reviver: (_, value) =>  recordify(value) }) as T);
         const data = wrap(json[0]);
 
@@ -76,7 +81,7 @@ export class YAMLParser extends Parser {
         this._assertSerializebleData(data !== undefined, data);
 
         try {
-            return new StringParser(this.contentType).serialize(serializeYAML(data));
+            return new StringParser(this.contentType).serialize(serializeYAML(data, this.integers));
         }
         catch (ex) {
             this._assertSerializebleData(false, data, ex);

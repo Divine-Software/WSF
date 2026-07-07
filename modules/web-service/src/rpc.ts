@@ -268,7 +268,7 @@ export function createRPCService<M extends RPCMethods<M>, Context = unknown>(con
                 const result = await serviceProxy(method, options, args, (params) => object[method](params as any, args) as Promise<object>);
                 const signal = { get aborted() { return args.request.closing || args.request.aborted; } };
 
-                return isAsyncIterable<object>(result) ? new EventStreamResponse(result, undefined, undefined, options.keepalive ?? undefined, signal) : result;
+                return isAsyncIterable<object>(result) ? new EventStreamResponse(result, undefined, undefined, options.keepalive ?? undefined, signal, args.request.webService.webServiceConfig.payloadParser) : result;
             }
         }
     );

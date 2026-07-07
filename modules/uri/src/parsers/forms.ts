@@ -129,7 +129,7 @@ export class MessageParser extends Parser {
         // Fake a multipart message and use the MultiPartParser to parse the data, then convert to MimeMessage
         const boundary  = makeBoundary();
         const formType  = new ContentType('multipart/*').setParam('boundary', boundary);
-        const multipart = await new MultiPartParser(formType).parse(wrappedStream(boundary));
+        const multipart = await new MultiPartParser(formType, this.integers).parse(wrappedStream(boundary));
         const messages  = multiPartToMime(multipart);
 
         return { ...messages[0], [FINALIZE]: multipart[FINALIZE] }
@@ -140,7 +140,7 @@ export class MessageParser extends Parser {
 
         // Serialize first, to give Parser a chance to update the content-type
         const value = (data.value as MultiPartData)?.[FIELDS] ?? data.value;
-        const [ stream, contentType ] = value !== undefined ? Parser.serialize(value, data.headers?.['content-type']) : [];
+        const [ stream, contentType ] = value !== undefined ? Parser.withIntegers(this.integers).serialize(value, data.headers?.['content-type']) : [];
 
         const headers = [
             ...Object.entries({ ...data.headers, 'content-type': data.headers?.['content-type'] && contentType })
@@ -217,7 +217,7 @@ export class MultiPartParser extends Parser {
                             const data: AsyncIterable<Buffer> = Encoder.decode(stream, headers['content-transfer-encoding'] ?? []);
 
                             if (parse) {
-                                const parsed = await Parser.parse<string | MultiPartData>(data, type);
+                                const parsed = await Parser.withIntegers(this.integers).parse<string | MultiPartData>(data, type);
 
                                 if (parsed[FINALIZE]) {
                                     finalizers.push(parsed[FINALIZE]);
@@ -277,7 +277,7 @@ export class MultiPartParser extends Parser {
 
         for (const entry of entries) {
             yield Buffer.from(`\r\n--${boundary}\r\n`);
-            yield* new MessageParser(message).serialize(entry);
+            yield* new MessageParser(message, this.integers).serialize(entry);
         }
 
         yield Buffer.from(`\r\n--${boundary}--\r\n`);

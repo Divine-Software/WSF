@@ -44,6 +44,25 @@ export class ParserError<D extends object = object> extends IOError<D> {
  */
 export abstract class Parser {
     readonly contentType: ContentType;
+    protected readonly integers: boolean;
+
+    /**
+     * By default, parsers handle integers as `bigint` and serialize all numbers with a decimal point. Set to `false` to
+     * disable this behavior globally.
+     *
+     * @see {@link Parser.withIntegers} to create a new `Parser` for local use only.
+     */
+    static integers = true;
+
+    /**
+     * Create a new `Parser` that handles integers as `bigint` or `number`, depending on the value of `integers`.
+     *
+     * @param integers  Whether to treat integers distinct from decimal numbers or not.
+     * @returns         A new `Parser` that handles integers as specified.
+     */
+    static withIntegers(integers: boolean): typeof Parser {
+        return Object.assign(Object.create(this), { integers });
+    }
 
     /**
      * Registers a new parser/serializer. All subclasses must register their MIME media type support with this method.
@@ -73,7 +92,7 @@ export abstract class Parser {
      */
     static async parse<T>(stream: string | Buffer | AsyncIterable<Buffer | string>, contentType: ContentType | string): Promise<Wrap<T> & Finalizable> {
         try {
-            const result = await Parser._create(ContentType.create(contentType)).parse(toAsyncIterable(stream)) as T;
+            const result = await Parser._create(ContentType.create(contentType), this.integers).parse(toAsyncIterable(stream)) as T;
 
             // Never return primitive types or null/undefined
             return wrap(result) as Wrap<T> & Finalizable;
@@ -118,7 +137,7 @@ export abstract class Parser {
                 data instanceof URI        ? toReadableStream(data) : // AsyncIterable<Buffer>           => Readble<Buffer>
                 isReadableStream(data)     ? toReadableStream(data) : // ReadableStream<Buffer | string> => Readble<Buffer>
                 typeof data === 'string'   ? new StringParser(contentType)
-                                           : Parser._create(contentType);
+                                           : Parser._create(contentType, this.integers);
 
             if (dataOrParser instanceof Parser) {
                 const serialized = dataOrParser.serialize(data);
@@ -149,14 +168,14 @@ export abstract class Parser {
      *                          might add a boundary param if none was given).
      */
     static async serializeToBuffer<T = unknown>(data: T, contentType?: ContentType | string): Promise<[Buffer, ContentType]> {
-        const [ stream, ct ] = Parser.serialize(data, contentType);
+        const [ stream, ct ] = this.serialize(data, contentType);
 
-        return [ await Parser.parse<Buffer>(stream, ContentType.bytes), ct ];
+        return [ await this.parse<Buffer>(stream, ContentType.bytes), ct ];
     }
 
     private static _parsers = new Map<string | RegExp, typeof Parser>();
 
-    private static _create(contentType: ContentType): Parser {
+    private static _create(contentType: ContentType, integers: boolean): Parser {
         let parserClass = Parser._parsers.get(contentType.type);
 
         if (!parserClass) {
@@ -171,16 +190,18 @@ export abstract class Parser {
             throw new ParserError(`Parser '${contentType.type}' not available.`, undefined, contentType);
         }
 
-        return new (parserClass as any)(contentType);
+        return new (parserClass as any)(contentType, integers);
     }
 
     /**
      * Constructs a new Parser instance.
      *
-     * @param contentType The media type this parser object was instanciated for.
+     * @param contentType  The media type this parser object was instantiated for.
+     * @param integers     Whether to treat integers distinct from decimal numbers or not. Default is {@link Parser.integers}.
      */
-    constructor(contentType: ContentType | string) {
-        this.contentType = ContentType.create(contentType);
+    constructor(contentType: ContentType | string, integers = Parser.integers) {
+        this.contentType = ContentType.create(contentType,);
+        this.integers    = integers;
     }
 
     /**

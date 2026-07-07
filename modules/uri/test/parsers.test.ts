@@ -89,4 +89,33 @@ describe('the Parser class', () => {
 
         expect(serdes).toStrictEqual(data);
     });
+
+    it.each(['application/json', 'application/toml', 'application/yaml'])('%s can opt out of default integer handling', async (ct) => {
+        expect.hasAssertions();
+
+        const data = { big: 42n, int: 42, dec: 4.2 };
+
+        Parser.integers = true;
+        const serdes1 = await Parser.withIntegers(false).parse<typeof data>(...Parser.withIntegers(false).serialize(data , ct));
+        expect(serdes1.big).toBe(42)
+        expect(serdes1.int).toBe(42)
+        expect(serdes1.dec).toBe(4.2)
+
+        Parser.integers = false;
+        const serdes2 = await Parser.withIntegers(true).parse<typeof data>(...Parser.withIntegers(true).serialize(data , ct));
+        expect(serdes2.big).toBe(42n)
+        expect(serdes2.int).toBe(42)
+        expect(serdes2.dec).toBe(4.2)
+
+        const serdes3 = await Parser.parse<typeof data>(...Parser.serialize(data , ct));
+        expect(serdes3.big).toBe(42)
+        expect(serdes3.int).toBe(42)
+        expect(serdes3.dec).toBe(4.2)
+
+        Parser.integers = true;
+        const serdes4 = await Parser.parse<typeof data>(...Parser.serialize(data , ct));
+        expect(serdes4.big).toBe(42n)
+        expect(serdes4.int).toBe(42)
+        expect(serdes4.dec).toBe(4.2)
+    })
 })

@@ -557,7 +557,7 @@ export class WebService<Context> {
                 } else if (isAsyncIterable(result) && !isReadableStream(result)) {
                     return new EventStreamResponse(result, undefined, undefined, undefined, {
                         get aborted() { return webreq.closing || webreq.aborted; },
-                    });
+                    }, this.webServiceConfig.payloadParser);
                 } else {
                     return new WebResponse(result !== null ? WebStatus.OK : WebStatus.NO_CONTENT, result);
                 }

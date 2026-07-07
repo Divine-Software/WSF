@@ -1,8 +1,8 @@
 /* eslint-disable @typescript-eslint/no-unused-vars */
 
-import { unblocked } from '@divine/commons';
+import { isAsyncIterable, unblocked } from '@divine/commons';
 import { ContentType } from '@divine/headers';
-import { EventStreamEvent, Parser } from '@divine/uri';
+import { BufferParser, EventStreamEvent, Parser } from '@divine/uri';
 import { WebError, WebStatus } from './error';
 import { concatHeader } from './private/etag';
 import { WebArguments, WebFilter, WebResource } from './resource';
@@ -194,9 +194,10 @@ export interface EventAttributes {
  * @template T The type of events to transmit.
  */
 export class EventStreamResponse<T = unknown> extends WebResponse<AsyncGenerator<EventStreamEvent | undefined>> {
-    private static async *_eventStream(source: AsyncIterable<any>, dataType?: ContentType | string, keepaliveTimeout?: number, signal?: { aborted: boolean }): AsyncGenerator<EventStreamEvent | undefined> {
+    private static async *_eventStream(source: AsyncIterable<any>, parser: PayloadParser, dataType?: ContentType | string, keepaliveTimeout?: number, signal?: { aborted: boolean }): AsyncGenerator<EventStreamEvent | undefined> {
         const serialize = async (event: any): Promise<string> => {
-            const [serialized] = await Parser.serializeToBuffer(event, event[EVENT_FORMAT] ?? dataType);
+            const [ stream, ct ] = parser.serialize(event, event[EVENT_FORMAT] ?? dataType);
+            const serialized = isAsyncIterable(stream) ? await new BufferParser(ct).parse(stream) : stream;
 
             return serialized.toString(); // SSE is always UTF-8
         };
@@ -253,9 +254,10 @@ export class EventStreamResponse<T = unknown> extends WebResponse<AsyncGenerator
      * @param keepaliveTimeout How often, in milliseconds, to automatically send comments/keep-alive lines.
      * @param signal           An optional `AbortSignal`—or any object with an `aborted` property, really—to stop the stream.
      * @param signal.aborted   Stops the stream if true.
+     * @param parser          The {@link PayloadParser} to use for serializing the events. Default is {@link Parser}.
      */
-    constructor(source: AsyncIterable<T | T & EventAttributes | undefined | null>, dataType?: ContentType | string, headers?: WebResponseHeaders, keepaliveTimeout?: number, signal?: { aborted: boolean }) {
-        super(WebStatus.OK, EventStreamResponse._eventStream(source, dataType, keepaliveTimeout, signal), {
+    constructor(source: AsyncIterable<T | T & EventAttributes | undefined | null>, dataType?: ContentType | string, headers?: WebResponseHeaders, keepaliveTimeout?: number, signal?: { aborted: boolean }, parser: PayloadParser = Parser) {
+        super(WebStatus.OK, EventStreamResponse._eventStream(source, parser, dataType, keepaliveTimeout, signal), {
             'content-type':      'text/event-stream',
             'connection':        'close',
             'cache-control':     'no-store',

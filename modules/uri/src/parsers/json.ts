@@ -5,16 +5,17 @@ import { BasicTypes } from '../uri-types';
 /**
  * Utility function to parse JSON with standard WSF behavior.
  *
- * Unlike the built-in JSON parser/serializer, all parsed objects will have a `null` prototype and all integer numbers
- * will be parsed as `bigint`. Plain `number` values will be serialized with a `.0` suffix to ensure they are parsed as
- * `bigint` on the receiving end.
+ * Unlike the built-in JSON parser/serializer, all parsed objects will have a `null` prototype. By default, all integer
+ * numbers will be parsed as `bigint` and `number` integers will be serialized with a `.0` suffix to ensure they are
+ * parsed as `number` and not `bigint` on the receiving end.
  *
- * @param text A valid JSON string.
- * @returns    A parsed JSON value.
+ * @param text      A valid JSON string.
+ * @param integers  Whether to treat integers distinct from decimal numbers or not. Default is {@link Parser.integers}.
+ * @returns         A parsed JSON value.
  */
-export function parseJSON<T extends BasicTypes>(text: string): T {
+export function parseJSON<T extends BasicTypes>(text: string, integers = Parser.integers): T {
     return JSON.parse(text, (key: string, value: undefined, context?: { source: string }) => {
-        if (typeof value === 'number' && context?.source && /^[-+0-9]+$/.test(context.source)) {
+        if (integers && typeof value === 'number' && context?.source && /^[-+0-9]+$/.test(context.source)) {
             return BigInt(context.source);
         } else {
             return recordify(value);
@@ -25,18 +26,19 @@ export function parseJSON<T extends BasicTypes>(text: string): T {
 /**
  * Utility function to serialize JSON with standard WSF behavior.
  *
- * Unlike the built-in JSON parser/serializer, all parsed objects will have a `null` prototype and all integer numbers
- * will be parsed as `bigint`. Plain `number` values will be serialized with a `.0` suffix to ensure they are parsed as
- * `bigint` on the receiving end.
+ * Unlike the built-in JSON parser/serializer, all parsed objects will have a `null` prototype. By default, all integer
+ * numbers will be parsed as `bigint` and `number` integers will be serialized with a `.0` suffix to ensure they are
+ * parsed as `number` and not `bigint` on the receiving end.
  *
- * @param value The value to serialize.
- * @returns     A JSON string.
+ * @param value     The value to serialize.
+ * @param integers  Whether to treat integers distinct from decimal numbers or not. Default is {@link Parser.integers}.
+ * @returns         A JSON string.
  */
-export function serializeJSON(value: unknown): string {
+export function serializeJSON(value: unknown, integers = Parser.integers): string {
     return JSON.stringify(value, (_, value) => {
         if (typeof value === 'bigint') {
             return (JSON as any).rawJSON(value.toString());
-        } else if (typeof value === 'number') {
+        } else if (typeof value === 'number' && integers) {
             const serialized = JSON.stringify(value);
             return (JSON as any).rawJSON(/^[-+0-9]+$/.test(serialized) ? `${serialized}.0` : serialized);
         } else {
@@ -50,19 +52,19 @@ export function serializeJSON(value: unknown): string {
  * {@link JSON.stringify} (with a custom reviver/replacer) and {@link StringParser}.
  *
  * Unlike the built-in JSON parser/serializer, all parsed objects will have a `null` prototype and all integer numbers
- * will be parsed as `bigint`. Plain `number` values will be serialized with a `.0` suffix to ensure they are parsed as
- * `bigint` on the receiving end.
+ * will be parsed as `bigint`. All `number` integers will be serialized with a `.0` suffix to ensure they are parsed as
+ * `number` and not `bigint` on the receiving end.
  */
 export class JSONParser extends Parser {
     async parse<T extends BasicTypes>(stream: AsyncIterable<Buffer>): Promise<T> {
-        return parseJSON(await new StringParser(this.contentType).parse(stream));
+        return parseJSON(await new StringParser(this.contentType).parse(stream), this.integers);
     }
 
     serialize(data: unknown): Buffer {
         this._assertSerializebleData(data !== undefined, data);
 
         try {
-            data = serializeJSON(data);
+            data = serializeJSON(data, this.integers);
         } catch (ex) {
             this._assertSerializebleData(false, data, ex);
         }
