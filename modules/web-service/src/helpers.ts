@@ -147,18 +147,34 @@ export abstract class CORSFilter implements WebFilter {
     }
 }
 
-/** A trivial {@link WebFilter} that configures an {@link PayloadParser}/{@link PayloadEncoder} for matching requests. */
+/** A trivial {@link WebFilter} that configures a {@link PayloadParser}/{@link PayloadEncoder} for matching requests. */
 export abstract class PayloadSerDesFilter implements WebFilter {
     async filter(next: () => Promise<WebResponse>, args: WebArguments, resource: () => Promise<WebResource>): Promise<WebResponse> {
         args.request.setPayloadSerDes(await this.getEncoder(args, resource), await this.getParser(args, resource));
         return await next();
     }
 
-    /** Returns the {@link PayloadEncoder} to use. */
-    protected abstract getEncoder(args: WebArguments, resource: () => Promise<WebResource>): Promise<PayloadEncoder | undefined>;
+    /**
+     * Returns the {@link PayloadEncoder} to use. Override to provide a custom encoder.
+     *
+     * @param args      The request arguments.
+     * @param resource  A function that returns the resource that this request matched.
+     * @returns         The {@link PayloadEncoder} to use, or `undefined` if no custom encoder is provided.
+     */
+    protected async getEncoder(args: WebArguments, resource: () => Promise<WebResource>): Promise<PayloadEncoder | undefined> {
+        return undefined;
+    }
 
-    /** Returns the {@link PayloadParser} to use. */
-    protected abstract getParser(args: WebArguments, resource: () => Promise<WebResource>): Promise<PayloadParser | undefined>;
+    /**
+     * Returns the {@link PayloadParser} to use. Override to provide a custom parser.
+     *
+     * @param args      The request arguments.
+     * @param resource  A function that returns the resource that this request matched.
+     * @returns         The {@link PayloadParser} to use, or `undefined` if no custom parser is provided.
+     */
+    protected async getParser(args: WebArguments, resource: () => Promise<WebResource>): Promise<PayloadParser | undefined> {
+        return undefined;
+    }
 }
 
 /** A symbol in {@link EventAttributes} representing the media type of the event's `data` field. */
