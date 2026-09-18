@@ -49,9 +49,6 @@ export class AuthSchemeError<D extends object = object> extends IOError<D> {
  * @template C  The type of credentials that is to be provied.
  */
 export interface CredentialsProviderOptions<C extends Credentials> {
-    /** If credentials should be provided (`retrieve`) or checked for validity (`verify`). */
-    mode:           'retrieve' | 'verify';
-
     /** The AuthScheme that needs the credentials. */
     authScheme:     AuthScheme<C>;
 
@@ -69,13 +66,22 @@ export interface CredentialsProviderOptions<C extends Credentials> {
 }
 
 /**
- * A function used to provide or validate credentials for a request.
+ * A function used to provide or verify credentials for a request.
  *
- * @template C        The type of credentials that is to be provied.
- * @param    options  Information about the request how the provider should operate.
+ * * When retrieving credentials, the provider should return the credentials to send, or `undefined` if none are
+ *   available.
+ * * When validating credentials, the provider may either return credentials that will be checked against the
+ *   user-provided credentials by the AuthScheme, or handle the verification internally and signal the validity by
+ *   returning a boolean.
+ *
+ * @template C        The type of credentials that is to be provided.
+ * @param    mode     If credentials should be provided (`retrieve`) or checked for validity (`verify`).
+ * @param    options  Information about the request.
+ * @returns           (Unverified) credentials, if available, else `undefined`. In `verify` mode, a boolean indicating
+ *                    validity may also be returned, in case the credential provider handles the verification itself.
  *
  */
-export type CredentialsProvider<C extends Credentials> = (options: CredentialsProviderOptions<C>) => Promise<C | undefined>;
+export type CredentialsProvider<C extends Credentials> = (mode: 'retrieve' | 'verify', options: CredentialsProviderOptions<C>) => Promise<C | boolean | undefined>;
 
 /**
  * The base class for all authentication scheme subclasses. The subclasses can be constructed manually, but usually
@@ -117,7 +123,7 @@ export abstract class AuthScheme<C extends Credentials> {
      */
     static create(from: AuthHeader | string | RegExp, proxy?: boolean): AuthScheme<Credentials> {
         if (from instanceof AuthHeader) {
-            return new (AuthScheme._authSchemes.get(from.scheme.toLowerCase()) ?? UnknownAuthScheme)(from.scheme).setProxyMode(proxy ?? from.isProxyHeader());
+            return new (AuthScheme._authSchemes.get(from.scheme) ?? UnknownAuthScheme)(from.scheme).setProxyMode(proxy ?? from.isProxyHeader());
         }
         else if (typeof from === 'string') {
             return new (AuthScheme._authSchemes.get(from.toLowerCase()) ?? UnknownAuthScheme)(from).setProxyMode(proxy ?? false);
@@ -138,7 +144,7 @@ export abstract class AuthScheme<C extends Credentials> {
     /** The realm or domain this instance is handling. */
     public realm?: string;
 
-    /** Specifies wheter or not this scheme provides proxy auhentication. Usually false. */
+    /** Specifies whether or not this scheme provides proxy authentication. Usually false. */
     public proxy: boolean;
     private _credentialsProvider?: CredentialsProvider<C>;
 
@@ -147,8 +153,12 @@ export abstract class AuthScheme<C extends Credentials> {
      *
      * @param scheme  The canonical name of the scheme this instance handles.
      */
-    protected constructor(public scheme: string) {
+    protected constructor(protected _scheme: string) {
         this.proxy = false;
+    }
+
+    get scheme(): string {
+        return this._scheme.toLowerCase();
     }
 
     /**
@@ -199,30 +209,28 @@ export abstract class AuthScheme<C extends Credentials> {
     /**
      * Verifies an {@link Authorization} header from an incoming request.
      *
-     * @template T                  The type of the header to validate.
-     * @param    authorization      The authentication provided by the remote client.
-     * @param    request            The request that is to be authenticated.
-     * @param    payload            The request payload that was sent.
-     * @throws   {AuthSchemeError}  If the authentication or the credentials provided via {@link setCredentialsProvider}
-     *                              are incompatibe with this AuthScheme.
-     * @returns                     The validated Authorization header.
+     * @param  authorization      The authentication provided by the remote client.
+     * @param  request            The request that is to be authenticated.
+     * @param  payload            The request payload that was sent.
+     * @throws {AuthSchemeError}  If the authentication or the credentials provided via {@link setCredentialsProvider}
+     *                            are invalid or incompatibe with this AuthScheme.
+     * @returns                   The identity of the authenticated client/credentials.
      */
-    abstract verifyAuthorization<T extends Authorization | undefined>(authorization: T, request?: AuthSchemeRequest, payload?: Uint8Array): Promise<T>;
+    abstract verifyAuthorization(authorization: Authorization | undefined, request?: AuthSchemeRequest, payload?: Uint8Array): Promise<string>;
 
     /**
      * Verifies an {@link AuthenticationInfo} or {@link ServerAuthorization} header received from a server response.
      *
-     * Not all protocols supports verification of responses. In that case, this method does nothing.
+     * Not all protocols supports verification of responses. In that case, this method is undefined.
      *
-     * @template T                  The type of the header to validate.
-     * @param    authentication     The authentication provided by the remote server.
-     * @param    request            The *response* to a request that is to be authenticated.
-     * @param    payload            The *response* payload received from the remote server.
-     * @throws   {AuthSchemeError}  If the authentication or the credentials provided via {@link setCredentialsProvider}
-     *                              are incompatibe with this AuthScheme.
-     * @returns                     The validated AuthenticationInfo/ServerAuthorization header.
+     * @param  authentication     The authentication provided by the remote server.
+     * @param  request            The *response* to a request that is to be authenticated.
+     * @param  payload            The *response* payload received from the remote server.
+     * @throws {AuthSchemeError}  If the authentication or the credentials provided via {@link setCredentialsProvider}
+     *                            are invalid or incompatibe with this AuthScheme.
+     * @returns                   The identity of the authenticated server/credentials.
      */
-    abstract verifyAuthenticationInfo<T extends AuthenticationInfo | ServerAuthorization | undefined>(authentication: T, request?: AuthSchemeRequest, payload?: Uint8Array): Promise<T>;
+    abstract verifyAuthenticationInfo?(authentication: AuthenticationInfo | ServerAuthorization | undefined, request?: AuthSchemeRequest, payload?: Uint8Array): Promise<string>;
 
     /**
      * Checks if the provided credentials are compatible with this AuthScheme.
@@ -242,7 +250,7 @@ export abstract class AuthScheme<C extends Credentials> {
     protected async _createChallenge(authorization?: Authorization): Promise<WWWAuthenticate> {
         const proxyHeader = authorization?.isProxyHeader() ?? this.proxy;
 
-        return new WWWAuthenticate(this.scheme, proxyHeader).setParam('realm', this.realm);
+        return new WWWAuthenticate(this._scheme, proxyHeader).setParam('realm', this.realm);
     }
 
     /**
@@ -251,13 +259,38 @@ export abstract class AuthScheme<C extends Credentials> {
      * @param  options            Options to pass to the credentials provider.
      * @throws {AuthSchemeError}  If the authentication, challenge or the credentials provided via
      *                            {@link setCredentialsProvider} are incompatibe with this AuthScheme.
-     * @returns                   Valid credentials or `undefined` if no credentials could be provided.
+     * @throws {TypeError}        If the return value from the provider is not an object.
+     * @returns                   Valid credentials to provide or `undefined` if no credentials could be provided.
      */
-    protected async _getCredentials(options: CredentialsProviderOptions<C>): Promise<C | undefined> {
+    protected async _retrieveCredentials(options: CredentialsProviderOptions<C>): Promise<C | undefined> {
         this._assertCompatibleAuthHeader(options.authorization);
         this._assertCompatibleAuthHeader(options.challenge);
 
-        return this._assertCompatibleCredentials(await this._credentialsProvider?.(options));
+        const credentials = await this._credentialsProvider?.('retrieve', options);
+
+        if (credentials !== undefined && typeof credentials !== 'object') {
+            throw new TypeError(`Expected retrieved credentials from provider to be an object, not '${typeof credentials}'.`);
+        } else {
+            return this._assertCompatibleCredentials(credentials);
+        }
+    }
+
+    /**
+     * Asks the credentials provider to verify the provided authorization or return trusted credentials.
+     *
+     * @param  options            Options to pass to the credentials provider.
+     * @throws {AuthSchemeError}  If the authentication, challenge or the credentials provided via
+     *                            {@link setCredentialsProvider} are incompatible with this AuthScheme.
+     * @throws {TypeError}        If the return value from the provider is not an object.
+     * @returns                   Valid credentials to verify against, a boolean indicating verification result, or
+     *                            `undefined` if no credentials could be provided.
+     */
+    protected async _verifyCredentials(options: CredentialsProviderOptions<C>): Promise<C | boolean | undefined> {
+        this._assertCompatibleAuthHeader(options.authorization);
+        this._assertCompatibleAuthHeader(options.challenge);
+
+        const credentials = await this._credentialsProvider?.('verify', options);
+        return typeof credentials === 'object' ? this._assertCompatibleCredentials(credentials) : credentials;
     }
 
     /**
@@ -330,19 +363,17 @@ export class UnknownAuthScheme extends AuthScheme<Credentials> {
         super(scheme);
     }
 
-    async createAuthorization(_challenge?: WWWAuthenticate, _request?: AuthSchemeRequest, _payload?: Uint8Array): Promise<Authorization | undefined> {
+    override async createAuthorization(_challenge?: WWWAuthenticate, _request?: AuthSchemeRequest, _payload?: Uint8Array): Promise<Authorization | undefined> {
         throw new AuthSchemeError(`Not supported.`);
     }
 
-    async verifyAuthorization<T extends Authorization | undefined>(_authorization: T, _request?: AuthSchemeRequest, _payload?: Uint8Array): Promise<T> {
+    override async verifyAuthorization(_authorization: Authorization | undefined, _request?: AuthSchemeRequest, _payload?: Uint8Array): Promise<string> {
         throw new AuthSchemeError(`Not supported.`);
     }
 
-    async verifyAuthenticationInfo<T extends AuthenticationInfo | ServerAuthorization | undefined>(_authentication: T, _request?: AuthSchemeRequest, _payload?: Uint8Array): Promise<T> {
-        throw new AuthSchemeError(`Not supported.`);
-    }
+    override verifyAuthenticationInfo = undefined;
 
-    _isCompatibleCredentials(_credentials: Credentials): boolean {
+    protected override _isCompatibleCredentials(_credentials: Credentials): boolean {
         return false;
     }
 }

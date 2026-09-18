@@ -50,35 +50,31 @@ export class BasicAuthScheme extends AuthScheme<PasswordCredentials> {
     }
 
     override async createAuthorization(challenge?: WWWAuthenticate, request?: AuthSchemeRequest, _payload?: Uint8Array): Promise<Authorization | undefined> {
-        const credentials = await this._getCredentials({ mode: 'retrieve', authScheme: this, challenge, request });
+        const credentials = await this._retrieveCredentials({ authScheme: this, challenge, request });
         const proxyHeader = challenge?.isProxyHeader() ?? this.proxy;
 
-        return credentials ? new Authorization(`${this.scheme} ${BasicAuthScheme.encodeCredentials(credentials)}`, proxyHeader) : undefined;
+        return credentials ? new Authorization(`${this._scheme} ${BasicAuthScheme.encodeCredentials(credentials)}`, proxyHeader) : undefined;
     }
 
-    override async verifyAuthorization<T extends Authorization | undefined>(authorization: T, request?: AuthSchemeRequest, _payload?: Uint8Array): Promise<T> {
+    override async verifyAuthorization(authorization: Authorization | undefined, request?: AuthSchemeRequest, _payload?: Uint8Array): Promise<string> {
         const untrusted = BasicAuthScheme.decodeCredentials(this._assertCompatibleAuthHeader(authorization)?.credentials);
 
         if (!untrusted) {
             throw new AuthSchemeError(`No credentials provided.`, await this._createChallenge(authorization));
         }
 
-        const trusted = await this._getCredentials({ mode: 'verify', authScheme: this, identity: untrusted.identity, authorization, request});
+        const trusted = await this._verifyCredentials({ authScheme: this, identity: untrusted.identity, authorization, request });
 
-        if (!trusted) {
-            throw new AuthSchemeError(`User ${untrusted.identity} not found.`, await this._createChallenge(authorization));
-        }
-
-        if (!AuthScheme.safeCompare(BasicAuthScheme.encodeCredentials(untrusted), BasicAuthScheme.encodeCredentials(trusted))) {
+        if (trusted === true) {
+            return untrusted.identity;
+        } else if (!trusted || !AuthScheme.safeCompare(BasicAuthScheme.encodeCredentials(untrusted), BasicAuthScheme.encodeCredentials(trusted))) {
             throw new AuthSchemeError(`Invalid password.`, await this._createChallenge(authorization));
+        } else {
+            return trusted.identity;
         }
-
-        return authorization;
     }
 
-    override async verifyAuthenticationInfo<T extends AuthenticationInfo | ServerAuthorization | undefined>(authentication: T, _request?: AuthSchemeRequest, _payload?: Uint8Array): Promise<T> {
-        return authentication;
-    }
+    override verifyAuthenticationInfo = undefined;
 
     protected override _isCompatibleCredentials(credentials: PasswordCredentials): boolean {
         return typeof credentials.identity === 'string' && typeof credentials.secret === 'string';
