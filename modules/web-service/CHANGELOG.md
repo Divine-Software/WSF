@@ -1,5 +1,11 @@
 # @divine/web-service
 
+## 2.0.0-v2.9
+
+### Minor Changes
+
+- bab35e3: Individual PayloadSerDesFilter methods are no longer abstract.
+
 ## 2.0.0-v2.8
 
 ### Minor Changes

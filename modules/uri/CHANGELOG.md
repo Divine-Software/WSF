@@ -1,5 +1,11 @@
 # @divine/uri
 
+## 2.0.0-v2.11
+
+### Minor Changes
+
+- 05a4ac1: A CredentialsProvider may now validate credentials itself.
+
 ## 2.0.0-v2.10
 
 ### Minor Changes
