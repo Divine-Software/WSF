@@ -34,8 +34,6 @@ commit:		prepare								## Commit a change and create a change-log entry for it
 
 release:	pristine prepare						## Bump all package versions and generate change-log.
 	pnpm exec changeset version
-	pnpm install
-	git commit --amend --reuse-message=HEAD pnpm-lock.yaml
 
 publish:	pristine clean build test					## Publish all new packages to NPM
 	pnpm publish -r --access public
