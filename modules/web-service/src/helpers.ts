@@ -279,6 +279,7 @@ export class EventStreamResponse<T = unknown> extends WebResponse<AsyncGenerator
             'content-type':      'text/event-stream',
             'connection':        'close',
             'cache-control':     'no-store',
+            'content-encoding':  'identity',
             'transfer-encoding': 'identity',
             ...headers
         });
