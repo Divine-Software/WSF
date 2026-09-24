@@ -33,12 +33,15 @@ export function isEventStreamEvent(event: any): event is EventStreamEvent {
  * The `text/event-stream` parser reads and writes [SSE/server-sent
  * events](https://developer.mozilla.org/en-US/docs/Web/API/Server-sent_events/) streams, translating between
  * `AsyncIterable<Buffer>` and `AsyncIterable<`{@link EventStreamEvent}`>`.
+ *
+ * When serializing, yielding `undefined` produces a comment-only line, while yielding `null` produces an empty `data:`
+ * line. Both are useful for keep-alive purposes.
  */
 export class EventStreamParser extends Parser {
     // See <https://html.spec.whatwg.org/multipage/server-sent-events.html#event-stream-interpretation>
     static async *parser(stream: AsyncIterable<Buffer>): AsyncIterable<EventStreamEvent> {
         let extra = '';
-        let event: EventStreamEvent = { data: '' };
+        let event: EventStreamEvent = { data: null! };
 
         for await (const chunk of stream) {
             const lines = (extra + chunk.toString('binary')).split(/\n/);
@@ -46,12 +49,12 @@ export class EventStreamParser extends Parser {
 
             for (const line of lines.map((line) => Buffer.from(line, 'binary').toString('utf8'))) {
                 if (line === '') {
-                    if (event.data !== '') {
+                    if (event.data !== null) {
                         event.data = event.data.endsWith('\n') ? event.data.substr(0, event.data.length - 1) : event.data;
                         yield event;
                     }
 
-                    event = { data: '' };
+                    event = { data: null! };
                 }
                 else if (line[0] !== ':') {
                     const [, field, value] = /([^:]+): ?(.*)/.exec(line) ?? ['', line, ''];
@@ -60,6 +63,7 @@ export class EventStreamParser extends Parser {
                         event.event = value;
                     }
                     else if (field === 'data') {
+                        event.data ??= '';
                         event.data += value + '\n';
                     }
                     else if (field === 'id') {
@@ -82,7 +86,7 @@ export class EventStreamParser extends Parser {
 
         for await (const event of data) {
             if (!event) {
-                yield Buffer.from(':\n\n');
+                yield Buffer.from(event === null ? 'data:\n\n' : ':\n\n');
             }
             else {
                 this._assertSerializebleData(isEventStreamEvent(event), event);

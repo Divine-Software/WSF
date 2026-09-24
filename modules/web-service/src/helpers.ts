@@ -223,7 +223,7 @@ export class EventStreamResponse<T = unknown> extends WebResponse<AsyncGenerator
 
             for await (const event of source) {
                 if (event === undefined || event === null) {
-                    yield undefined; // Emit keep-alive comment line (see EventStreamParser.serialize())
+                    yield event; // Emit keep-alive comment or data line (see EventStreamParser.serialize())
                 }
                 else {
                     yield { id: event[EVENT_ID], event: event[EVENT_TYPE], retry: event[EVENT_RETRY], data: await serialize(event) };
@@ -270,7 +270,7 @@ export class EventStreamResponse<T = unknown> extends WebResponse<AsyncGenerator
      * @param keepaliveTimeout How often, in milliseconds, to automatically send comments/keep-alive lines.
      * @param signal           An optional `AbortSignal`—or any object with an `aborted` property, really—to stop the stream.
      * @param signal.aborted   Stops the stream if true.
-     * @param parser          The {@link PayloadParser} to use for serializing the events. Default is {@link Parser}.
+     * @param parser           The {@link PayloadParser} to use for serializing the events. Default is {@link Parser}.
      */
     constructor(source: AsyncIterable<T | T & EventAttributes | undefined | null>, dataType?: ContentType | string, headers?: WebResponseHeaders, keepaliveTimeout?: number, signal?: { aborted: boolean }, parser: PayloadParser = Parser) {
         super(WebStatus.OK, EventStreamResponse._eventStream(source, parser, dataType, keepaliveTimeout, signal), {
