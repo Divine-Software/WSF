@@ -106,7 +106,8 @@ export abstract class Parser {
      * Converts a parsed (or manually constructed) object back into a byte stream representation.
      *
      * Buffers and ReadableStream will be passed through as-is. Strings will just be encoded using the `charset` param
-     * from `contentType` (or UTF-8 if not present). Everything else is serialized using a Parser subclass.
+     * from `contentType` (or UTF-8 if not present). `undefined` will be treated as an empty value. Everything else is
+     * serialized using a Parser subclass.
      *
      * @template T              The type of the object that is to be serialized.
      * @param    data           The object that is to be serialized.
@@ -121,6 +122,7 @@ export abstract class Parser {
             data = unwrap(data); // Unpack values wrapped by toObject()
 
             contentType = ContentType.create(contentType,
+                data === undefined            ? ContentType.bytes :
                 data instanceof Buffer        ? ContentType.bytes :
                 isReadableStream(data)        ? ContentType.bytes :
                 isJSON(data) || data === null ? ContentType.json :
@@ -133,6 +135,7 @@ export abstract class Parser {
             // 3. Serialize everything else
 
             const dataOrParser =
+                data === undefined         ? Buffer.alloc(0) :
                 data instanceof Buffer     ? data :
                 data instanceof URI        ? toReadableStream(data) : // AsyncIterable<Buffer>           => Readble<Buffer>
                 isReadableStream(data)     ? toReadableStream(data) : // ReadableStream<Buffer | string> => Readble<Buffer>

@@ -6,8 +6,8 @@ import { Parser } from '../src';
 describe('the Parser class', () => {
     const buffer = Buffer.from("Hi there 🫥");
 
-    it('serializes Buffer/string as Buffer', async () => {
-        expect.assertions(6);
+    it('serializes Buffer/string/undefined as Buffer', async () => {
+        expect.assertions(8);
 
         let [ result, ct ] = Parser.serialize(buffer);
         expect(result).toBe(buffer);
@@ -20,6 +20,10 @@ describe('the Parser class', () => {
         [ result, ct ] = Parser.serialize(buffer.toString(), "application/x-custom; charset=UTF-16");
         expect(result).toStrictEqual(Buffer.from(buffer.toString(), "utf16le"));
         expect(ct.toString()).toBe("application/x-custom;charset=UTF-16");
+
+        [ result, ct ] = Parser.serialize(undefined);
+        expect(result).toStrictEqual(Buffer.alloc(0));
+        expect(ct).toStrictEqual(ContentType.bytes);
     });
 
     it('passes ReadableStream right through', async () => {
