@@ -9,6 +9,7 @@ import { EventStreamResponse } from './helpers';
 import { WebRequest } from './request';
 import { WebArguments, WebErrorHandler, WebFilterCtor, WebResource, WebResourceCtor } from './resource';
 import { WebResponse, WebResponseHeaders, WebResponses } from './response';
+import { RPC_DEFAULT_KEEPALIVE } from './rpc';
 import { WebServer } from './server';
 
 export interface PayloadEncoder {
@@ -62,6 +63,12 @@ export interface WebServiceConfig {
 
     /** The threshold, in milliseconds, for when a request will be considered "slow". Default is 1000 ms. */
     slowRequestThreshold?: number;
+
+    /**
+     * If not `null`, the interval (in milliseconds) at which to send keep-alive comments for event streams. Default is
+     * 10000 ms (10 seconds).
+     */
+    eventStreamKeepalive?: number | null;
 
     /**
      * The name of the property holding the error message when a {@link WebError} is converted to a structued
@@ -214,7 +221,7 @@ export class WebService<Context> {
      * Throws a `405 Method Not Allowed` error if the method is recognized, or a `501 Not Implemented` error if not.
      *
      * @param method           The method to reject.
-     * @param rsrc             The resource to use for the `Allow` header. @see {@link makeAllowHeader}.
+     * @param rsrc             The resource to use for the `Allow` header. See {@link makeAllowHeader}.
      * @param methodToVerbMap  An optional mapping of method names to HTTP verbs, used to generate the `Allow` header.
      */
     public static rejectUnhandledMethod(method: string, rsrc: object, methodToVerbMap?: Record<string, string | undefined>): never {
@@ -253,6 +260,7 @@ export class WebService<Context> {
         this.webServiceConfig = {
             console:              console,
             slowRequestThreshold: 1_000,
+            eventStreamKeepalive: RPC_DEFAULT_KEEPALIVE,
             maxContentLength:     1_000_000,
             errorMessageProperty: 'message',
             payloadEncoder:       Encoder,
@@ -555,7 +563,7 @@ export class WebService<Context> {
                 if (result instanceof WebResponse) {
                     return result;
                 } else if (isAsyncIterable(result) && !isReadableStream(result)) {
-                    return new EventStreamResponse(result, undefined, undefined, undefined, {
+                    return new EventStreamResponse(result, undefined, undefined, this.webServiceConfig.eventStreamKeepalive, {
                         get aborted() { return webreq.closing || webreq.aborted; },
                     }, this.webServiceConfig.payloadParser);
                 } else {

@@ -1,6 +1,7 @@
 import { escapeRegExp, isAsyncIterable } from '@divine/commons';
 import { EventStreamResponse } from './helpers';
 import { WebArguments, WebResourceCtor } from './resource';
+import { type WebServiceConfig } from './service';
 
 type RPCParamsType = object;
 type RPCResultType = object | AsyncIterable<object>;
@@ -49,7 +50,10 @@ export interface RPCEndpointOptions {
     /** The path of this RPC method. Default is simply the RPC method name. */
     path?:      string;
 
-    /** Keep-alive time in milliseconds, in case this RPC call is an event stream. Default is {@link RPC_DEFAULT_KEEPALIVE}. */
+    /**
+     * Keep-alive time in milliseconds, in case this RPC call is an event stream. Default is
+     * {@link WebServiceConfig.eventStreamKeepalive}/{@link RPC_DEFAULT_KEEPALIVE} (10 seconds).
+     */
     keepalive?: number | null;
 }
 
@@ -135,12 +139,11 @@ export type RPCClientProxy<M extends RPCMethods<M>> = (method: keyof M, options:
  */
 export type RPCSeviceProxy<M extends RPCMethods<M>> = (method: keyof M, options: Required<RPCEndpointOptions>, args: WebArguments, fn: (params: RPCParamsType) => Promise<RPCResultType>) => Promise<RPCResultType>
 
-function endpoints<M extends RPCMethods<M>>(endpoints: RPCEndpoints<M>): Array<[keyof M, Required<RPCEndpointOptions>]> {
-    return Object.entries(endpoints)
-        .map(([method, options]) => [method as keyof M, {
-            path:      method,
-            keepalive: RPC_DEFAULT_KEEPALIVE,
-            ...(options as RPCEndpointOptions | null ?? {})
+function endpoints<M extends RPCMethods<M>>(endpoints: RPCEndpoints<M>, defaultKeepalive: number): Array<[keyof M, Required<RPCEndpointOptions>]> {
+    return (Object.entries(endpoints) as [keyof M, RPCEndpointOptions | null | undefined][])
+        .map(([method, options]) => [method, {
+            path:      options?.path ?? String(method),
+            keepalive: defaultKeepalive,
         }]);
 }
 
@@ -176,7 +179,7 @@ export function createRPCClient<M extends RPCMethods<M>>(config: RPCEndpoints<M>
         constructor() {
             const self = this as any;
 
-            for (const [method, options] of endpoints(config)) {
+            for (const [method, options] of endpoints(config, RPC_DEFAULT_KEEPALIVE)) {
                 self[method] = (params: RPCParamsType) => clientProxy(method, options, params);
             }
         }
@@ -257,7 +260,7 @@ export function createRPCService<M extends RPCMethods<M>, Context>(config: RPCEn
 export function createRPCService<M extends RPCMethods<M>>(config: RPCEndpoints<M>, impl: RPCService<M>, serviceProxy: RPCSeviceProxy<M>): Array<WebResourceCtor<unknown>>;
 // eslint-disable-next-line jsdoc/require-jsdoc
 export function createRPCService<M extends RPCMethods<M>, Context = unknown>(config: RPCEndpoints<M>, impl: RPCServiceCtor<Context, M> | RPCService<M>, serviceProxy: RPCSeviceProxy<M>): Array<WebResourceCtor<Context>> {
-    return endpoints(config).map(([method, options]) =>
+    return endpoints(config, NaN).map(([method, options]) =>
         class RPCResource {
             static path = RegExp(escapeRegExp(options.path));
 
@@ -266,9 +269,16 @@ export function createRPCService<M extends RPCMethods<M>, Context = unknown>(con
             async POST(args: WebArguments): Promise<object> {
                 const object = typeof impl === 'function' ? new impl(this._ctx, args) : impl;
                 const result = await serviceProxy(method, options, args, (params) => object[method](params as any, args) as Promise<object>);
-                const signal = { get aborted() { return args.request.closing || args.request.aborted; } };
 
-                return isAsyncIterable<object>(result) ? new EventStreamResponse(result, undefined, undefined, options.keepalive ?? undefined, signal, args.request.webService.webServiceConfig.payloadParser) : result;
+                if (isAsyncIterable<object>(result)) {
+                    const config    = args.request.webService.webServiceConfig;
+                    const keepalive = options.keepalive === null ? null : isNaN(options.keepalive) ? config.eventStreamKeepalive : options.keepalive;
+                    const signal    = { get aborted() { return args.request.closing || args.request.aborted; } };
+
+                    return new EventStreamResponse(result, undefined, undefined, keepalive, signal, config.payloadParser);
+                } else {
+                    return result;
+                }
             }
         }
     );

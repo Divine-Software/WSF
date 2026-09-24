@@ -210,7 +210,7 @@ export interface EventAttributes {
  * @template T The type of events to transmit.
  */
 export class EventStreamResponse<T = unknown> extends WebResponse<AsyncGenerator<EventStreamEvent | undefined>> {
-    private static async *_eventStream(source: AsyncIterable<any>, parser: PayloadParser, dataType?: ContentType | string, keepaliveTimeout?: number, signal?: { aborted: boolean }): AsyncGenerator<EventStreamEvent | undefined> {
+    private static async *_eventStream(source: AsyncIterable<any>, parser: PayloadParser, dataType?: ContentType | string, keepaliveTimeout: number | null = null, signal?: { aborted: boolean }): AsyncGenerator<EventStreamEvent | undefined> {
         const serialize = async (event: any): Promise<string> => {
             const [ stream, ct ] = parser.serialize(event, event[EVENT_FORMAT] ?? dataType);
             const serialized = isAsyncIterable(stream) ? await new BufferParser(ct).parse(stream) : stream;
@@ -219,7 +219,7 @@ export class EventStreamResponse<T = unknown> extends WebResponse<AsyncGenerator
         };
 
         try {
-            source = keepaliveTimeout === undefined ? source : unblocked(source, keepaliveTimeout);
+            source = keepaliveTimeout === null ? source : unblocked(source, keepaliveTimeout);
 
             for await (const event of source) {
                 if (event === undefined || event === null) {
@@ -267,12 +267,14 @@ export class EventStreamResponse<T = unknown> extends WebResponse<AsyncGenerator
      * @param source           The `AsyncIterable` which yields events to transmit.
      * @param dataType         The default format of the individual events.
      * @param headers          Custom response headers to send.
-     * @param keepaliveTimeout How often, in milliseconds, to automatically send comments/keep-alive lines.
-     * @param signal           An optional `AbortSignal`—or any object with an `aborted` property, really—to stop the stream.
+     * @param keepaliveTimeout If specified and not `null`, how often (in milliseconds) to automatically send
+     *                         comments/keep-alive lines. Default is `null`.
+     * @param signal           An optional `AbortSignal`—or any object with an `aborted` property, really—to stop the
+     *                         stream.
      * @param signal.aborted   Stops the stream if true.
      * @param parser           The {@link PayloadParser} to use for serializing the events. Default is {@link Parser}.
      */
-    constructor(source: AsyncIterable<T | T & EventAttributes | undefined | null>, dataType?: ContentType | string, headers?: WebResponseHeaders, keepaliveTimeout?: number, signal?: { aborted: boolean }, parser: PayloadParser = Parser) {
+    constructor(source: AsyncIterable<T | T & EventAttributes | undefined | null>, dataType?: ContentType | string, headers?: WebResponseHeaders, keepaliveTimeout?: number | null, signal?: { aborted: boolean }, parser: PayloadParser = Parser) {
         super(WebStatus.OK, EventStreamResponse._eventStream(source, parser, dataType, keepaliveTimeout, signal), {
             'content-type':      'text/event-stream',
             'connection':        'close',
