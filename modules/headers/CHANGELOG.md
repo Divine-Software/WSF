@@ -1,5 +1,11 @@
 # @divine/headers
 
+## 2.1.0-v2.1
+
+### Patch Changes
+
+- fdcc7c1: Accept headers now correctly handles empty headers.
+
 ## 2.1.0-v2.0
 
 ### Minor Changes

@@ -1,5 +1,12 @@
 # @divine/uri
 
+## 2.0.0-v2.12
+
+### Minor Changes
+
+- 57f9b72: Parser.serialize(undefined) now produces 0 bytes.
+- 8188c63: Event streams treat `null` as empty `data:` lines, and will no longer block such events when parsing.
+
 ## 2.0.0-v2.11
 
 ### Minor Changes

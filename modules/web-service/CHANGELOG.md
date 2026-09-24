@@ -1,5 +1,12 @@
 # @divine/web-service
 
+## 2.0.0-v2.10
+
+### Minor Changes
+
+- 8188c63: Event streams treat `null` as empty `data:` lines, and will no longer block such events when parsing.
+- a769477: The default SSE keepalive timeout can now be configured. New default is 10 seconds.
+
 ## 2.0.0-v2.9
 
 ### Minor Changes
