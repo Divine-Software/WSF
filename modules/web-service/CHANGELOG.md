@@ -1,5 +1,11 @@
 # @divine/web-service
 
+## 2.0.0-v2.11
+
+### Patch Changes
+
+- 05a8e07: Disable content encoding negotiation for event streams.
+
 ## 2.0.0-v2.10
 
 ### Minor Changes
