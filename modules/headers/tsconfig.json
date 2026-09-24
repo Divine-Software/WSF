@@ -4,6 +4,7 @@
         "src/**/*.ts", "test/**/*.ts"
     ],
     "compilerOptions": {
+        "lib": ["ES2022", "WebWorker"],
         "types": ["jest"],
         "outDir": "build"
     }

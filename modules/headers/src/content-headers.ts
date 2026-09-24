@@ -5,6 +5,10 @@ export interface ContentHeaderParams {
 }
 
 export abstract class ContentHeader {
+    static split(unparsed: string): string[] {
+        return unparsed.trim().split(/\s*,\s*/g).filter(s => !!s);
+    }
+
     private _type: string;
     readonly params: ContentHeaderParams = Record();
 

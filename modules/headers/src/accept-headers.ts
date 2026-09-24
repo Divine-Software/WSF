@@ -5,7 +5,7 @@ export class Accept extends ContentTypeHeader {
     static create(unparsed: string | Accept[] | undefined): Accept[] | undefined;
     static create(unparsed: string | Accept[] | undefined): Accept[] | undefined {
         return (typeof unparsed === 'string'
-            ? unparsed.split(/\s*,\s*/g).map((header) => new Accept(header, 'accept'))
+            ? ContentHeader.split(unparsed).map((header) => new Accept(header, 'accept'))
             : unparsed?.map((header) => new Accept(header))
         )?.sort((a, b) => b.q - a.q);
     }
@@ -20,8 +20,8 @@ export class AcceptCharset extends ContentHeader {
     static create(unparsed: string | AcceptCharset[] | undefined): AcceptCharset[] | undefined;
     static create(unparsed: string | AcceptCharset[] | undefined): AcceptCharset[] | undefined {
         return (typeof unparsed === 'string'
-            ? unparsed.split(/\s*,\s*/g).map((header) => new AcceptLanguage(header, 'accept-charset'))
-            : unparsed?.map((header) => new AcceptLanguage(header))
+            ? ContentHeader.split(unparsed).map((header) => new AcceptCharset(header, 'accept-charset'))
+            : unparsed?.map((header) => new AcceptCharset(header))
         )?.sort((a, b) => b.q - a.q);
     }
 
@@ -34,8 +34,8 @@ export class AcceptEncoding extends ContentHeader {
     static create(unparsed: string | AcceptEncoding[] | undefined): AcceptEncoding[] | undefined;
     static create(unparsed: string | AcceptEncoding[] | undefined): AcceptEncoding[] | undefined {
         return (typeof unparsed === 'string'
-            ? unparsed.split(/\s*,\s*/g).map((header) => new AcceptLanguage(header, 'accept-encoding'))
-            : unparsed?.map((header) => new AcceptLanguage(header))
+            ? ContentHeader.split(unparsed).map((header) => new AcceptEncoding(header, 'accept-encoding'))
+            : unparsed?.map((header) => new AcceptEncoding(header))
         )?.sort((a, b) => b.q - a.q);
     }
 
@@ -49,7 +49,7 @@ export class AcceptLanguage extends ContentHeader {
     static create(unparsed: string | AcceptLanguage[] | undefined): AcceptLanguage[] | undefined;
     static create(unparsed: string | AcceptLanguage[] | undefined): AcceptLanguage[] | undefined {
         return (typeof unparsed === 'string'
-            ? unparsed.split(/\s*,\s*/g).map((header) => new AcceptLanguage(header, 'accept-language'))
+            ? ContentHeader.split(unparsed).map((header) => new AcceptLanguage(header, 'accept-language'))
             : unparsed?.map((header) => new AcceptLanguage(header))
         )?.sort((a, b) => b.q - a.q);
     }
@@ -64,7 +64,7 @@ export class AcceptPatch extends ContentTypeHeader {
     static create(unparsed: string | AcceptPatch[] | undefined): AcceptPatch[] | undefined;
     static create(unparsed: string | AcceptPatch[] | undefined): AcceptPatch[] | undefined {
         return (typeof unparsed === 'string'
-            ? unparsed.split(/\s*,\s*/g).map((header) => new AcceptPatch(header, 'accept-patch'))
+            ? ContentHeader.split(unparsed).map((header) => new AcceptPatch(header, 'accept-patch'))
             : unparsed?.map((header) => new AcceptPatch(header))
         )?.sort((a, b) => b.q - a.q);
     }

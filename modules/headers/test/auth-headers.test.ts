@@ -1,6 +1,21 @@
 import { AuthHeader, Authorization, WWWAuthenticate } from '../src';
 
 describe('the AuthScheme class', () => {
+    it('handles empty headers', () => {
+        expect.assertions(7);
+
+        const auths = WWWAuthenticate.create(',Dummy,,Basic,');
+
+        expect(auths).toHaveLength(2);
+        expect(auths[0].scheme).toBe('dummy');
+        expect(auths[1].scheme).toBe('basic');
+
+        expect(WWWAuthenticate.create(undefined)).toBeUndefined();
+        expect(WWWAuthenticate.create('')).toHaveLength(0);
+        expect(WWWAuthenticate.create(',')).toHaveLength(0);
+        expect(WWWAuthenticate.create(' , , ')).toHaveLength(0);
+    })
+
     it('parses Basic credentials', () => {
         expect.assertions(4);
 
